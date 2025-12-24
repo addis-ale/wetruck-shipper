@@ -59,10 +59,11 @@ export const SignInView = () => {
       await login(data.email, data.password);
       router.push("/dashboard");
     } catch (err) {
+      // In production, we provide generic but helpful error messages
       setError(
         err instanceof Error
           ? err.message
-          : "Invalid email or password. Please try again."
+          : "Authentication failed. Please check your connection."
       );
     } finally {
       setPending(false);
