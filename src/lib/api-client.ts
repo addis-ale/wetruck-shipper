@@ -130,7 +130,10 @@ export async function request<T>(
     const status = response.status;
 
     // Handle 401 Unauthorized - Try to refresh token
-    if (status === 401 && !isRetry && endpoint !== "/auth/refresh") {
+    // BUT skip auto-refresh for login/refresh endpoints (401 there means invalid credentials, not expired session)
+    const skipAutoRefresh = ["/auth/login", "/auth/refresh"].includes(endpoint);
+
+    if (status === 401 && !isRetry && !skipAutoRefresh) {
       console.log("🔐 Received 401, attempting token refresh...");
 
       const newToken = await refreshAccessToken();

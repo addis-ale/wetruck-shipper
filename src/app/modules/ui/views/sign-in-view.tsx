@@ -43,6 +43,25 @@ export const SignInView = () => {
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState<{
+    request?: {
+      endpoint: string;
+      method: string;
+      payload: Record<string, string>;
+    };
+    response?: {
+      status: string;
+      message: string;
+    };
+    error?: {
+      message: string;
+      type: string;
+      fullError: string;
+    };
+    timestamp?: string;
+  }>({});
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,15 +75,106 @@ export const SignInView = () => {
       setPending(true);
       setError(null);
 
+      // Debug: Capture request
+      const requestPayload = {
+        email: data.email,
+        password: "•••••••••", // Don't log actual password
+        role: "shipper",
+      };
+      setDebugInfo({
+        request: {
+          endpoint: `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+          method: "POST",
+          payload: requestPayload,
+        },
+        timestamp: new Date().toISOString(),
+      });
+
       await login(data.email, data.password);
+
+      // Debug: Success response
+      setDebugInfo((prev) => ({
+        ...prev,
+        response: {
+          status: "success",
+          message: "Login successful, redirecting to dashboard...",
+        },
+      }));
+
       router.push("/dashboard");
     } catch (err) {
-      // In production, we provide generic but helpful error messages
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Authentication failed. Please check your connection."
-      );
+      // Debug: Capture error
+      setDebugInfo((prev) => ({
+        ...prev,
+        error: {
+          message: err instanceof Error ? err.message : "Unknown error",
+          type: typeof err,
+          fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+        },
+      }));
+
+      // Map backend errors to user-friendly messages
+      const errorMessage = err instanceof Error ? err.message : "";
+
+      // Network/Connection errors
+      if (
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("Network error") ||
+        errorMessage.includes("Cannot connect")
+      ) {
+        setError(
+          "Unable to connect to server. Please check your internet connection and try again."
+        );
+      }
+      // Invalid credentials
+      else if (
+        errorMessage.includes("Invalid") ||
+        errorMessage.includes("incorrect") ||
+        errorMessage.includes("wrong")
+      ) {
+        setError(
+          "Invalid email or password. Please check your credentials and try again."
+        );
+      }
+      // Account-related errors
+      else if (
+        errorMessage.includes("not found") ||
+        errorMessage.includes("doesn't exist")
+      ) {
+        setError(
+          "No account found with this email. Please check your email or contact support."
+        );
+      } else if (
+        errorMessage.includes("disabled") ||
+        errorMessage.includes("suspended")
+      ) {
+        setError(
+          "Your account has been disabled. Please contact support for assistance."
+        );
+      }
+      // Server errors
+      else if (
+        errorMessage.includes("500") ||
+        errorMessage.includes("server error")
+      ) {
+        setError("Server error occurred. Please try again in a few moments.");
+      }
+      // Rate limiting
+      else if (
+        errorMessage.includes("too many") ||
+        errorMessage.includes("rate limit")
+      ) {
+        setError(
+          "Too many login attempts. Please wait a few minutes and try again."
+        );
+      }
+      // Generic fallback
+      else {
+        setError(
+          errorMessage ||
+            "Authentication failed. Please try again or contact support if the problem persists."
+        );
+      }
     } finally {
       setPending(false);
     }
@@ -209,8 +319,10 @@ export const SignInView = () => {
                     </div>
                     <p className="text-xs text-primary/80">
                       <span className="font-semibold">Email:</span>{" "}
-                      test@gmail.com <br />
-                      <span className="font-semibold">Password:</span> test123
+                      shipper@example.com
+                      <br />
+                      <span className="font-semibold">Password:</span>{" "}
+                      shipper123
                     </p>
                   </div>
                 </form>
@@ -255,6 +367,86 @@ export const SignInView = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Debug Panel - Only in Development */}
+        {process.env.NODE_ENV === "development" && (
+          <Card className="border-2 border-amber-500/30 bg-slate-900 text-white shadow-xl">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
+                <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                  🐛 Debug Panel
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded uppercase">
+                    Dev Only
+                  </span>
+                </h3>
+                <button
+                  onClick={() => setDebugInfo({})}
+                  className="text-[10px] text-gray-400 hover:text-white transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+
+              {Object.keys(debugInfo).length === 0 ? (
+                <p className="text-xs text-gray-400 italic">
+                  No API activity yet. Try logging in to see request/response
+                  data.
+                </p>
+              ) : (
+                <div className="space-y-2 text-xs font-mono">
+                  {debugInfo.timestamp && (
+                    <div className="text-gray-400">
+                      <span className="text-cyan-400 font-semibold">
+                        Timestamp:
+                      </span>{" "}
+                      {new Date(debugInfo.timestamp).toLocaleTimeString()}
+                    </div>
+                  )}
+
+                  {debugInfo.request && (
+                    <div className="space-y-1">
+                      <div className="text-blue-400 font-semibold">
+                        📤 Request Payload:
+                      </div>
+                      <pre className="bg-slate-800 p-2 rounded text-[10px] overflow-x-auto text-green-300">
+                        {JSON.stringify(debugInfo.request, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+
+                  {debugInfo.response && (
+                    <div className="space-y-1">
+                      <div className="text-green-400 font-semibold">
+                        ✅ Response:
+                      </div>
+                      <pre className="bg-slate-800 p-2 rounded text-[10px] overflow-x-auto text-green-300">
+                        {JSON.stringify(debugInfo.response, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+
+                  {debugInfo.error && (
+                    <div className="space-y-1">
+                      <div className="text-red-400 font-semibold">
+                        ❌ Error:
+                      </div>
+                      <pre className="bg-slate-800 p-2 rounded text-[10px] overflow-x-auto text-red-300">
+                        {JSON.stringify(debugInfo.error, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-amber-500/20">
+                    <p className="text-[9px] text-gray-500">
+                      💡 Tip: Check browser DevTools &gt; Network tab for full
+                      request details
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-400">
