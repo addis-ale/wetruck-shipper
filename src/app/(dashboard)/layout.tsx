@@ -63,8 +63,8 @@ export default function DashboardLayout({
     setShowLogoutDialog(true);
   };
 
-  const confirmLogout = () => {
-    logout();
+  const confirmLogout = async () => {
+    await logout();
     router.push("/sign-in");
     setShowLogoutDialog(false);
   };

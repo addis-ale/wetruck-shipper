@@ -11,11 +11,9 @@ type User = {
 } | null;
 
 interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
+  message?: string;
   role: string;
+  expires_in: number;
 }
 
 interface AuthContextType {
@@ -23,27 +21,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Helper to decode JWT and extract user ID
-function decodeJWT(token: string): { sub: string; role: string } | null {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
@@ -51,65 +32,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
+      // Load user from localStorage
       const savedUser = localStorage.getItem("wetruck_user");
-      const savedToken = localStorage.getItem("wetruck_token");
 
-      if (savedUser && savedToken) {
-        setUser(JSON.parse(savedUser));
+      if (savedUser) {
+        // Verify the session with backend (check if cookie is still valid)
+        const { data, error, status } = await request<{
+          id: number;
+          email: string;
+          user_type: string;
+        }>("/auth/me");
+
+        if (error || status === 401) {
+          // Session invalid - clear everything
+          console.log("❌ Session invalid - clearing user data");
+          localStorage.removeItem("wetruck_user");
+          setUser(null);
+        } else if (data) {
+          // Session valid - keep user logged in
+          setUser(JSON.parse(savedUser));
+        }
       }
+
       setIsLoading(false);
     };
     initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { data, error } = await request<LoginResponse>(
-      "/auth/login", 
-      {
-        method: "POST",
-        body: JSON.stringify({ 
-          email, 
-          password,
-          role: "shipper" // Required by your backend
-        }),
-      }
-    );
+    const { data, error } = await request<LoginResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+        role: "shipper", // Required by your backend
+      }),
+    });
 
     if (error) throw new Error(error);
 
     if (data) {
-      // Decode JWT to get user ID
-      const decoded = decodeJWT(data.access_token);
-      
-      const userData: User = {
-        id: decoded?.sub || "",
+      // Create user data from login response
+      const user: User = {
+        id: "", // Backend can provide this later if needed
         email,
         role: data.role,
-        name: email.split('@')[0] // Fallback: use email prefix as name
+        name: email.split("@")[0],
       };
 
-      setUser(userData);
-      localStorage.setItem("wetruck_token", data.access_token);
-      localStorage.setItem("wetruck_refresh_token", data.refresh_token);
-      localStorage.setItem("wetruck_user", JSON.stringify(userData));
+      setUser(user);
+      localStorage.setItem("wetruck_user", JSON.stringify(user));
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("wetruck_token");
-    localStorage.removeItem("wetruck_refresh_token");
-    localStorage.removeItem("wetruck_user");
+  const logout = async () => {
+    try {
+      // Call backend to clear cookies
+      await request("/auth/logout", {
+        method: "POST",
+      });
+    } catch (error) {
+      // Even if backend call fails, still clear local data
+      console.warn("Logout endpoint failed, clearing local data anyway", error);
+    } finally {
+      // Always clear local user data
+      setUser(null);
+      localStorage.removeItem("wetruck_user");
+    }
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        isAuthenticated: !!user, 
-        isLoading, 
-        login, 
-        logout 
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
       }}
     >
       {children}

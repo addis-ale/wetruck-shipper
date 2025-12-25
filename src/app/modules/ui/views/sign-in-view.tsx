@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -38,29 +38,17 @@ const formSchema = z.object({
 
 export const SignInView = () => {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Debug state
-  const [debugInfo, setDebugInfo] = useState<{
-    request?: {
-      endpoint: string;
-      method: string;
-      payload: Record<string, string>;
-    };
-    response?: {
-      status: string;
-      message: string;
-    };
-    error?: {
-      message: string;
-      type: string;
-      fullError: string;
-    };
-    timestamp?: string;
-  }>({});
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,44 +63,9 @@ export const SignInView = () => {
       setPending(true);
       setError(null);
 
-      // Debug: Capture request
-      const requestPayload = {
-        email: data.email,
-        password: "•••••••••", // Don't log actual password
-        role: "shipper",
-      };
-      setDebugInfo({
-        request: {
-          endpoint: `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-          method: "POST",
-          payload: requestPayload,
-        },
-        timestamp: new Date().toISOString(),
-      });
-
       await login(data.email, data.password);
-
-      // Debug: Success response
-      setDebugInfo((prev) => ({
-        ...prev,
-        response: {
-          status: "success",
-          message: "Login successful, redirecting to dashboard...",
-        },
-      }));
-
       router.push("/dashboard");
     } catch (err) {
-      // Debug: Capture error
-      setDebugInfo((prev) => ({
-        ...prev,
-        error: {
-          message: err instanceof Error ? err.message : "Unknown error",
-          type: typeof err,
-          fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
-        },
-      }));
-
       // Map backend errors to user-friendly messages
       const errorMessage = err instanceof Error ? err.message : "";
 
@@ -179,6 +132,32 @@ export const SignInView = () => {
       setPending(false);
     }
   };
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if already authenticated (will redirect)
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Redirecting to dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
@@ -319,7 +298,7 @@ export const SignInView = () => {
                     </div>
                     <p className="text-xs text-primary/80">
                       <span className="font-semibold">Email:</span>{" "}
-                      shipper@example.com
+                      shipper@wetruck.ai
                       <br />
                       <span className="font-semibold">Password:</span>{" "}
                       shipper123
@@ -367,86 +346,6 @@ export const SignInView = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Debug Panel - Only in Development */}
-        {process.env.NODE_ENV === "development" && (
-          <Card className="border-2 border-amber-500/30 bg-slate-900 text-white shadow-xl">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
-                <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
-                  🐛 Debug Panel
-                  <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded uppercase">
-                    Dev Only
-                  </span>
-                </h3>
-                <button
-                  onClick={() => setDebugInfo({})}
-                  className="text-[10px] text-gray-400 hover:text-white transition-colors"
-                >
-                  Clear
-                </button>
-              </div>
-
-              {Object.keys(debugInfo).length === 0 ? (
-                <p className="text-xs text-gray-400 italic">
-                  No API activity yet. Try logging in to see request/response
-                  data.
-                </p>
-              ) : (
-                <div className="space-y-2 text-xs font-mono">
-                  {debugInfo.timestamp && (
-                    <div className="text-gray-400">
-                      <span className="text-cyan-400 font-semibold">
-                        Timestamp:
-                      </span>{" "}
-                      {new Date(debugInfo.timestamp).toLocaleTimeString()}
-                    </div>
-                  )}
-
-                  {debugInfo.request && (
-                    <div className="space-y-1">
-                      <div className="text-blue-400 font-semibold">
-                        📤 Request Payload:
-                      </div>
-                      <pre className="bg-slate-800 p-2 rounded text-[10px] overflow-x-auto text-green-300">
-                        {JSON.stringify(debugInfo.request, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-
-                  {debugInfo.response && (
-                    <div className="space-y-1">
-                      <div className="text-green-400 font-semibold">
-                        ✅ Response:
-                      </div>
-                      <pre className="bg-slate-800 p-2 rounded text-[10px] overflow-x-auto text-green-300">
-                        {JSON.stringify(debugInfo.response, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-
-                  {debugInfo.error && (
-                    <div className="space-y-1">
-                      <div className="text-red-400 font-semibold">
-                        ❌ Error:
-                      </div>
-                      <pre className="bg-slate-800 p-2 rounded text-[10px] overflow-x-auto text-red-300">
-                        {JSON.stringify(debugInfo.error, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-
-                  <div className="pt-2 border-t border-amber-500/20">
-                    <p className="text-[9px] text-gray-500">
-                      💡 Tip: Check browser DevTools &gt; Network tab for full
-                      request details
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-400">
