@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -38,10 +38,17 @@ const formSchema = z.object({
 
 export const SignInView = () => {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,15 +66,98 @@ export const SignInView = () => {
       await login(data.email, data.password);
       router.push("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Invalid email or password. Please try again."
-      );
+      // Map backend errors to user-friendly messages
+      const errorMessage = err instanceof Error ? err.message : "";
+
+      // Network/Connection errors
+      if (
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("Network error") ||
+        errorMessage.includes("Cannot connect")
+      ) {
+        setError(
+          "Unable to connect to server. Please check your internet connection and try again."
+        );
+      }
+      // Invalid credentials
+      else if (
+        errorMessage.includes("Invalid") ||
+        errorMessage.includes("incorrect") ||
+        errorMessage.includes("wrong")
+      ) {
+        setError(
+          "Invalid email or password. Please check your credentials and try again."
+        );
+      }
+      // Account-related errors
+      else if (
+        errorMessage.includes("not found") ||
+        errorMessage.includes("doesn't exist")
+      ) {
+        setError(
+          "No account found with this email. Please check your email or contact support."
+        );
+      } else if (
+        errorMessage.includes("disabled") ||
+        errorMessage.includes("suspended")
+      ) {
+        setError(
+          "Your account has been disabled. Please contact support for assistance."
+        );
+      }
+      // Server errors
+      else if (
+        errorMessage.includes("500") ||
+        errorMessage.includes("server error")
+      ) {
+        setError("Server error occurred. Please try again in a few moments.");
+      }
+      // Rate limiting
+      else if (
+        errorMessage.includes("too many") ||
+        errorMessage.includes("rate limit")
+      ) {
+        setError(
+          "Too many login attempts. Please wait a few minutes and try again."
+        );
+      }
+      // Generic fallback
+      else {
+        setError(
+          errorMessage ||
+            "Authentication failed. Please try again or contact support if the problem persists."
+        );
+      }
     } finally {
       setPending(false);
     }
   };
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if already authenticated (will redirect)
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Redirecting to dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
@@ -208,8 +298,10 @@ export const SignInView = () => {
                     </div>
                     <p className="text-xs text-primary/80">
                       <span className="font-semibold">Email:</span>{" "}
-                      test@gmail.com <br />
-                      <span className="font-semibold">Password:</span> test123
+                      shipper@wetruck.ai
+                      <br />
+                      <span className="font-semibold">Password:</span>{" "}
+                      shipper123
                     </p>
                   </div>
                 </form>
