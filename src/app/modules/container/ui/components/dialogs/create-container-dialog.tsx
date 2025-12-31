@@ -21,6 +21,11 @@ import {
   CreateContainerInput,
 } from "@/lib/zod/container.schema";
 import { useCreateContainer } from "../../../server/hooks/use-create-container";
+import { z } from "zod";
+
+
+type CreateContainerFormValues = z.input<typeof createContainerSchema>;
+
 
 export function CreateContainerDialog() {
   const [open, setOpen] = useState(false);
@@ -49,12 +54,12 @@ export function CreateContainerDialog() {
     []
   );
 
-  const form = useForm<CreateContainerInput>({
+  const form = useForm<CreateContainerFormValues>({
     resolver: zodResolver(createContainerSchema),
     defaultValues,
     mode: "onChange",
   });
-
+  
   const {
     register,
     handleSubmit,
@@ -83,22 +88,26 @@ export function CreateContainerDialog() {
   const submitting = isPending || isSubmitting;
 
   // submit
-  function onSubmit(values: CreateContainerInput) {
+  function onSubmit(values: CreateContainerFormValues) {
+    // ✅ parse → coercion happens here
+    const parsed = createContainerSchema.parse(values);
+  
     const payload: CreateContainerInput = {
-      ...values,
+      ...parsed,
       container_details: {
-        ...values.container_details,
-        commodity: values.container_details.commodity
+        ...parsed.container_details,
+        commodity: parsed.container_details.commodity
           .map((c) => c.trim())
           .filter(Boolean),
       },
-      return_location_info: values.is_returning
-        ? values.return_location_info
+      return_location_info: parsed.is_returning
+        ? parsed.return_location_info
         : undefined,
     };
-
+  
     mutate(payload);
   }
+  
 
   // ui
   return (
@@ -316,6 +325,7 @@ export function CreateContainerDialog() {
                 </div>
               </div>
             )}
+
 
             <div className="pb-4"></div>
           </form>

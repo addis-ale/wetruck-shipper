@@ -30,6 +30,10 @@ import {
 } from "@/lib/zod/container.schema";
 
 import { useUpdateContainer } from "../../../server/hooks/use-update-container";
+import { z } from "zod";
+
+
+type UpdateContainerFormValues = z.input<typeof updateContainerSchema>;
 
 type Props = {
   open: boolean;
@@ -42,7 +46,7 @@ export function UpdateContainerDialog({
   onOpenChange,
   container,
 }: Props) {
-  const form = useForm<UpdateContainerInput>({
+  const form = useForm<UpdateContainerFormValues>({
     resolver: zodResolver(updateContainerSchema),
     defaultValues: {
       container_number: container.container_number,
@@ -67,6 +71,7 @@ export function UpdateContainerDialog({
       },
     },
   });
+  
 
   useEffect(() => {
     if (open) {
@@ -104,23 +109,23 @@ export function UpdateContainerDialog({
     }
   }, [isSuccess, onOpenChange, form]);
 
-  const onSubmit = (values: UpdateContainerInput) => {
-    const payload = {
-      ...values,
+  const onSubmit = (values: UpdateContainerFormValues) => {
+    const parsed = updateContainerSchema.parse(values);
+  
+    const payload: UpdateContainerInput = {
+      ...parsed,
       container_details: {
-        ...values.container_details,
-        commodity:
-          values.container_details.commodity.length > 0
-            ? values.container_details.commodity.filter(Boolean)
-            : [""],
+        ...parsed.container_details,
+        commodity: parsed.container_details.commodity.filter(Boolean),
       },
-      return_location_info: values.is_returning
-        ? values.return_location_info
+      return_location_info: parsed.is_returning
+        ? parsed.return_location_info
         : undefined,
     };
-
+  
     mutate({ id: container.id, data: payload });
   };
+  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
