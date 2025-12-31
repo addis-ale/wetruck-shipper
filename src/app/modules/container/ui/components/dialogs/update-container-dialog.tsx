@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectTrigger,
@@ -58,7 +59,12 @@ export function UpdateContainerDialog({
           : [""],
         instruction: container.container_details?.instruction ?? "",
       },
-      return_location_info: container.return_location_info ?? undefined,
+      return_location_info: container.return_location_info ?? {
+        country: "",
+        city: "",
+        port: "",
+        address: "",
+      },
     },
   });
 
@@ -79,7 +85,12 @@ export function UpdateContainerDialog({
             : [""],
           instruction: container.container_details?.instruction ?? "",
         },
-        return_location_info: container.return_location_info ?? undefined,
+        return_location_info: container.return_location_info ?? {
+          country: "",
+          city: "",
+          port: "",
+          address: "",
+        },
       });
     }
   }, [container, open, form]);
@@ -113,22 +124,24 @@ export function UpdateContainerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Container</DialogTitle>
         </DialogHeader>
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-2 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <div className="col-span-2 space-y-1">
-            <Label>Container Number</Label>
+          {/* Container Number */}
+          <div className="space-y-1">
+            <Label>Container Number *</Label>
             <Input {...form.register("container_number")} />
           </div>
 
+          {/* Size */}
           <div className="space-y-1">
-            <Label>Size</Label>
+            <Label>Size *</Label>
             <Controller
               control={form.control}
               name="container_size"
@@ -146,8 +159,9 @@ export function UpdateContainerDialog({
             />
           </div>
 
+          {/* Type */}
           <div className="space-y-1">
-            <Label>Type</Label>
+            <Label>Type *</Label>
             <Controller
               control={form.control}
               name="container_type"
@@ -165,33 +179,122 @@ export function UpdateContainerDialog({
             />
           </div>
 
+          {/* Gross Weight */}
           <div className="space-y-1">
-            <Label>Gross Weight</Label>
+            <Label>Gross Weight *</Label>
             <Input
               type="number"
               {...form.register("gross_weight", { valueAsNumber: true })}
             />
           </div>
 
+          {/* Gross Weight Unit */}
           <div className="space-y-1">
-            <Label>Tare Weight</Label>
+            <Label>Gross Weight Unit *</Label>
+            <Controller
+              control={form.control}
+              name="gross_weight_unit"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kg">KG</SelectItem>
+                    <SelectItem value="ton">Ton</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          {/* Tare Weight */}
+          <div className="space-y-1">
+            <Label>Tare Weight *</Label>
             <Input
               type="number"
               {...form.register("tare_weight", { valueAsNumber: true })}
             />
           </div>
 
-          <div className="col-span-2 space-y-1">
-            <Label>Commodity (at least one)</Label>
-            <Input {...form.register("container_details.commodity.0")} />
+          {/* Sequencing Priority */}
+          <div className="space-y-1">
+            <Label>Sequencing Priority *</Label>
+            <Input
+              type="number"
+              {...form.register("sequencing_priority", { valueAsNumber: true })}
+            />
           </div>
 
-          <div className="col-span-2 space-y-1">
+          {/* Is Returning */}
+          <div className="space-y-2 col-span-full">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Is Returning Container
+              </Label>
+              <Controller
+                control={form.control}
+                name="is_returning"
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Commodity */}
+          <div className="col-span-full space-y-1">
+            <Label>Commodity * (comma separated)</Label>
+            <Input
+              placeholder="Electronics, Machinery, Textiles"
+              {...form.register("container_details.commodity.0")}
+            />
+          </div>
+
+          {/* Instruction */}
+          <div className="col-span-full space-y-1">
             <Label>Instruction</Label>
-            <Input {...form.register("container_details.instruction")} />
+            <Input
+              {...form.register("container_details.instruction")}
+              placeholder="Special handling instructions"
+            />
           </div>
 
-          <DialogFooter className="col-span-2">
+          {/* Return Location Info - Conditional */}
+          {form.watch("is_returning") && (
+            <div className="col-span-full">
+              <Label className="text-base font-semibold mb-3 block">
+                Return Location Details
+              </Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
+                <div className="space-y-1">
+                  <Label>Country *</Label>
+                  <Input
+                    {...form.register("return_location_info.country")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>City *</Label>
+                  <Input {...form.register("return_location_info.city")} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Port *</Label>
+                  <Input {...form.register("return_location_info.port")} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Address *</Label>
+                  <Input
+                    {...form.register("return_location_info.address")}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="col-span-full">
             <Button
               type="button"
               variant="outline"
