@@ -25,7 +25,6 @@ import { useCreateContainer } from "../../../server/hooks/use-create-container";
 export function CreateContainerDialog() {
   const [open, setOpen] = useState(false);
 
-
   const defaultValues = useMemo<CreateContainerInput>(
     () => ({
       container_number: "",
@@ -49,8 +48,6 @@ export function CreateContainerDialog() {
     }),
     []
   );
-
-// form
 
   const form = useForm<CreateContainerInput>({
     resolver: zodResolver(createContainerSchema),
@@ -85,7 +82,7 @@ export function CreateContainerDialog() {
 
   const submitting = isPending || isSubmitting;
 
-// submit
+  // submit
   function onSubmit(values: CreateContainerInput) {
     const payload: CreateContainerInput = {
       ...values,
@@ -102,6 +99,7 @@ export function CreateContainerDialog() {
 
     mutate(payload);
   }
+
   // ui
   return (
     <>
@@ -114,20 +112,27 @@ export function CreateContainerDialog() {
           if (!v) reset(defaultValues);
         }}
       >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Add Container</DialogTitle>
             <DialogDescription>
               Fill the container details and save.
             </DialogDescription>
           </DialogHeader>
 
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <form 
+            className="flex-1 overflow-y-auto pr-1 space-y-6" 
+            onSubmit={handleSubmit(onSubmit)}
+            id="create-container-form"
+          >
             {/* Top fields */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Container Number</Label>
-                <Input {...register("container_number")} />
+                <Label htmlFor="container_number">Container Number</Label>
+                <Input 
+                  id="container_number"
+                  {...register("container_number")} 
+                />
                 {errors.container_number && (
                   <p className="text-sm text-destructive">
                     {errors.container_number.message}
@@ -136,8 +141,13 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label>Sequencing Priority</Label>
-                <Input type="number" min={1} {...register("sequencing_priority")} />
+                <Label htmlFor="sequencing_priority">Sequencing Priority</Label>
+                <Input 
+                  id="sequencing_priority"
+                  type="number" 
+                  min={1} 
+                  {...register("sequencing_priority")} 
+                />
                 {errors.sequencing_priority && (
                   <p className="text-sm text-destructive">
                     {errors.sequencing_priority.message}
@@ -146,8 +156,9 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label>Container Size</Label>
+                <Label htmlFor="container_size">Container Size</Label>
                 <select
+                  id="container_size"
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                   {...register("container_size")}
                 >
@@ -157,8 +168,9 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label>Container Type</Label>
+                <Label htmlFor="container_type">Container Type</Label>
                 <select
+                  id="container_type"
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                   {...register("container_type")}
                 >
@@ -168,13 +180,19 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label>Gross Weight</Label>
-                <Input type="number" min={0} {...register("gross_weight")} />
+                <Label htmlFor="gross_weight">Gross Weight</Label>
+                <Input 
+                  id="gross_weight"
+                  type="number" 
+                  min={0} 
+                  {...register("gross_weight")} 
+                />
               </div>
 
               <div className="space-y-2">
-                <Label>Gross Weight Unit</Label>
+                <Label htmlFor="gross_weight_unit">Gross Weight Unit</Label>
                 <select
+                  id="gross_weight_unit"
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                   {...register("gross_weight_unit")}
                 >
@@ -184,13 +202,19 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label>Tare Weight</Label>
-                <Input type="number" min={0} {...register("tare_weight")} />
+                <Label htmlFor="tare_weight">Tare Weight</Label>
+                <Input 
+                  id="tare_weight"
+                  type="number" 
+                  min={0} 
+                  {...register("tare_weight")} 
+                />
               </div>
 
               <div className="space-y-2">
-                <Label>Is Returning?</Label>
+                <Label htmlFor="is_returning">Is Returning?</Label>
                 <select
+                  id="is_returning"
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                   value={isReturning ? "yes" : "no"}
                   onChange={(e) =>
@@ -210,34 +234,41 @@ export function CreateContainerDialog() {
               <div className="font-medium">Container Details</div>
 
               <div className="space-y-2">
-                <Label>Instruction</Label>
-                <Input {...register("container_details.instruction")} />
+                <Label htmlFor="instruction">Instruction</Label>
+                <Input 
+                  id="instruction"
+                  {...register("container_details.instruction")} 
+                />
               </div>
 
               <div className="space-y-2">
                 <Label>Commodity</Label>
 
-                {commodities.fields.map((field, idx) => (
-                  <div key={field.id} className="flex gap-2">
-                    <Input
-                      placeholder={`Commodity ${idx + 1}`}
-                      {...register(`container_details.commodity.${idx}`)}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => commodities.remove(idx)}
-                      disabled={commodities.fields.length === 1}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
+                <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                  {commodities.fields.map((field, idx) => (
+                    <div key={field.id} className="flex gap-2">
+                      <Input
+                        placeholder={`Commodity ${idx + 1}`}
+                        {...register(`container_details.commodity.${idx}`)}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => commodities.remove(idx)}
+                        disabled={commodities.fields.length === 1}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
 
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => commodities.append("")}
+                  className="mt-2"
                 >
                   Add Commodity
                 </Button>
@@ -250,23 +281,57 @@ export function CreateContainerDialog() {
                 <div className="font-medium">Return Location</div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Input placeholder="Country" {...register("return_location_info.country")} />
-                  <Input placeholder="City" {...register("return_location_info.city")} />
-                  <Input placeholder="Port" {...register("return_location_info.port")} />
-                  <Input placeholder="Address" {...register("return_location_info.address")} />
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input 
+                      id="country"
+                      placeholder="Country" 
+                      {...register("return_location_info.country")} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input 
+                      id="city"
+                      placeholder="City" 
+                      {...register("return_location_info.city")} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="port">Port</Label>
+                    <Input 
+                      id="port"
+                      placeholder="Port" 
+                      {...register("return_location_info.port")} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input 
+                      id="address"
+                      placeholder="Address" 
+                      {...register("return_location_info.address")} 
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            <DialogFooter className="gap-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={submitting || !isValid}>
-                {submitting ? "Saving..." : "Add Container"}
-              </Button>
-            </DialogFooter>
+            <div className="pb-4"></div>
           </form>
+
+          <DialogFooter className="shrink-0 gap-2 pt-4 border-t mt-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={submitting || !isValid}
+              form="create-container-form"
+            >
+              {submitting ? "Saving..." : "Add Container"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
