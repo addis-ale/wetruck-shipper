@@ -1,17 +1,22 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { useContainersFilters } from "../../server/hooks/use-containers-filters";
+import { UseContainersParams } from "../../server/hooks/use-containers";
 
-export function ContainerFilters() {
-  const { filters, setFilters } = useContainersFilters();
+type Props = {
+  filters: UseContainersParams;
+  setFilters: (next: Partial<UseContainersParams>) => void;
+};
 
+export function ContainerFilters({ filters, setFilters }: Props) {
   return (
     <Input
       placeholder="Search container number"
       value={filters.container_number ?? ""}
       onChange={(e) =>
-        setFilters({ container_number: e.target.value })
+        setFilters({
+          container_number: e.target.value || undefined,
+        })
       }
       className="w-64"
     />

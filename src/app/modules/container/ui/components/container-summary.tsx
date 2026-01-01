@@ -1,10 +1,13 @@
 "use client";
 
 import { useContainers } from "../../server/hooks/use-containers";
-import { useContainersFilters } from "../../server/hooks/use-containers-filters";
+import { UseContainersParams } from "../../server/hooks/use-containers";
 
-export function ContainerSummary() {
-  const { filters } = useContainersFilters();
+type Props = {
+  filters: UseContainersParams;
+};
+
+export function ContainerSummary({ filters }: Props) {
   const { data } = useContainers(filters);
 
   return (

@@ -1,12 +1,15 @@
 "use client";
 
 import { useContainers } from "../../server/hooks/use-containers";
-import { useContainersFilters } from "../../server/hooks/use-containers-filters";
+import { UseContainersParams } from "../../server/hooks/use-containers";
 import { containerColumns } from "../columns/container-columns";
 import { DataTable } from "./data-table";
 
-export function ContainerTable() {
-  const { filters } = useContainersFilters();
+type Props = {
+  filters: UseContainersParams;
+};
+
+export function ContainerTable({ filters }: Props) {
   const { data, isLoading } = useContainers(filters);
 
   if (isLoading) return <div>Loading containers...</div>;

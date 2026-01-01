@@ -1,20 +1,8 @@
 import { z } from "zod";
-import { containerZod } from "@/lib/zod/container.schema";
+import { containerSchema } from "@/lib/zod/container.schema";
 
-/* ----------------------------------------
- * Core container type (from Zod)
- * ------------------------------------- */
+export type Container = z.infer<typeof containerSchema>;
 
-export type Container = z.infer<typeof containerZod>;
-
-/* ----------------------------------------
- * Payloads
- * ------------------------------------- */
-
-/**
- * Payload used when creating a container
- * (fields controlled by backend are omitted)
- */
 export type CreateContainerPayload = Omit<
   Container,
   | "id"
@@ -23,7 +11,4 @@ export type CreateContainerPayload = Omit<
   | "recommended_axle_type"
 >;
 
-/**
- * Payload used when updating a container
- */
 export type UpdateContainerPayload = Partial<CreateContainerPayload>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useContainer } from "../../server/hooks/use-container";
+import { useContainers } from "../../server/hooks/use-container";
 import { ContainerDetailsCard } from "../components/container-details-card";
 import { ContainerReturnInfo } from "../components/container-return-info";
 
@@ -9,7 +9,7 @@ export function ContainerDetailsView({
 }: {
   containerId: number;
 }) {
-  const { data, isLoading } = useContainer(containerId);
+  const { data, isLoading } = useContainers(containerId);
 
   if (isLoading) return <div>Loading...</div>;
 
