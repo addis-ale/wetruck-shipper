@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -175,6 +176,13 @@ export default function DashboardLayout({
                         <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded uppercase font-bold tracking-wider opacity-60">
                           Admin
                         </span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer rounded-md py-2 px-3"
+                        onClick={() => router.push("/dashboard/organazation/documents")}
+                      >
+                        <Upload className="mr-3 h-4 w-4 text-muted-foreground" />
+                        <span>Upload Document</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer rounded-md py-2 px-3">
                         <Settings className="mr-3 h-4 w-4 text-muted-foreground" />
