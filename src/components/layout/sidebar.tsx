@@ -8,6 +8,7 @@ import {
   Package,
   Clock,
   MapPin,
+  Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,8 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "New Shipment", href: "/shipments/new", icon: PlusCircle },
   { name: "My Shipments", href: "/shipments", icon: Package },
+  { name: "Containers", href: "/dashboard/containers", icon: Boxes },
+
   { name: "Order History", href: "/history", icon: Clock },
   { name: "Live Tracking", href: "/tracking", icon: MapPin },
 ];
@@ -35,6 +38,7 @@ export function Sidebar({
         className
       )}
     >
+      {/* Logo */}
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
         <div className="flex items-center gap-2">
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -45,9 +49,15 @@ export function Sidebar({
           </span>
         </div>
       </div>
+
+      {/* Navigation */}
       <nav className="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+        
+          const isActive =
+            pathname === item.href ||
+            pathname.startsWith(`${item.href}/`);
+
           return (
             <Link
               key={item.name}
@@ -77,4 +87,3 @@ export function Sidebar({
     </div>
   );
 }
-
