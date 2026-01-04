@@ -9,13 +9,19 @@ export type UseContainersParams = {
   container_size?: string;
   truck_type?: string;
   axle_type?: string;
+  ship_id?: number;
 };
 
-export const useContainers = (params: UseContainersParams) => {
+export const useContainers = (params?: UseContainersParams) => {
   return useQuery({
     queryKey: ["containers", params],
-    queryFn: () => containerApi.list(params),
+    queryFn: () => containerApi.list(params || {}),
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
+    staleTime: Infinity, // Never auto-refetch
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
   });
 };
