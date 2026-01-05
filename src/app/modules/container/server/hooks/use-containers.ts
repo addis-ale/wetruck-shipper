@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, UseQueryOptions } from "@tanstack/react-query";
 import { containerApi } from "../api/container.api";
 
 export type UseContainersParams = {
@@ -12,7 +12,12 @@ export type UseContainersParams = {
   ship_id?: number;
 };
 
-export const useContainers = (params?: UseContainersParams) => {
+type ContainerListResponse = Awaited<ReturnType<typeof containerApi.list>>;
+
+export const useContainers = (
+  params?: UseContainersParams,
+  options?: Omit<UseQueryOptions<ContainerListResponse>, "queryKey" | "queryFn">
+) => {
   return useQuery({
     queryKey: ["containers", params],
     queryFn: () => containerApi.list(params || {}),
@@ -23,5 +28,6 @@ export const useContainers = (params?: UseContainersParams) => {
     refetchOnMount: false,
     refetchOnReconnect: false,
     refetchInterval: false,
+    ...options,
   });
 };

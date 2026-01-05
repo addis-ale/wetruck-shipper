@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
 import { ContainerAssignTable } from "@/app/modules/shipment/ui/components/container-assign-table";
@@ -19,19 +19,28 @@ export function ShipmentsView() {
   // Fetch data
   const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
   
-  // Fetch containers assigned to the active shipment
+  const shipments = shipmentsResponse?.items || [];
+
+  // Auto-select first shipment when shipments load and no shipment is selected
+  useEffect(() => {
+    if (shipments.length > 0 && activeShipmentId === null) {
+      setActiveShipmentId(shipments[0].id);
+    }
+  }, [shipments, activeShipmentId]);
+  
+  // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
   const { data: assignedContainersData, isLoading: assignedContainersLoading } = useContainers(
-    activeShipmentId ? { ship_id: activeShipmentId } : undefined
+    activeShipmentId ? { ship_id: activeShipmentId } : undefined,
+    { enabled: !!activeShipmentId }
   );
   
   // Fetch all containers for counts and search
   const { data: allContainersData } = useContainers();
 
-  const shipments = shipmentsResponse?.items || [];
   const assignedContainers = assignedContainersData?.items || [];
   const allContainers = allContainersData?.items || [];
 
-  // Use containers assigned to the active shipment
+  // Use containers assigned to the active shipment - always empty array if no active shipment
   const filteredContainers = activeShipmentId ? assignedContainers : [];
 
   // Calculate container counts per shipment
