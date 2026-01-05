@@ -16,6 +16,7 @@ import {
   Bell,
   Upload,
   Lock,
+  Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -45,8 +46,8 @@ import { PasswordResetDialog } from "@/components/profile/password-reset-dialog"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "New Shipment", href: "/shipments/new", icon: PlusCircle },
-  { name: "My Shipments", href: "/shipments", icon: Package },
+  { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
+  { name: "Containers", href: "/dashboard/containers", icon: Boxes },
   { name: "Order History", href: "/history", icon: Clock },
   { name: "Live Tracking", href: "/tracking", icon: MapPin },
 ];

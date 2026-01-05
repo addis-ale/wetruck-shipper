@@ -67,6 +67,8 @@ export const containerSchema = createContainerSchema.extend({
   recommended_axle_type: z.string().nullable(),
 
   return_location_info: returnLocationSchema.nullable(),
+  
+  ship_id: z.number().nullable().optional(),
 });
 
 

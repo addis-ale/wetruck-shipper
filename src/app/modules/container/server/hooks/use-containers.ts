@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, UseQueryOptions } from "@tanstack/react-query";
 import { containerApi } from "../api/container.api";
 
 export type UseContainersParams = {
@@ -9,13 +9,25 @@ export type UseContainersParams = {
   container_size?: string;
   truck_type?: string;
   axle_type?: string;
+  ship_id?: number;
 };
 
-export const useContainers = (params: UseContainersParams) => {
+type ContainerListResponse = Awaited<ReturnType<typeof containerApi.list>>;
+
+export const useContainers = (
+  params?: UseContainersParams,
+  options?: Omit<UseQueryOptions<ContainerListResponse>, "queryKey" | "queryFn">
+) => {
   return useQuery({
     queryKey: ["containers", params],
-    queryFn: () => containerApi.list(params),
+    queryFn: () => containerApi.list(params || {}),
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
+    staleTime: Infinity, // Never auto-refetch
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    ...options,
   });
 };
