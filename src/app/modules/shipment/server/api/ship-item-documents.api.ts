@@ -42,6 +42,26 @@ export const shipItemDocumentsApi = {
     });
   },
 
+  update(
+    shipItemId: number,
+    documentId: number,
+    payload: { document_type: string; file: File }
+  ): Promise<ShipItemDocument> {
+    const formData = new FormData();
+    formData.append("document_type", payload.document_type);
+    formData.append("file", payload.file);
+  
+    return apiRequest(
+      `${API_PATH}/${shipItemId}/documents/${documentId}`,
+      {
+        method: "PATCH",
+        body: formData,
+      }
+    );
+  },
+  
+  
+
   delete(shipItemId: number, documentId: number): Promise<void> {
     return apiRequest(
       `${API_PATH}/${shipItemId}/documents/${documentId}`,
