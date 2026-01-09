@@ -1,0 +1,201 @@
+import type {
+  Shipment,
+  CreateShipmentPayload,
+  UpdateShipmentPayload,
+} from "@/app/modules/shipment/server/types/shipment.types";
+import type {
+  ShipmentListResponse,
+  ShipmentCreateResponse,
+} from "@/lib/zod/shipment.schema";
+
+// BASE_URL should be just the domain, we'll add /api/v1 ourselves
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_PREFIX = "/api/v1";
+const API_PATH = "/ship";
+
+// Helper to get auth token from cookies
+function getAuthToken(): string | null {
+  if (typeof document === "undefined") return null;
+  const cookies = document.cookie.split(";");
+  const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
+  return tokenCookie ? tokenCookie.split("=")[1] : null;
+}
+
+// Helper for API requests
+async function apiRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = getAuthToken();
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  // Token is sent via cookie, but we can also include it in headers if needed
+  if (token && !options.credentials) {
+    options.credentials = "include";
+  }
+
+  // Construct full URL, ensuring we don't double up /api/v1
+  const baseUrl = BASE_URL.replace(/\/api\/v1\/?$/, ""); // Remove /api/v1 if present
+  const fullUrl = `${baseUrl}${API_PREFIX}${endpoint}`;
+
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers,
+    credentials: "include", // Important for cookie-based auth
+  });
+
+  if (!response.ok) {
+    let errorData: any = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      // If response is not JSON, use status text
+    }
+
+    // Handle FastAPI validation errors
+    if (errorData.detail) {
+      if (Array.isArray(errorData.detail)) {
+        const firstError = errorData.detail[0];
+        throw new Error(
+          firstError.msg || firstError.message || "Validation error"
+        );
+      } else if (typeof errorData.detail === "string") {
+        throw new Error(errorData.detail);
+      } else if (errorData.detail.message) {
+        // Handle custom exception format
+        throw new Error(errorData.detail.message);
+      }
+    }
+
+    // Check for error message in various formats
+    const errorMessage =
+      errorData.message ||
+      errorData.error_message ||
+      errorData.detail?.message ||
+      errorData.detail ||
+      `HTTP ${response.status}: ${response.statusText}`;
+
+    throw new Error(errorMessage);
+  }
+
+  // Handle 204 No Content
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  return response.json();
+}
+
+export const shipmentApi = {
+  // Get all shipments with pagination and filters
+  async getAll(params?: {
+    page?: number;
+    per_page?: number;
+    origin?: string;
+    destination?: string;
+    status?: string;
+  }): Promise<ShipmentListResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.per_page)
+      searchParams.append("per_page", params.per_page.toString());
+    if (params?.origin) searchParams.append("origin", params.origin);
+    if (params?.destination)
+      searchParams.append("destination", params.destination);
+    if (params?.status) searchParams.append("status", params.status);
+
+    const query = searchParams.toString();
+    const endpoint = query ? `${API_PATH}/?${query}` : `${API_PATH}/`;
+
+    return apiRequest<ShipmentListResponse>(endpoint);
+  },
+
+  // Get single shipment by ID
+  async getById(id: number): Promise<Shipment> {
+    return apiRequest<Shipment>(`${API_PATH}/${id}`);
+  },
+
+  // Create shipment
+  async create(data: CreateShipmentPayload): Promise<Shipment> {
+    const response = await apiRequest<ShipmentCreateResponse>(`${API_PATH}/`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    return response.result;
+  },
+
+  // Update shipment (PATCH)
+  async update(id: number, data: UpdateShipmentPayload): Promise<Shipment> {
+    const response = await apiRequest<ShipmentCreateResponse>(
+      `${API_PATH}/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }
+    );
+
+    return response.result;
+  },
+
+  // Delete shipment
+  async delete(id: number): Promise<void> {
+    await apiRequest<void>(`${API_PATH}/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Assign containers to shipment (bulk)
+  async assignContainers(
+    shipmentId: number,
+    containerIds: number[]
+  ): Promise<void> {
+    if (!containerIds || containerIds.length === 0) {
+      throw new Error("At least one container ID is required");
+    }
+
+    await apiRequest<{ status: boolean; success_message: string }>(
+      `${API_PATH}/${shipmentId}/containers`,
+      {
+        method: "POST",
+        body: JSON.stringify({ container_ids: containerIds }),
+      }
+    );
+  },
+
+  // Remove container from shipment
+  async removeContainer(
+    shipmentId: number,
+    containerId: number
+  ): Promise<void> {
+    await apiRequest<void>(
+      `${API_PATH}/${shipmentId}/containers/${containerId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
+
+  // Get price for selected containers
+  async getPrice(
+    shipmentId: number,
+    containerIds: number[]
+  ): Promise<{ price: number; currency?: string }> {
+    // TODO: Replace with actual API endpoint when available
+    // Example: POST /api/v1/ship/{shipmentId}/price
+    // Body: { container_ids: [1, 2, 3] }
+
+    return apiRequest<{ price: number; currency?: string }>(
+      `${API_PATH}/${shipmentId}/price`,
+      {
+        method: "POST",
+        body: JSON.stringify({ container_ids: containerIds }),
+      }
+    );
+  },
+};

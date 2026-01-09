@@ -14,6 +14,9 @@ import {
   Settings,
   LogOut,
   Bell,
+  Upload,
+  Lock,
+  Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -39,11 +42,12 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Sidebar } from "@/components/layout/sidebar";
+import { PasswordResetDialog } from "@/components/profile/password-reset-dialog";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "New Shipment", href: "/shipments/new", icon: PlusCircle },
-  { name: "My Shipments", href: "/shipments", icon: Package },
+  { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
+  { name: "Containers", href: "/dashboard/containers", icon: Boxes },
   { name: "Order History", href: "/history", icon: Clock },
   { name: "Live Tracking", href: "/tracking", icon: MapPin },
 ];
@@ -55,6 +59,7 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -176,6 +181,20 @@ export default function DashboardLayout({
                           Admin
                         </span>
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer rounded-md py-2 px-3"
+                        onClick={() => setPasswordDialogOpen(true)}
+                      >
+                        <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
+                        <span>Change Password</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer rounded-md py-2 px-3"
+                        onClick={() => router.push("/dashboard/organazation/documents")}
+                      >
+                        <Upload className="mr-3 h-4 w-4 text-muted-foreground" />
+                        <span>Upload Document</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer rounded-md py-2 px-3">
                         <Settings className="mr-3 h-4 w-4 text-muted-foreground" />
                         <span>Account Settings</span>
@@ -216,6 +235,11 @@ export default function DashboardLayout({
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            <PasswordResetDialog
+              open={passwordDialogOpen}
+              onOpenChange={setPasswordDialogOpen}
+            />
 
             <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 mb-20 lg:mb-0 bg-background/50">
               <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-2 duration-500">
