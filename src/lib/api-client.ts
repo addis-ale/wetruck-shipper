@@ -32,25 +32,25 @@ async function logout() {
  */
 async function tryRefreshToken(): Promise<boolean> {
   try {
-    console.log("🔄 Attempting to refresh access token...");
+    console.log(" Attempting to refresh access token...");
     
     const response = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
-      credentials: "include", // Send refresh_token cookie
+      credentials: "include", 
       headers: {
         "Content-Type": "application/json",
       },
     });
 
     if (response.ok) {
-      console.log("✅ Token refreshed successfully");
+      console.log(" Token refreshed successfully");
       return true;
     } else {
-      console.warn("❌ Token refresh failed:", response.status);
+      console.warn(" Token refresh failed:", response.status);
       return false;
     }
   } catch (error) {
-    console.error("❌ Token refresh error:", error);
+    console.error(" Token refresh error:", error);
     return false;
   }
 }
@@ -74,20 +74,20 @@ export async function request<T>(
 
     // Debug logging in development
     if (process.env.NODE_ENV === "development") {
-      console.log("📡 Request:", options.method || "GET", url);
+      console.log(" Request:", options.method || "GET", url);
     }
 
     const response = await fetch(url, {
       ...options,
       headers,
-      credentials: "include", // ✅ Send cookies with every request
+      credentials: "include", 
     });
 
     const status = response.status;
 
     // Handle 401 Unauthorized - Try to refresh token first
     if (status === 401 && !isRetry) {
-      console.warn("⚠️ Received 401 - Access token expired or invalid");
+      console.warn(" Received 401 - Access token expired or invalid");
 
       // Don't try refresh on login/refresh endpoints (that's just invalid credentials)
       const isAuthEndpoint = endpoint === "/auth/login" || endpoint === "/auth/refresh";
@@ -98,11 +98,11 @@ export async function request<T>(
 
         if (refreshed) {
           // Token refreshed! Retry the original request
-          console.log("🔁 Retrying original request with new token...");
-          return request<T>(endpoint, options, true); // Set isRetry = true
+          console.log(" Retrying original request with new token...");
+          return request<T>(endpoint, options, true); 
         } else {
           // Refresh failed - logout
-          console.log("🚪 Refresh failed - logging out...");
+          console.log(" Refresh failed - logging out...");
           await logout();
         }
       }
@@ -119,7 +119,7 @@ export async function request<T>(
 
     return { data: result as T, status };
   } catch (error) {
-    console.error("❌ API Request Failed:", error);
+    console.error(" API Request Failed:", error);
 
     let errorMessage = "Network error - Unable to connect to server";
 
