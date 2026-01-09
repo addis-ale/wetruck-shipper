@@ -1,198 +1,251 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useCaptcha } from '@/hooks/useCaptcha';
-import './CaptchaStyles.css';
+import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useCaptcha } from "@/hooks/useCaptcha";
+import { RefreshCw, Loader2 } from "lucide-react";
 
 interface CaptchaComponentProps {
-    onCaptchaVerified?: (captchaId: string, solution: string) => void;
-    onError?: (error: string) => void;
-    disabled?: boolean;
-    showRefreshButton?: boolean;
-    deferVerification?: boolean;
+  onCaptchaVerified?: (captchaId: string, solution: string) => void;
+  onError?: (error: string) => void;
+  disabled?: boolean;
+  showRefreshButton?: boolean;
+  deferVerification?: boolean;
+  onRefreshReady?: (refreshFn: () => void) => void;
 }
 
 const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
-    onCaptchaVerified,
-    onError,
-    disabled = false,
-    showRefreshButton = true,
-    deferVerification = false
+  onCaptchaVerified,
+  onError,
+  disabled = false,
+  showRefreshButton = true,
+  deferVerification = false,
+  onRefreshReady,
 }) => {
-    const [userInput, setUserInput] = useState<string>('');
-    const inputRef = useRef<HTMLInputElement>(null);
+  const [userInput, setUserInput] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+  const pathname = usePathname();
 
-    const {
-        captchaData,
-        isLoading,
-        error: hookError,
-        isVerified,
-        fetchCaptcha,
-        verifyCaptcha,
-        cleanup
-    } = useCaptcha();
+  const {
+    captchaData,
+    isLoading,
+    error: hookError,
+    isVerified,
+    fetchCaptcha,
+    verifyCaptcha,
+    cleanup,
+  } = useCaptcha();
+
+  // Check if we're on the login page
+  const isLoginPage = pathname === "/sign-in";
+
+  // Store latest functions in refs to avoid stale closures
+  const fetchCaptchaRef = useRef(fetchCaptcha);
+  const cleanupRef = useRef(cleanup);
+  const isVerifiedRef = useRef(isVerified);
+
+  // Update refs when values change
+  useEffect(() => {
+    fetchCaptchaRef.current = fetchCaptcha;
+    cleanupRef.current = cleanup;
+    isVerifiedRef.current = isVerified;
+  }, [fetchCaptcha, cleanup, isVerified]);
+
+  // Initial fetch and auto-refresh - only on login page
+  useEffect(() => {
+    // Only fetch if we're on the login page
+    if (!isLoginPage) {
+      return;
+    }
+
+    isMountedRef.current = true;
 
     // Initial fetch
-    useEffect(() => {
-        fetchCaptcha();
+    fetchCaptchaRef.current();
 
-        // Auto-refresh every 55 seconds if not verified
-        const interval = setInterval(() => {
-            if (!isVerified) {
-                fetchCaptcha();
-            }
-        }, 55000);
+    // Auto-refresh every 55 seconds if not verified
+    intervalRef.current = setInterval(() => {
+      if (isMountedRef.current && !isVerifiedRef.current && isLoginPage) {
+        fetchCaptchaRef.current();
+      }
+    }, 55000);
 
-        return () => clearInterval(interval);
-    }, [fetchCaptcha, isVerified]);
-
-    // Handle errors
-    useEffect(() => {
-        if (hookError && onError) {
-            onError(hookError);
-        }
-    }, [hookError, onError]);
-
-    // Focus input after loading new captcha
-    useEffect(() => {
-        if (captchaData?.imageUrl && !isLoading && !isVerified) {
-            setTimeout(() => inputRef.current?.focus(), 100);
-        }
-    }, [captchaData, isLoading, isVerified]);
-
-    // Handle verification success
-    useEffect(() => {
-        if (isVerified && captchaData && onCaptchaVerified) {
-            onCaptchaVerified(captchaData.captchaId, userInput);
-        }
-    }, [isVerified, captchaData, userInput, onCaptchaVerified]);
-
-    const handleVerify = async () => {
-        if (!userInput.trim()) {
-            return;
-        }
-
-        if (deferVerification && captchaData && onCaptchaVerified) {
-            onCaptchaVerified(captchaData.captchaId, userInput);
-            return;
-        }
-
-        await verifyCaptcha(userInput);
+    // Cleanup on unmount or when leaving login page
+    return () => {
+      isMountedRef.current = false;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      // Call hook cleanup
+      cleanupRef.current();
     };
+  }, [isLoginPage]); // Re-run if login page status changes
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.toUpperCase();
-        setUserInput(value);
-    };
-
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !disabled && !isVerified) {
-            handleVerify();
+  // Expose refresh function to parent
+  useEffect(() => {
+    if (onRefreshReady) {
+      onRefreshReady(() => {
+        if (isMountedRef.current && isLoginPage) {
+          fetchCaptcha();
+          setUserInput("");
         }
-    };
+      });
+    }
+  }, [fetchCaptcha, onRefreshReady, isLoginPage]);
 
-    return (
-        <div className="captcha-container">
-            <div className="captcha-header">
-                <label htmlFor="captcha-input" className="captcha-label">
-                    Security Verification
-                </label>
-                {showRefreshButton && (
-                    <button
-                        type="button"
-                        onClick={() => fetchCaptcha()}
-                        disabled={isLoading || disabled}
-                        className="captcha-refresh-btn"
-                        aria-label="Get new CAPTCHA"
-                        title="Get new CAPTCHA"
-                    >
-                        {isLoading ? (
-                            <span className="loading-spinner" aria-hidden="true"></span>
-                        ) : (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                            </svg>
-                        )}
-                        Refresh
-                    </button>
-                )}
-            </div>
+  // Handle errors
+  useEffect(() => {
+    if (hookError && onError) {
+      onError(hookError);
+    }
+  }, [hookError, onError]);
 
-            <div className="captcha-image-container">
-                {captchaData?.imageUrl ? (
-                    <img
-                        src={captchaData.imageUrl}
-                        alt="CAPTCHA security image"
-                        className="captcha-image"
-                    />
-                ) : (
-                    <div className="captcha-placeholder">
-                        {isLoading ? (
-                            <>
-                                <div className="loading-spinner"></div>
-                                <div style={{ marginTop: '8px' }}>Loading CAPTCHA...</div>
-                            </>
-                        ) : (
-                            <div>Loading CAPTCHA...</div>
-                        )}
-                    </div>
-                )}
-            </div>
+  // Focus input after loading new captcha
+  useEffect(() => {
+    if (captchaData?.imageUrl && !isLoading && !isVerified) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [captchaData, isLoading, isVerified]);
 
-            <div className="captcha-input-container">
-                <input
-                    ref={inputRef}
-                    id="captcha-input"
-                    type="text"
-                    value={userInput}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                    disabled={disabled || isVerified || isLoading}
-                    placeholder="Enter the text above"
-                    className="captcha-input"
-                    aria-label="CAPTCHA text input"
-                    aria-describedby="captcha-help captcha-error"
-                    maxLength={6}
-                    autoComplete="off"
-                />
+  // Handle verification success
+  useEffect(() => {
+    if (isVerified && captchaData && onCaptchaVerified) {
+      onCaptchaVerified(captchaData.captchaId, userInput);
+    }
+  }, [isVerified, captchaData, userInput, onCaptchaVerified]);
 
-                <button
-                    type="button"
-                    onClick={handleVerify}
-                    disabled={disabled || isVerified || isLoading || !userInput.trim()}
-                    className="captcha-verify-btn"
-                >
-                    {isLoading ? 'Verifying...' : 'Verify'}
-                </button>
-            </div>
+  // Call onCaptchaVerified when captcha loads and user has input (for deferVerification)
+  useEffect(() => {
+    if (
+      deferVerification &&
+      captchaData &&
+      userInput.trim().length > 0 &&
+      onCaptchaVerified
+    ) {
+      onCaptchaVerified(captchaData.captchaId, userInput);
+    }
+  }, [captchaData, userInput, deferVerification, onCaptchaVerified]);
 
-            <div id="captcha-help" className="captcha-help">
-                <small>
-                    Enter the 6-character code shown above. Case-insensitive.
-                </small>
-            </div>
+  // Clear input when captcha refreshes
+  useEffect(() => {
+    if (captchaData) {
+      setUserInput("");
+    }
+  }, [captchaData?.captchaId]);
 
-            {hookError && (
-                <div id="captcha-error" className="captcha-error" role="alert">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    {hookError}
-                </div>
+  const handleVerify = async () => {
+    if (!userInput.trim()) {
+      return;
+    }
+
+    if (deferVerification && captchaData && onCaptchaVerified) {
+      onCaptchaVerified(captchaData.captchaId, userInput);
+      return;
+    }
+
+    await verifyCaptcha(userInput);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    setUserInput(value);
+
+    // If deferVerification is true, call onCaptchaVerified whenever user types
+    if (
+      deferVerification &&
+      captchaData &&
+      value.trim().length > 0 &&
+      onCaptchaVerified
+    ) {
+      onCaptchaVerified(captchaData.captchaId, value);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !disabled && !isVerified) {
+      handleVerify();
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label
+          htmlFor="captcha-input"
+          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+        >
+          Security Code
+        </label>
+        {showRefreshButton && (
+          <button
+            type="button"
+            onClick={() => {
+              if (isMountedRef.current && isLoginPage) {
+                fetchCaptchaRef.current();
+                setUserInput("");
+              }
+            }}
+            disabled={isLoading || disabled || !isLoginPage}
+            className="p-1.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Refresh CAPTCHA"
+            title="Refresh CAPTCHA"
+          >
+            {isLoading ? (
+              <Loader2 className="h-3.5 w-3.5 text-gray-600 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5 text-gray-600" />
             )}
+          </button>
+        )}
+      </div>
 
-            {isVerified && (
-                <div className="captcha-success" role="status">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    CAPTCHA verified successfully
-                </div>
-            )}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 relative border border-gray-200 rounded-md overflow-hidden bg-gray-50 flex items-center justify-center min-h-[60px]">
+          {captchaData?.imageUrl ? (
+            <img
+              src={captchaData.imageUrl}
+              alt="CAPTCHA"
+              className="max-h-[60px] w-auto"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-4">
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              ) : (
+                <span className="text-xs text-gray-400">Loading...</span>
+              )}
+            </div>
+          )}
         </div>
-    );
+      </div>
+
+      <div>
+        <input
+          ref={inputRef}
+          id="captcha-input"
+          type="text"
+          value={userInput}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
+          disabled={disabled || isVerified || isLoading}
+          placeholder="Enter code"
+          className="w-full h-11 border border-gray-200 rounded-md px-3 focus-visible:ring-primary focus-visible:ring-offset-0 uppercase text-sm"
+          aria-label="CAPTCHA text input"
+          maxLength={6}
+          autoComplete="off"
+        />
+      </div>
+
+      {hookError && (
+        <div className="text-xs text-red-600 mt-1" role="alert">
+          {hookError}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default CaptchaComponent;
