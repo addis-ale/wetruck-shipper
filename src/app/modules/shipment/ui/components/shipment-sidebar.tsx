@@ -7,14 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package2, MapPin, Calendar, Edit, ExternalLink } from "lucide-react";
-// import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 interface ShipmentSidebarProps {
   shipments: Shipment[];
   activeShipmentId: number | null;
   onSelectShipment: (shipmentId: number) => void;
   onEditShipment?: (shipmentId: number) => void;
-  containerCounts?: Map<number, number>; // Optional: shipmentId -> container count
+  containerCounts?: Map<number, number>;
 }
 
 export function ShipmentSidebar({

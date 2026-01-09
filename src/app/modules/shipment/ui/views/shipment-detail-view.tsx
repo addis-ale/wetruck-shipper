@@ -43,6 +43,7 @@ import { useContainers } from "@/app/modules/container/server/hooks/use-containe
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { ShipmentDocuments } from "../components/shipment-documents/shipment-documents";
 
 interface ShipmentDetailViewProps {
   shipmentId: number;
@@ -442,6 +443,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 </CardContent>
               </Card>
             </div>
+            {/* Shipment Documents */}
+            <ShipmentDocuments shipItemId={shipment.id} />
+
           </div>
 
           {/* Sidebar - Takes 1/3 width */}
