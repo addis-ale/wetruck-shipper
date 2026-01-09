@@ -42,6 +42,19 @@ export const shipItemDocumentsApi = {
     });
   },
 
+  get(
+    shipItemId: number,
+    documentId: number
+  ): Promise<{
+    id: number;
+    document_type: string;
+    presigned_url: string;
+  }> {
+    return apiRequest(
+      `${API_PATH}/${shipItemId}/documents/${documentId}`
+    );
+  },
+  
   update(
     shipItemId: number,
     documentId: number,

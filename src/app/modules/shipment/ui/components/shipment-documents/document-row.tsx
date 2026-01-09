@@ -10,12 +10,19 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Trash2, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Trash2, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ShipItemDocument } from "@/app/modules/shipment/server/types/ship-item-document";
 import { useDeleteShipItemDocument } from "@/app/modules/shipment/server/hooks/use-delete-ship-item-document";
 import { useUpdateShipItemDocument } from "@/app/modules/shipment/server/hooks/use-update-ship-item-document";
+import { DocumentPreviewDialog } from "./document-preview-dialog";
 
 export function DocumentRow({
   shipItemId,
@@ -25,8 +32,10 @@ export function DocumentRow({
   document: ShipItemDocument;
 }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
+
   const [docType, setDocType] = useState(document.document_type);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const { mutate: deleteDoc, isPending: isDeleting } =
     useDeleteShipItemDocument(shipItemId);
@@ -42,10 +51,12 @@ export function DocumentRow({
           <p className="font-medium capitalize">
             {docType.replace(/_/g, " ")}
           </p>
+
           <p className="text-sm text-muted-foreground">
             {document.file_path.split("/").pop()}
           </p>
 
+          {/* Optional: allow changing type */}
           <select
             className="text-xs border rounded px-2 py-1 mt-1"
             value={docType}
@@ -57,50 +68,74 @@ export function DocumentRow({
           </select>
         </div>
 
-        <div className="flex gap-2">
-          {/* Edit */}
-          <Button
-            size="icon"
-            variant="outline"
-            disabled={isUpdating}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
+        {/* 3-dot menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="ghost">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
 
-          {/* Delete */}
-          <Button
-            size="icon"
-            variant="destructive"
-            onClick={() => setConfirmOpen(true)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <DropdownMenuContent align="end">
+            {/* View */}
+            <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </DropdownMenuItem>
 
-          {/* Hidden file input */}
-          <input
-            ref={fileRef}
-            type="file"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
+            {/* Edit / Replace */}
+            <DropdownMenuItem
+              disabled={isUpdating}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Replace
+            </DropdownMenuItem>
 
-              updateDoc(
-                { document_type: docType, file },
-                {
-                  onSuccess: () => {
-                    toast.success("Document updated successfully");
-                  },
-                  onError: (err: any) => {
-                    toast.error(err.message || "Failed to update document");
-                  },
-                }
-              );
-            }}
-          />
-        </div>
+            {/* Delete */}
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => setConfirmOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileRef}
+          type="file"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            updateDoc(
+              { document_type: docType, file },
+              {
+                onSuccess: () => {
+                  toast.success("Document updated successfully");
+                },
+                onError: (err: any) => {
+                  toast.error(err.message || "Failed to update document");
+                },
+              }
+            );
+          }}
+        />
       </div>
+
+      {/* Preview dialog */}
+     
+<DocumentPreviewDialog
+  open={previewOpen}
+  onOpenChange={setPreviewOpen}
+  shipItemId={shipItemId}
+  documentId={document.id}
+  documentType={document.document_type}
+/>
 
       {/* Delete confirmation modal */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
