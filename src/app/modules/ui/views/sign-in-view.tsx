@@ -25,9 +25,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
+import CaptchaComponent from "@/components/captcha/CaptchaComponent";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid business email"),
@@ -42,6 +43,7 @@ export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaData, setCaptchaData] = useState<{ id: string; solution: string } | null>(null);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -58,12 +60,22 @@ export const SignInView = () => {
     },
   });
 
+  const handleCaptchaVerified = useCallback((id: string, solution: string) => {
+    setCaptchaData({ id, solution });
+  }, []);
+
+  const handleCaptchaError = useCallback((msg: string) => {
+    setError(msg);
+  }, []);
+
+
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       setPending(true);
       setError(null);
 
-      await login(data.email, data.password);
+      await login(data.email, data.password, captchaData?.id, captchaData?.solution);
       router.push("/dashboard");
     } catch (err) {
       // Map backend errors to user-friendly messages
@@ -125,7 +137,7 @@ export const SignInView = () => {
       else {
         setError(
           errorMessage ||
-            "Authentication failed. Please try again or contact support if the problem persists."
+          "Authentication failed. Please try again or contact support if the problem persists."
         );
       }
     } finally {
@@ -160,7 +172,7 @@ export const SignInView = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
+    <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8" >
       <div className="flex flex-col gap-6 w-full max-w-[450px] md:max-w-[900px] mx-auto">
         <Card className="overflow-hidden border-none shadow-none sm:shadow-sm bg-white p-0 gap-0">
           <CardContent className="grid p-0 md:grid-cols-2 min-h-[500px] md:min-h-[550px]">
@@ -249,6 +261,16 @@ export const SignInView = () => {
                     />
                   </div>
 
+                  {/* CAPTCHA Component */}
+                  <div className="pt-2">
+                    <CaptchaComponent
+                      onCaptchaVerified={handleCaptchaVerified}
+                      onError={handleCaptchaError}
+                      disabled={pending}
+                      deferVerification={true}
+                    />
+                  </div>
+
                   {error && (
                     <Alert
                       variant="destructive"
@@ -264,7 +286,7 @@ export const SignInView = () => {
                   <Button
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
-                    disabled={pending}
+                    disabled={pending || !captchaData}
                   >
                     {pending ? (
                       <>
@@ -367,6 +389,6 @@ export const SignInView = () => {
           </a>
         </p>
       </div>
-    </div>
+    </div >
   );
 };
