@@ -3,14 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  OctagonAlert,
-  Loader2,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { OctagonAlert, Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -42,7 +35,10 @@ export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaData, setCaptchaData] = useState<{ id: string; solution: string } | null>(null);
+  const [captchaData, setCaptchaData] = useState<{
+    id: string;
+    solution: string;
+  } | null>(null);
   const [captchaId, setCaptchaId] = useState<string>("");
   const [captchaSolution, setCaptchaSolution] = useState<string>("");
   const refreshCaptchaRef = useRef<(() => void) | null>(null);
@@ -72,13 +68,13 @@ export const SignInView = () => {
     // Make captcha errors more user-friendly
     const lowerMsg = msg.toLowerCase();
     if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
-      setError("Unable to load security code. Please refresh the page and try again.");
+      setError(
+        "Unable to load security code. Please refresh the page and try again."
+      );
     } else {
       setError(msg);
     }
   }, []);
-
-
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
@@ -100,9 +96,13 @@ export const SignInView = () => {
         lowerErrorMessage.includes("invalid captcha") ||
         lowerErrorMessage.includes("captcha expired") ||
         lowerErrorMessage.includes("captcha verification") ||
-        (lowerErrorMessage.includes("400") && (lowerErrorMessage.includes("captcha") || lowerErrorMessage.includes("code")))
+        (lowerErrorMessage.includes("400") &&
+          (lowerErrorMessage.includes("captcha") ||
+            lowerErrorMessage.includes("code")))
       ) {
-        setError("The security code you entered is incorrect. Please enter the code from the new image below.");
+        setError(
+          "The security code you entered is incorrect. Please enter the code from the new image below."
+        );
         // Refresh captcha on error
         setCaptchaSolution("");
         setCaptchaData(null);
@@ -132,8 +132,10 @@ export const SignInView = () => {
         lowerErrorMessage.includes("incorrect password") ||
         lowerErrorMessage.includes("wrong password") ||
         lowerErrorMessage.includes("credentials") ||
-        (lowerErrorMessage.includes("invalid") && !lowerErrorMessage.includes("captcha")) ||
-        (lowerErrorMessage.includes("incorrect") && !lowerErrorMessage.includes("captcha")) ||
+        (lowerErrorMessage.includes("invalid") &&
+          !lowerErrorMessage.includes("captcha")) ||
+        (lowerErrorMessage.includes("incorrect") &&
+          !lowerErrorMessage.includes("captcha")) ||
         lowerErrorMessage.includes("401")
       ) {
         setError(
@@ -214,7 +216,7 @@ export const SignInView = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8" >
+    <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
       <div className="flex flex-col gap-6 w-full max-w-[450px] md:max-w-[900px] mx-auto">
         <Card className="overflow-hidden border-none shadow-none sm:shadow-sm bg-white p-0 gap-0">
           <CardContent className="grid p-0 md:grid-cols-2 min-h-[500px] md:min-h-[550px]">
@@ -331,7 +333,11 @@ export const SignInView = () => {
                   <Button
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
-                    disabled={pending || !captchaId || captchaSolution.trim().length === 0}
+                    disabled={
+                      pending ||
+                      !captchaId ||
+                      captchaSolution.trim().length === 0
+                    }
                   >
                     {pending ? (
                       <>
@@ -417,6 +423,6 @@ export const SignInView = () => {
           </a>
         </p>
       </div>
-    </div >
+    </div>
   );
 };

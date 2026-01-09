@@ -230,11 +230,6 @@ export function OrganizationDocumentsView() {
     return true;
   });
 
-  // Calculate pagination for both table and card views
-  const startIndex = (page - 1) * perPage;
-  const endIndex = startIndex + perPage;
-  const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
-
   // Reset scroll state when filters, search, or page change
   useEffect(() => {
     setIsScrolled(false);
@@ -248,6 +243,18 @@ export function OrganizationDocumentsView() {
 
   return (
     <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="hover:text-foreground transition-colors"
+        >
+          Dashboard
+        </button>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-foreground font-medium">Organization Documents</span>
+      </div>
+
       {/* Header */}
       <div className="space-y-3 pb-2 border-b shrink-0 touch-none md:touch-auto">
         <div className="flex flex-row items-center justify-between gap-3">
@@ -323,7 +330,7 @@ export function OrganizationDocumentsView() {
               deleteDocumentMutation.isPending,
               handleEntityClick
             )}
-            data={paginatedDocuments as OrganizationDocumentTableRow[]}
+            data={filteredDocuments as OrganizationDocumentTableRow[]}
             searchKey={undefined}
             searchPlaceholder=""
             manualPagination={true}
