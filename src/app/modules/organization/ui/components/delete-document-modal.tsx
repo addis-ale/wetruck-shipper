@@ -57,7 +57,7 @@ export function DeleteDocumentModal({
             ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="pt-4 gap-2 sm:gap-0 flex-col sm:flex-row">
+        <DialogFooter className="pt-4 gap-2 sm:gap-2 flex-col sm:flex-row">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

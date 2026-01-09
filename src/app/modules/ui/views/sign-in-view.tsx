@@ -3,15 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  OctagonAlert,
-  Loader2,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-} from "lucide-react";
+import { OctagonAlert, Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -25,10 +17,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import Link from "next/link";
+import CaptchaComponent from "@/components/captcha/CaptchaComponent";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid business email"),
@@ -43,6 +35,13 @@ export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaData, setCaptchaData] = useState<{
+    id: string;
+    solution: string;
+  } | null>(null);
+  const [captchaId, setCaptchaId] = useState<string>("");
+  const [captchaSolution, setCaptchaSolution] = useState<string>("");
+  const refreshCaptchaRef = useRef<(() => void) | null>(null);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -59,48 +58,103 @@ export const SignInView = () => {
     },
   });
 
+  const handleCaptchaVerified = useCallback((id: string, solution: string) => {
+    setCaptchaId(id);
+    setCaptchaSolution(solution);
+    setCaptchaData({ id, solution });
+  }, []);
+
+  const handleCaptchaError = useCallback((msg: string) => {
+    // Make captcha errors more user-friendly
+    const lowerMsg = msg.toLowerCase();
+    if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
+      setError(
+        "Unable to load security code. Please refresh the page and try again."
+      );
+    } else {
+      setError(msg);
+    }
+  }, []);
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       setPending(true);
       setError(null);
 
-      await login(data.email, data.password);
+      await login(data.email, data.password, captchaId, captchaSolution);
       router.push("/dashboard");
     } catch (err) {
       // Map backend errors to user-friendly messages
       const errorMessage = err instanceof Error ? err.message : "";
+      const lowerErrorMessage = errorMessage.toLowerCase();
+
+      // CAPTCHA errors - check first and refresh captcha
+      if (
+        lowerErrorMessage.includes("captcha") ||
+        lowerErrorMessage.includes("security code") ||
+        lowerErrorMessage.includes("incorrect captcha") ||
+        lowerErrorMessage.includes("invalid captcha") ||
+        lowerErrorMessage.includes("captcha expired") ||
+        lowerErrorMessage.includes("captcha verification") ||
+        (lowerErrorMessage.includes("400") &&
+          (lowerErrorMessage.includes("captcha") ||
+            lowerErrorMessage.includes("code")))
+      ) {
+        setError(
+          "The security code you entered is incorrect. Please enter the code from the new image below."
+        );
+        // Refresh captcha on error
+        setCaptchaSolution("");
+        setCaptchaData(null);
+        setCaptchaId("");
+        // Trigger captcha refresh
+        if (refreshCaptchaRef.current) {
+          refreshCaptchaRef.current();
+        }
+        return;
+      }
 
       // Network/Connection errors
       if (
-        errorMessage.includes("Failed to fetch") ||
-        errorMessage.includes("Network error") ||
-        errorMessage.includes("Cannot connect")
+        lowerErrorMessage.includes("failed to fetch") ||
+        lowerErrorMessage.includes("network error") ||
+        lowerErrorMessage.includes("cannot connect") ||
+        lowerErrorMessage.includes("connection")
       ) {
         setError(
-          "Unable to connect to server. Please check your internet connection and try again."
+          "Unable to connect to the server. Please check your internet connection and try again."
         );
       }
-      // Invalid credentials
+      // Invalid credentials (but not captcha)
       else if (
-        errorMessage.includes("Invalid") ||
-        errorMessage.includes("incorrect") ||
-        errorMessage.includes("wrong")
+        lowerErrorMessage.includes("invalid email") ||
+        lowerErrorMessage.includes("invalid password") ||
+        lowerErrorMessage.includes("incorrect password") ||
+        lowerErrorMessage.includes("wrong password") ||
+        lowerErrorMessage.includes("credentials") ||
+        (lowerErrorMessage.includes("invalid") &&
+          !lowerErrorMessage.includes("captcha")) ||
+        (lowerErrorMessage.includes("incorrect") &&
+          !lowerErrorMessage.includes("captcha")) ||
+        lowerErrorMessage.includes("401")
       ) {
         setError(
-          "Invalid email or password. Please check your credentials and try again."
+          "The email or password you entered is incorrect. Please check your credentials and try again."
         );
       }
       // Account-related errors
       else if (
-        errorMessage.includes("not found") ||
-        errorMessage.includes("doesn't exist")
+        lowerErrorMessage.includes("not found") ||
+        lowerErrorMessage.includes("doesn't exist") ||
+        lowerErrorMessage.includes("user not found")
       ) {
         setError(
-          "No account found with this email. Please check your email or contact support."
+          "No account found with this email address. Please check your email or contact support."
         );
       } else if (
-        errorMessage.includes("disabled") ||
-        errorMessage.includes("suspended")
+        lowerErrorMessage.includes("disabled") ||
+        lowerErrorMessage.includes("suspended") ||
+        lowerErrorMessage.includes("inactive")
       ) {
         setError(
           "Your account has been disabled. Please contact support for assistance."
@@ -108,25 +162,26 @@ export const SignInView = () => {
       }
       // Server errors
       else if (
-        errorMessage.includes("500") ||
-        errorMessage.includes("server error")
+        lowerErrorMessage.includes("500") ||
+        lowerErrorMessage.includes("server error") ||
+        lowerErrorMessage.includes("internal server")
       ) {
-        setError("Server error occurred. Please try again in a few moments.");
+        setError("A server error occurred. Please try again in a few moments.");
       }
       // Rate limiting
       else if (
-        errorMessage.includes("too many") ||
-        errorMessage.includes("rate limit")
+        lowerErrorMessage.includes("too many") ||
+        lowerErrorMessage.includes("rate limit") ||
+        lowerErrorMessage.includes("429")
       ) {
         setError(
-          "Too many login attempts. Please wait a few minutes and try again."
+          "Too many login attempts. Please wait a few minutes before trying again."
         );
       }
       // Generic fallback
       else {
         setError(
-          errorMessage ||
-            "Authentication failed. Please try again or contact support if the problem persists."
+          "Login failed. Please check your credentials and try again. If the problem persists, contact support."
         );
       }
     } finally {
@@ -214,13 +269,12 @@ export const SignInView = () => {
                             <FormLabel className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                               Password
                             </FormLabel>
-                            <Link
-  href="/forgot-password"
-  className="text-xs text-amber-600 hover:text-amber-700 hover:underline"
->
-  Forgot?
-</Link>
-
+                            <a
+                              href="#"
+                              className="text-xs text-amber-600 hover:text-amber-700 hover:underline"
+                            >
+                              Forgot?
+                            </a>
                           </div>
                           <FormControl>
                             <div className="relative">
@@ -251,6 +305,19 @@ export const SignInView = () => {
                     />
                   </div>
 
+                  {/* CAPTCHA Component */}
+                  <div className="pt-2">
+                    <CaptchaComponent
+                      onCaptchaVerified={handleCaptchaVerified}
+                      onError={handleCaptchaError}
+                      disabled={pending}
+                      deferVerification={true}
+                      onRefreshReady={(refreshFn) => {
+                        refreshCaptchaRef.current = refreshFn;
+                      }}
+                    />
+                  </div>
+
                   {error && (
                     <Alert
                       variant="destructive"
@@ -266,7 +333,11 @@ export const SignInView = () => {
                   <Button
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
-                    disabled={pending}
+                    disabled={
+                      pending ||
+                      !captchaId ||
+                      captchaSolution.trim().length === 0
+                    }
                   >
                     {pending ? (
                       <>
@@ -288,23 +359,6 @@ export const SignInView = () => {
                     >
                       Sign Up
                     </a>
-                  </div>
-
-                  {/* Mock Credentials Hint */}
-                  <div className="rounded-lg border border-dashed border-amber-600/50 bg-amber-600/5 p-3 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <ShieldCheck className="h-3 w-3 text-primary" />
-                      <p className="text-[10px] uppercase tracking-widest font-bold text-primary/60">
-                        Dev Access
-                      </p>
-                    </div>
-                    <p className="text-xs text-primary/80">
-                      <span className="font-semibold">Email:</span>{" "}
-                      shipper@wetruck.ai
-                      <br />
-                      <span className="font-semibold">Password:</span>{" "}
-                      shipper123
-                    </p>
                   </div>
                 </form>
               </Form>

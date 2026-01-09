@@ -15,6 +15,13 @@ import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -303,17 +310,29 @@ export function DataTable<TData, TValue>({
               <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
-          <select
-            value={perPage}
-            onChange={(e) => handlePerPageChange(Number(e.target.value))}
-            className="h-8 px-2 text-xs sm:text-sm border rounded-md bg-background"
+          <Select
+            value={perPage.toString()}
+            onValueChange={(value) => handlePerPageChange(Number(value))}
             disabled={isLoading}
           >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
+            <SelectTrigger className="h-8 text-xs sm:text-sm" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" className="min-w-[var(--radix-select-trigger-width)]">
+              <SelectItem value="10" className="[&_span[data-slot=select-item-indicator]]:hidden pr-2">
+                10
+              </SelectItem>
+              <SelectItem value="20" className="[&_span[data-slot=select-item-indicator]]:hidden pr-2">
+                20
+              </SelectItem>
+              <SelectItem value="50" className="[&_span[data-slot=select-item-indicator]]:hidden pr-2">
+                50
+              </SelectItem>
+              <SelectItem value="100" className="[&_span[data-slot=select-item-indicator]]:hidden pr-2">
+                100
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

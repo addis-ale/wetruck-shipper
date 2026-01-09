@@ -20,7 +20,7 @@ interface AuthContextType {
   user: User;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, captchaId?: string, captchaSolution?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -59,13 +59,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, captchaId?: string, captchaSolution?: string) => {
+    console.log(email,
+      password,
+      captchaId,
+      captchaSolution)
     const { data, error } = await request<LoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({
         email,
         password,
         role: "shipper", // Required by your backend
+        captcha_id: captchaId,
+        captcha_solution: captchaSolution,
       }),
     });
 
