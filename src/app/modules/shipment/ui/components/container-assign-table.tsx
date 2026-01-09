@@ -71,7 +71,6 @@ export function ContainerAssignTable<TData, TValue>({
   const [searchOpen, setSearchOpen] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
 
-  // Increased debounce delay for smoother typing experience
   const debouncedSearch = useDebounce(searchQuery, 800);
 
   // API search for containers
@@ -84,12 +83,12 @@ export function ContainerAssignTable<TData, TValue>({
       : undefined
   );
 
-  // Fetch all available containers for the assign button dropdown
+
   const { data: allAvailableContainers, isLoading: isLoadingAvailable } =
     useContainers(
       assignModalOpen && activeShipmentId
         ? {
-            per_page: 50, // Get more containers for the dropdown
+            per_page: 50, 
           }
         : undefined
     );
@@ -99,16 +98,14 @@ export function ContainerAssignTable<TData, TValue>({
     return containers.filter((container) => {
       const shipId = (container as ContainerWithShipId).ship_id;
       if (shipId === null || shipId === undefined) return true;
-      if (typeof shipId === "number" && shipId > 0) return false; // Assigned - filter out
-      if (shipId === 0) return true; // Unassigned - show
-      return true; // Default: show if unsure
+      if (typeof shipId === "number" && shipId > 0) return false; 
+      if (shipId === 0) return true; 
+      return true; 
     });
   };
 
-  // Filter out containers already assigned to any shipment
   const searchContainers = filterUnassigned(searchResults?.items || []);
 
-  // Available containers for assign button dropdown
   const availableContainers = filterUnassigned(
     allAvailableContainers?.items || []
   );
@@ -132,15 +129,14 @@ export function ContainerAssignTable<TData, TValue>({
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    // Only open popover when debounced search has results
+
     if (value.length > 0) {
-      // Will open when debouncedSearch updates
+
     } else {
       setSearchOpen(false);
     }
   };
 
-  // Open popover when debounced search has results
   useEffect(() => {
     if (debouncedSearch.length > 0 && searchQuery.length > 0) {
       setSearchOpen(true);
