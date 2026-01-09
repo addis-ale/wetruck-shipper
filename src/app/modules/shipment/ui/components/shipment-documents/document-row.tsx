@@ -1,15 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,11 +10,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Trash2, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import type { ShipItemDocument } from "@/app/modules/shipment/server/types/ship-item-document";
 import { useDeleteShipItemDocument } from "@/app/modules/shipment/server/hooks/use-delete-ship-item-document";
 import { useUpdateShipItemDocument } from "@/app/modules/shipment/server/hooks/use-update-ship-item-document";
-import { DocumentPreviewDialog } from "./document-preview-dialog";
+import { useShipItemDocumentPreview } from
+  "@/app/modules/shipment/server/hooks/use-ship-item-document-preview";
 
 export function DocumentRow({
   shipItemId,
@@ -34,8 +28,7 @@ export function DocumentRow({
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const [docType, setDocType] = useState(document.document_type);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [shouldFetchPreview, setShouldFetchPreview] = useState(false);
 
   const { mutate: deleteDoc, isPending: isDeleting } =
     useDeleteShipItemDocument(shipItemId);
@@ -43,10 +36,34 @@ export function DocumentRow({
   const { mutate: updateDoc, isPending: isUpdating } =
     useUpdateShipItemDocument(shipItemId, document.id);
 
+  const { data, isLoading, isError } = useShipItemDocumentPreview(
+    shipItemId,
+    document.id,
+    shouldFetchPreview 
+  );
+
+
+  useEffect(() => {
+    if (data?.presigned_url && shouldFetchPreview) {
+  
+      window.location.href = data.presigned_url;
+    }
+  }, [data, shouldFetchPreview]);
+
+  const handleViewDocument = () => {
+    if (data?.presigned_url) {
+
+      window.location.href = data.presigned_url;
+    } else {
+   
+      setShouldFetchPreview(true);
+    }
+  };
+
   return (
-    <>
+    <div className="border rounded-md">
       {/* Row */}
-      <div className="flex items-center justify-between border rounded p-3">
+      <div className="flex items-center justify-between p-3">
         <div className="space-y-1">
           <p className="font-medium capitalize">
             {docType.replace(/_/g, " ")}
@@ -56,7 +73,6 @@ export function DocumentRow({
             {document.file_path.split("/").pop()}
           </p>
 
-          {/* Optional: allow changing type */}
           <select
             className="text-xs border rounded px-2 py-1 mt-1"
             value={docType}
@@ -77,13 +93,18 @@ export function DocumentRow({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            {/* View */}
-            <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
-              <Eye className="mr-2 h-4 w-4" />
-              View
+            <DropdownMenuItem 
+              onClick={handleViewDocument}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? "Loading..." : "View"}
             </DropdownMenuItem>
 
-            {/* Edit / Replace */}
             <DropdownMenuItem
               disabled={isUpdating}
               onClick={() => fileRef.current?.click()}
@@ -92,10 +113,16 @@ export function DocumentRow({
               Replace
             </DropdownMenuItem>
 
-            {/* Delete */}
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => setConfirmOpen(true)}
+              onClick={() =>
+                deleteDoc(document.id, {
+                  onSuccess: () =>
+                    toast.success("Document deleted successfully"),
+                  onError: (e: any) =>
+                    toast.error(e.message || "Delete failed"),
+                })
+              }
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
@@ -115,68 +142,15 @@ export function DocumentRow({
             updateDoc(
               { document_type: docType, file },
               {
-                onSuccess: () => {
-                  toast.success("Document updated successfully");
-                },
-                onError: (err: any) => {
-                  toast.error(err.message || "Failed to update document");
-                },
+                onSuccess: () =>
+                  toast.success("Document updated successfully"),
+                onError: (e: any) =>
+                  toast.error(e.message || "Update failed"),
               }
             );
           }}
         />
       </div>
-
-      {/* Preview dialog */}
-     
-<DocumentPreviewDialog
-  open={previewOpen}
-  onOpenChange={setPreviewOpen}
-  shipItemId={shipItemId}
-  documentId={document.id}
-  documentType={document.document_type}
-/>
-
-      {/* Delete confirmation modal */}
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete document</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this document? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmOpen(false)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="destructive"
-              disabled={isDeleting}
-              onClick={() => {
-                deleteDoc(document.id, {
-                  onSuccess: () => {
-                    toast.success("Document deleted successfully");
-                    setConfirmOpen(false);
-                  },
-                  onError: (err: any) => {
-                    toast.error(err.message || "Failed to delete document");
-                  },
-                });
-              }}
-            >
-              {isDeleting ? "Deleting..." : "Yes, delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   );
 }
