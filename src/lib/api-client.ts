@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// Support both NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_BASE_URL for compatibility
+const envApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+// If the env var includes /api/v1, use it as-is, otherwise add /api/v1
+const baseUrl = envApiUrl || 'http://localhost:8000';
+const apiBaseUrl = baseUrl.includes('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
+
+const API_URL = apiBaseUrl;
 
 // Debug: Log the API URL in development
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {

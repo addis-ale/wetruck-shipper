@@ -36,21 +36,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const savedUser = localStorage.getItem("wetruck_user");
 
       if (savedUser) {
-        // Verify the session with backend (check if cookie is still valid)
-        const { data, error, status } = await request<{
-          id: number;
-          email: string;
-          user_type: string;
-        }>("/auth/me");
+        try {
+          // Verify the session with backend (check if cookie is still valid)
+          const { data, error, status } = await request<{
+            id: number;
+            email: string;
+            user_type: string;
+          }>("/auth/me");
 
-        if (error || status === 401) {
-          // Session invalid - clear everything
-          console.log("❌ Session invalid - clearing user data");
+          if (error || status === 401) {
+            // Session invalid - clear everything
+            console.log("❌ Session invalid - clearing user data");
+            localStorage.removeItem("wetruck_user");
+            setUser(null);
+          } else if (data) {
+            // Session valid - keep user logged in
+            setUser(JSON.parse(savedUser));
+          }
+        } catch (err) {
+          // If verification fails, clear user data
+          console.warn("Failed to verify session:", err);
           localStorage.removeItem("wetruck_user");
           setUser(null);
-        } else if (data) {
-          // Session valid - keep user logged in
-          setUser(JSON.parse(savedUser));
         }
       }
 
@@ -60,10 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string, captchaId?: string, captchaSolution?: string) => {
-    console.log(email,
-      password,
-      captchaId,
-      captchaSolution)
     const { data, error } = await request<LoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({
@@ -86,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: email.split("@")[0],
       };
 
+      // Set user state and localStorage synchronously
       setUser(user);
       localStorage.setItem("wetruck_user", JSON.stringify(user));
     }

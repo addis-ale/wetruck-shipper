@@ -43,12 +43,12 @@ export const SignInView = () => {
   const [captchaSolution, setCaptchaSolution] = useState<string>("");
   const refreshCaptchaRef = useRef<(() => void) | null>(null);
 
-  // Redirect to dashboard if already logged in
+  // Redirect to dashboard if already logged in (only on mount, not after login)
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && !pending) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pending]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,7 +82,8 @@ export const SignInView = () => {
       setError(null);
 
       await login(data.email, data.password, captchaId, captchaSolution);
-      router.push("/dashboard");
+      // Redirect immediately after successful login using replace to avoid history entry
+      router.replace("/dashboard");
     } catch (err) {
       // Map backend errors to user-friendly messages
       const errorMessage = err instanceof Error ? err.message : "";
