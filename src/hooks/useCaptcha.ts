@@ -30,12 +30,23 @@ export const useCaptcha = (): UseCaptchaReturn => {
         setError('');
 
         try {
+            console.log('🔄 useCaptcha: Fetching CAPTCHA...');
             const data = await captchaService.getCaptcha();
+            console.log('✅ useCaptcha: CAPTCHA fetched successfully:', {
+                captchaId: data.captchaId,
+                imageUrl: data.imageUrl ? 'URL created' : 'No URL',
+            });
             setCaptchaData(data);
             setIsVerified(false);
         } catch (err: any) {
+            console.error('❌ useCaptcha: Error fetching CAPTCHA:', err);
+            console.error('❌ useCaptcha: Error details:', {
+                name: err.name,
+                message: err.message,
+                stack: err.stack,
+            });
             if (err.name !== 'AbortError') {
-                setError(err.message);
+                setError(err.message || 'Failed to load CAPTCHA');
             }
         } finally {
             setIsLoading(false);
