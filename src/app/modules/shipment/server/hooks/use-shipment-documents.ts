@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { shipmentDocumentsApi } from "../api/shipment-documents.api";
-import type { ShipmentDocument } from "../types/shipment-document";
 
-export function useShipmentDocuments(shipId?: number) {
-  return useQuery<ShipmentDocument[]>({
+export function useShipmentDocuments(shipId: number) {
+  return useQuery({
     queryKey: ["shipment-documents", shipId],
+    queryFn: () => shipmentDocumentsApi.list(shipId),
     enabled: !!shipId,
-    queryFn: () => shipmentDocumentsApi.list(shipId!),
   });
 }

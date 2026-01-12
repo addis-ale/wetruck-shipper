@@ -1,6 +1,7 @@
 import type { ShipmentDocument } from "../types/shipment-document";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PATH = "/ship";
 
 type ShipmentDocumentListResponse = {
@@ -32,15 +33,22 @@ async function apiRequest<T>(
 }
 
 export const shipmentDocumentsApi = {
-  // ✅ LIST → returns ARRAY (items)
   async list(shipId: number): Promise<ShipmentDocument[]> {
     const res = await apiRequest<ShipmentDocumentListResponse>(
-      `${API_PATH}/${shipId}/documents`
+      `${API_PATH}/${shipId}/documents/`
     );
     return res.items ?? [];
   },
 
-  // ✅ UPLOAD
+  async get(
+    shipId: number,
+    documentId: number
+  ): Promise<ShipmentDocument> {
+    return apiRequest<ShipmentDocument>(
+      `${API_PATH}/${shipId}/documents/${documentId}`
+    );
+  },
+
   upload(
     shipId: number,
     payload: { document_type: string; file: File }
@@ -49,15 +57,20 @@ export const shipmentDocumentsApi = {
     fd.append("document_type", payload.document_type);
     fd.append("file", payload.file);
 
-    return apiRequest(`${API_PATH}/${shipId}/documents`, {
-      method: "POST",
-      body: fd,
-    });
+    return apiRequest<ShipmentDocument>(
+      `${API_PATH}/${shipId}/documents/`,
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
   },
 
-  // ✅ DELETE
-  delete(shipId: number, documentId: number): Promise<void> {
-    return apiRequest(
+  delete(
+    shipId: number,
+    documentId: number
+  ): Promise<ShipmentDocument> {
+    return apiRequest<ShipmentDocument>(
       `${API_PATH}/${shipId}/documents/${documentId}`,
       { method: "DELETE" }
     );
