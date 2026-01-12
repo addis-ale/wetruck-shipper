@@ -68,7 +68,8 @@ export function PasswordResetDialog({
             // Try to get token from localStorage/sessionStorage, otherwise use cookies via request function
             const token =
                 typeof window !== "undefined"
-                    ? localStorage.getItem("token") ||
+                    ? localStorage.getItem("wetruck_access_token") ||
+                    localStorage.getItem("token") ||
                     sessionStorage.getItem("token") ||
                     localStorage.getItem("access_token") ||
                     sessionStorage.getItem("access_token")

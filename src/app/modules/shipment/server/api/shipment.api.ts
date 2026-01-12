@@ -13,12 +13,28 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PREFIX = "/api/v1";
 const API_PATH = "/ship";
 
-// Helper to get auth token from cookies
+// Helper to get auth token from localStorage or cookies
 function getAuthToken(): string | null {
-  if (typeof document === "undefined") return null;
-  const cookies = document.cookie.split(";");
-  const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
-  return tokenCookie ? tokenCookie.split("=")[1] : null;
+  if (typeof window === "undefined") return null;
+
+  // First try localStorage (most reliable for cross-origin requests)
+  const localStorageToken = localStorage.getItem("wetruck_access_token");
+  if (localStorageToken) {
+    return localStorageToken;
+  }
+
+  // Fallback to cookie
+  if (typeof document !== "undefined") {
+    const cookies = document.cookie.split(";");
+    const tokenCookie = cookies.find((c) =>
+      c.trim().startsWith("access_token=")
+    );
+    if (tokenCookie) {
+      return tokenCookie.split("=")[1];
+    }
+  }
+
+  return null;
 }
 
 // Helper for API requests
@@ -28,14 +44,15 @@ async function apiRequest<T>(
 ): Promise<T> {
   const token = getAuthToken();
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
-  // Token is sent via cookie, but we can also include it in headers if needed
-  if (token && !options.credentials) {
-    options.credentials = "include";
+  // Add Authorization header if token is available (as fallback if cookies fail)
+  // Many backends accept both cookie-based and header-based auth
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   // Construct full URL, ensuring we don't double up /api/v1
@@ -45,7 +62,7 @@ async function apiRequest<T>(
   const response = await fetch(fullUrl, {
     ...options,
     headers,
-    credentials: "include", // Important for cookie-based auth
+    credentials: "include", // CRITICAL: This sends cookies (including HttpOnly cookies)
   });
 
   if (!response.ok) {

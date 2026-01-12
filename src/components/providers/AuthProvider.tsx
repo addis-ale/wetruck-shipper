@@ -14,6 +14,8 @@ interface LoginResponse {
   message?: string;
   role: string;
   expires_in: number;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 interface AuthContextType {
@@ -92,6 +94,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set user state and localStorage synchronously
       setUser(user);
       localStorage.setItem("wetruck_user", JSON.stringify(user));
+      
+      // Store access token in localStorage if provided (for cross-origin requests)
+      if (data.access_token) {
+        localStorage.setItem("wetruck_access_token", data.access_token);
+      }
+      if (data.refresh_token) {
+        localStorage.setItem("wetruck_refresh_token", data.refresh_token);
+      }
     }
   };
 
@@ -108,6 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Always clear local user data
       setUser(null);
       localStorage.removeItem("wetruck_user");
+      localStorage.removeItem("wetruck_access_token");
+      localStorage.removeItem("wetruck_refresh_token");
     }
   };
 
