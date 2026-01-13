@@ -5,12 +5,45 @@ const BASE_URL =
 const API_PREFIX = "";
 const API_PATH = "/ship-item";
 
+// Helper to get auth token from localStorage or cookies
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  
+  // First try localStorage (most reliable for cross-origin requests)
+  const localStorageToken = localStorage.getItem("wetruck_access_token");
+  if (localStorageToken) {
+    return localStorageToken;
+  }
+  
+  // Fallback to cookie
+  if (typeof document !== "undefined") {
+    const cookies = document.cookie.split(";");
+    const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
+    if (tokenCookie) {
+      return tokenCookie.split("=")[1];
+    }
+  }
+  
+  return null;
+}
+
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    ...(options.headers as Record<string, string>),
+  };
+
+  // Add Authorization header if token is available
+  if (token) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${BASE_URL}${API_PREFIX}${endpoint}`, {
     ...options,
+    headers,
     credentials: "include",
   });
 

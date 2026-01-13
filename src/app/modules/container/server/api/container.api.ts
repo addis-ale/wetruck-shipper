@@ -35,7 +35,35 @@ export const containerApi = {
     if (res.error) {
       throw new Error(res.error);
     }
-    return containerListSchema.parse(res.data);
+    
+    // Debug: Log the response in development
+    if (process.env.NODE_ENV === "development") {
+      console.log("📦 Container API Response:", res.data);
+      console.log("📦 Container Items Count:", Array.isArray(res.data?.items) ? res.data.items.length : "Not an array");
+    }
+    
+    try {
+      const parsed = containerListSchema.parse(res.data);
+      if (process.env.NODE_ENV === "development") {
+        console.log("✅ Container list parsed successfully:", parsed);
+        console.log("✅ Parsed items count:", parsed.items?.length);
+      }
+      return parsed;
+    } catch (error: any) {
+      console.error("❌ Container list schema validation error:", error);
+      if (error.issues) {
+        console.error("❌ Validation issues:", JSON.stringify(error.issues, null, 2));
+        error.issues.forEach((issue: any, idx: number) => {
+          console.error(`❌ Issue ${idx + 1}:`, issue.path, issue.message, issue.code);
+        });
+      }
+      console.error("❌ Response data:", JSON.stringify(res.data, null, 2));
+      console.error("❌ Response items:", res.data?.items);
+      if (res.data?.items && res.data.items.length > 0) {
+        console.error("❌ First item structure:", JSON.stringify(res.data.items[0], null, 2));
+      }
+      throw new Error(`Invalid container list response format: ${error.message || "Schema validation failed"}`);
+    }
   },
 
 // get by id 

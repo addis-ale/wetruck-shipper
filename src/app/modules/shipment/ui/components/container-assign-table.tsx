@@ -53,6 +53,9 @@ interface ContainerAssignTableProps<TData, TValue> {
   selectedContainers?: number[];
   onSelectionChange?: (containerIds: number[]) => void;
   onGetPrice?: (containerIds: number[]) => void;
+  onRequestPrice?: (shipmentId: number) => void;
+  shipmentStatus?: string;
+  isRequestingPrice?: boolean;
 }
 
 export function ContainerAssignTable<TData, TValue>({
@@ -63,6 +66,9 @@ export function ContainerAssignTable<TData, TValue>({
   selectedContainers = [],
   onSelectionChange,
   onGetPrice,
+  onRequestPrice,
+  shipmentStatus,
+  isRequestingPrice = false,
 }: ContainerAssignTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -367,15 +373,50 @@ export function ContainerAssignTable<TData, TValue>({
           </div>
         )}
 
-        {/* Get Price Button */}
-        {selectedContainers.length > 0 && (
+        {/* Request Price Button - Show when status is "created" and has containers */}
+        {data.length > 0 && activeShipmentId && (
+          <div className="flex justify-end pt-2 border-t">
+            {shipmentStatus === "created" && onRequestPrice ? (
+              <Button
+                onClick={() => onRequestPrice(activeShipmentId)}
+                disabled={isRequestingPrice || !activeShipmentId || data.length === 0}
+                className="gap-2"
+              >
+                {isRequestingPrice ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Requesting Price...
+                  </>
+                ) : (
+                  <>
+                    Request Price ({data.length} container{data.length !== 1 ? "s" : ""})
+                  </>
+                )}
+              </Button>
+            ) : shipmentStatus === "price_requested" ? (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
+                <span className="text-sm font-medium">Price Requested</span>
+              </div>
+            ) : shipmentStatus ? (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
+                <span className="text-sm">
+                  Status: {shipmentStatus.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        )}
+        
+        {/* Get Price Button - For selected containers (if still needed) */}
+        {selectedContainers.length > 0 && onGetPrice && (
           <div className="flex justify-end pt-2 border-t">
             <Button
-              onClick={() => onGetPrice?.(selectedContainers)}
+              variant="outline"
+              onClick={() => onGetPrice(selectedContainers)}
               disabled={!activeShipmentId || selectedContainers.length === 0}
               className="gap-2"
             >
-              Get Price ({selectedContainers.length})
+              Get Price Quote ({selectedContainers.length})
             </Button>
           </div>
         )}
