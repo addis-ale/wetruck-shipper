@@ -407,7 +407,7 @@ export function ContainerAssignTable<TData, TValue>({
           </div>
         )}
         
-        {/* Get Price Button - For selected containers (if still needed) */}
+        {/* Get Price Button - For selected containers (if still needed)
         {selectedContainers.length > 0 && onGetPrice && (
           <div className="flex justify-end pt-2 border-t">
             <Button
@@ -419,7 +419,7 @@ export function ContainerAssignTable<TData, TValue>({
               Get Price Quote ({selectedContainers.length})
             </Button>
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );
