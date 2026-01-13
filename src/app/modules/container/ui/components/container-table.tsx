@@ -10,9 +10,20 @@ type Props = {
 };
 
 export function ContainerTable({ filters }: Props) {
-  const { data, isLoading } = useContainers(filters);
+  const { data, isLoading, error } = useContainers(filters);
 
   if (isLoading) return <div>Loading containers...</div>;
+  
+  if (error) {
+    console.error("Container table error:", error);
+    return <div>Error loading containers: {error.message}</div>;
+  }
+
+  // Debug: Log data in development
+  if (process.env.NODE_ENV === "development") {
+    console.log("📦 Container Table Data:", data);
+    console.log("📦 Container Items:", data?.items);
+  }
 
   return (
     <DataTable

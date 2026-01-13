@@ -11,11 +11,29 @@ import type {
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PREFIX = "/api/v1";
 const API_PATH = "/ship";
+
+// Helper to get auth token from localStorage or cookies
 function getAuthToken(): string | null {
-  if (typeof document === "undefined") return null;
-  const cookies = document.cookie.split(";");
-  const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
-  return tokenCookie ? tokenCookie.split("=")[1] : null;
+  if (typeof window === "undefined") return null;
+
+  // First try localStorage (most reliable for cross-origin requests)
+  const localStorageToken = localStorage.getItem("wetruck_access_token");
+  if (localStorageToken) {
+    return localStorageToken;
+  }
+
+  // Fallback to cookie
+  if (typeof document !== "undefined") {
+    const cookies = document.cookie.split(";");
+    const tokenCookie = cookies.find((c) =>
+      c.trim().startsWith("access_token=")
+    );
+    if (tokenCookie) {
+      return tokenCookie.split("=")[1];
+    }
+  }
+
+  return null;
 }
 
 async function apiRequest<T>(
@@ -24,24 +42,30 @@ async function apiRequest<T>(
 ): Promise<T> {
   const token = getAuthToken();
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
-  // Token is sent via cookie, but we can also include it in headers if needed
-  if (token && !options.credentials) {
-    options.credentials = "include";
+  // Add Authorization header if token is available (as fallback if cookies fail)
+  // Many backends accept both cookie-based and header-based auth
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   // Construct full URL, ensuring we don't double up /api/v1
   const baseUrl = BASE_URL.replace(/\/api\/v1\/?$/, ""); // Remove /api/v1 if present
   const fullUrl = `${baseUrl}${API_PREFIX}${endpoint}`;
 
+  // Debug logging in development
+  if (process.env.NODE_ENV === "development") {
+    console.log(`📡 API Request: ${options.method || "GET"} ${fullUrl}`);
+  }
+
   const response = await fetch(fullUrl, {
     ...options,
     headers,
-    credentials: "include", // Important for cookie-based auth
+    credentials: "include", // CRITICAL: This sends cookies (including HttpOnly cookies)
   });
 
   if (!response.ok) {
@@ -193,5 +217,34 @@ export const shipmentApi = {
         body: JSON.stringify({ container_ids: containerIds }),
       }
     );
+  },
+
+  // Request price for a shipment
+  async requestPrice(shipmentId: number): Promise<{
+    status: boolean;
+    error_message: string | null;
+    success_message: string | null;
+    result: string;
+  }> {
+    // Note: The endpoint has /ship/ship/ (double "ship") as per API spec
+    // Full path: /api/v1/ship/ship/{shipmentId}/price-request
+    const endpoint = `${API_PATH}/ship/${shipmentId}/price-request`;
+
+    if (process.env.NODE_ENV === "development") {
+      const baseUrl = BASE_URL.replace(/\/api\/v1\/?$/, "");
+      console.log(
+        "🔗 Request Price Endpoint:",
+        `${baseUrl}${API_PREFIX}${endpoint}`
+      );
+    }
+
+    return apiRequest<{
+      status: boolean;
+      error_message: string | null;
+      success_message: string | null;
+      result: string;
+    }>(endpoint, {
+      method: "POST",
+    });
   },
 };

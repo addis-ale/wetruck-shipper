@@ -1,5 +1,37 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Helper to get auth token from localStorage or cookies
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  
+  // First try localStorage (most reliable for cross-origin requests)
+  const localStorageToken = localStorage.getItem("wetruck_access_token");
+  if (localStorageToken) {
+    return localStorageToken;
+  }
+  
+  // Fallback to cookie
+  if (typeof document !== "undefined") {
+    const cookies = document.cookie.split(";");
+    const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
+    if (tokenCookie) {
+      return tokenCookie.split("=")[1];
+    }
+  }
+  
+  return null;
+}
+
+// Helper to get auth headers
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export interface OrganizationDocument {
   id: number;
   document_type: string;
@@ -42,6 +74,7 @@ export const organizationApi = {
 
     const response = await fetch(`${API_URL}/organization/documents`, {
       method: "POST",
+      headers: getAuthHeaders(),
       body: formData,
       credentials: "include",
     });
@@ -67,6 +100,7 @@ export const organizationApi = {
   listDocuments: async () => {
     const response = await fetch(`${API_URL}/organization/documents/list`, {
       method: "GET",
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -95,6 +129,7 @@ export const organizationApi = {
       `${API_URL}/organization/documents/${documentId}/get`,
       {
         method: "GET",
+        headers: getAuthHeaders(),
         credentials: "include",
       }
     );
@@ -134,6 +169,7 @@ export const organizationApi = {
       `${API_URL}/organization/documents/${documentId}/update`,
       {
         method: "PATCH",
+        headers: getAuthHeaders(),
         body: formData,
         credentials: "include",
       }
@@ -162,6 +198,7 @@ export const organizationApi = {
       `${API_URL}/organization/documents/${documentId}/delete`,
       {
         method: "DELETE",
+        headers: getAuthHeaders(),
         credentials: "include",
       }
     );

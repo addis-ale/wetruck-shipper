@@ -16,8 +16,16 @@ export const useCreateContainer = (
       containerApi.create(payload),
 
     onSuccess: () => {
-     
+      // Invalidate all container queries
       qc.invalidateQueries({ queryKey: ["containers"] });
+      
+      // Force refetch all active container queries
+      // This bypasses staleTime: Infinity
+      qc.refetchQueries({ 
+        queryKey: ["containers"],
+        type: "active"
+      });
+      
       options?.onSuccess?.();
     },
   });

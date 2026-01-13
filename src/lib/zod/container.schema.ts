@@ -17,6 +17,7 @@ export const weightUnitEnum = z.enum([
 
 export const containerStatusEnum = z.enum([
   "created",
+  "price_requested",
   "assigned",
   "in_transit",
   "completed",
@@ -26,9 +27,10 @@ export const containerStatusEnum = z.enum([
 export const containerDetailsSchema = z.object({
   commodity: z
     .array(z.string().min(1, "Commodity cannot be empty"))
-    .min(1, "At least one commodity is required"),
+    .min(1, "At least one commodity is required")
+    .optional(), // Make optional for read operations
   instruction: z.string().optional(),
-});
+}).passthrough(); // Allow extra fields
 
 export const returnLocationSchema = z.object({
   country: z.string().min(1, "Country is required"),
@@ -43,16 +45,16 @@ export const createContainerSchema = z.object({
   container_size: containerSizeEnum,
   container_type: containerTypeEnum,
   gross_weight: z.coerce.number().min(0),
-  gross_weight_unit: weightUnitEnum,
-  tare_weight: z.coerce.number().min(0),
+  gross_weight_unit: weightUnitEnum.optional(), // Make optional for read operations
+  tare_weight: z.coerce.number().min(0).optional(), // Make optional for read operations
 
-  container_details: containerDetailsSchema,
+  container_details: containerDetailsSchema.optional(), // Make optional for read operations
 
   return_location_info: returnLocationSchema.optional(),
-  sequencing_priority: z.coerce.number().int().min(1),
+  sequencing_priority: z.coerce.number().int().min(1).optional(), // Make optional for read operations
 
-  is_returning: z.boolean(),
-});
+  is_returning: z.boolean().optional(), // Make optional for read operations
+}).passthrough(); // Allow extra fields from backend
 
 
 export const updateContainerSchema = createContainerSchema;
@@ -60,16 +62,12 @@ export const updateContainerSchema = createContainerSchema;
 
 export const containerSchema = createContainerSchema.extend({
   id: z.number(),
-
-  status: containerStatusEnum,
-
-  recommended_truck_type: z.string().nullable(),
-  recommended_axle_type: z.string().nullable(),
-
-  return_location_info: returnLocationSchema.nullable(),
-  
+  status: containerStatusEnum.optional(),
+  recommended_truck_type: z.string().nullable().optional(),
+  recommended_axle_type: z.string().nullable().optional(),
+  return_location_info: returnLocationSchema.nullable().optional(),
   ship_id: z.number().nullable().optional(),
-});
+}).passthrough(); // Allow extra fields from backend
 
 
 export const containerListSchema = z.object({
@@ -77,6 +75,9 @@ export const containerListSchema = z.object({
   total: z.number(),
   page: z.number(),
   per_page: z.number(),
+  pages: z.number().optional(),
+  status: z.boolean().optional(),
+  message: z.string().optional(),
 });
 
 export type CreateContainerInput = z.infer<

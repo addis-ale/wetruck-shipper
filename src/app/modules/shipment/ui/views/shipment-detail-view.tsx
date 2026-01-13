@@ -41,9 +41,11 @@ import { useAssignContainers } from "@/app/modules/shipment/server/hooks/use-ass
 import { useRemoveContainer } from "@/app/modules/shipment/server/hooks/use-remove-container";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
+import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ShipmentDocuments } from "../components/shipment-documents/shipment-documents";
+import { DollarSign } from "lucide-react";
 
 interface ShipmentDetailViewProps {
   shipmentId: number;
@@ -63,6 +65,9 @@ const getStatusVariant = (status: string) => {
   }
   if (statusLower.includes("in_transit") || statusLower.includes("ready")) {
     return "warning";
+  }
+  if (statusLower.includes("price_requested") || statusLower.includes("priced")) {
+    return "default";
   }
   return "secondary";
 };
@@ -87,6 +92,11 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
   const { mutate: getPrice } = useGetPrice();
+  const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
+  
+  const handleRequestPrice = (shipmentId: number) => {
+    requestPrice(shipmentId);
+  };
 
   // Fetch containers assigned to this shipment
   const { data: containersData } = useContainers({ ship_id: shipmentId });
@@ -187,6 +197,27 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Request Price Button - Only show when status is "created" and has containers */}
+          {shipment.status === "created" && assignedContainers.length > 0 && (
+            <Button
+              variant="default"
+              onClick={() => requestPrice(shipmentId)}
+              disabled={isRequestingPrice}
+              className="shrink-0"
+            >
+              {isRequestingPrice ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Requesting...
+                </>
+              ) : (
+                <>
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Request Price
+                </>
+              )}
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setIsEditMode(!isEditMode)}
@@ -500,6 +531,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             selectedContainers={selectedContainers}
             onSelectionChange={setSelectedContainers}
             onGetPrice={handleGetPrice}
+            onRequestPrice={handleRequestPrice}
+            shipmentStatus={shipment?.status}
+            isRequestingPrice={isRequestingPrice}
           />
         </CardContent>
       </Card>

@@ -13,6 +13,7 @@ export const originDestinationEnum = z.enum([
 
 export const shipmentStatusEnum = z.enum([
   "created",
+  "price_requested",
   "priced",
   "accepted_by_shipper",
   "rejected_by_shipper",
