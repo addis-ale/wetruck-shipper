@@ -12,6 +12,7 @@ import { useRemoveContainer } from "@/app/modules/shipment/server/hooks/use-remo
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
@@ -137,7 +138,9 @@ export function ShipmentsView() {
     <div className="space-y-6">
       {/* Create Shipment Form */}
       <CreateShipmentForm onSuccess={handleShipmentCreated} />
-
+      {activeShipmentId && (
+  <ShipmentDocumentsCard shipId={activeShipmentId} />
+)}
       {/* Main Content: Sidebar + Container Table */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Shipment Sidebar - Takes 1/4 width, on the left */}

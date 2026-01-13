@@ -8,7 +8,6 @@ import type {
   ShipmentCreateResponse,
 } from "@/lib/zod/shipment.schema";
 
-// BASE_URL should be just the domain, we'll add /api/v1 ourselves
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PREFIX = "/api/v1";
 const API_PATH = "/ship";
@@ -37,7 +36,6 @@ function getAuthToken(): string | null {
   return null;
 }
 
-// Helper for API requests
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
