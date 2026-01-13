@@ -203,11 +203,7 @@ export function ContainerAssignTable<TData, TValue>({
                         <div className="text-xs text-muted-foreground mt-1 truncate">
                           Type: {container.container_type}
                         </div>
-                        {container.port_of_loading && (
-                          <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                            Port: {container.port_of_loading}
-                          </div>
-                        )}
+                    
                       </div>
                       <div className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
                         Select →
