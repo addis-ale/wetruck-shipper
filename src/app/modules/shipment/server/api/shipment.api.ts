@@ -59,6 +59,11 @@ async function apiRequest<T>(
   const baseUrl = BASE_URL.replace(/\/api\/v1\/?$/, ""); // Remove /api/v1 if present
   const fullUrl = `${baseUrl}${API_PREFIX}${endpoint}`;
 
+  // Debug logging in development
+  if (process.env.NODE_ENV === "development") {
+    console.log(`📡 API Request: ${options.method || "GET"} ${fullUrl}`);
+  }
+
   const response = await fetch(fullUrl, {
     ...options,
     headers,
@@ -214,5 +219,34 @@ export const shipmentApi = {
         body: JSON.stringify({ container_ids: containerIds }),
       }
     );
+  },
+
+  // Request price for a shipment
+  async requestPrice(shipmentId: number): Promise<{
+    status: boolean;
+    error_message: string | null;
+    success_message: string | null;
+    result: string;
+  }> {
+    // Note: The endpoint has /ship/ship/ (double "ship") as per API spec
+    // Full path: /api/v1/ship/ship/{shipmentId}/price-request
+    const endpoint = `${API_PATH}/ship/${shipmentId}/price-request`;
+
+    if (process.env.NODE_ENV === "development") {
+      const baseUrl = BASE_URL.replace(/\/api\/v1\/?$/, "");
+      console.log(
+        "🔗 Request Price Endpoint:",
+        `${baseUrl}${API_PREFIX}${endpoint}`
+      );
+    }
+
+    return apiRequest<{
+      status: boolean;
+      error_message: string | null;
+      success_message: string | null;
+      result: string;
+    }>(endpoint, {
+      method: "POST",
+    });
   },
 };

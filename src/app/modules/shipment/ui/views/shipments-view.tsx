@@ -10,6 +10,7 @@ import { useContainers } from "@/app/modules/container/server/hooks/use-containe
 import { useAssignContainers } from "@/app/modules/shipment/server/hooks/use-assign-container";
 import { useRemoveContainer } from "@/app/modules/shipment/server/hooks/use-remove-container";
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
+import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ShipmentsView() {
@@ -58,6 +59,10 @@ export function ShipmentsView() {
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
   const { mutate: getPrice, isPending: isGettingPrice } = useGetPrice();
+  const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
+  
+  // Get active shipment status
+  const activeShipment = shipments.find(s => s.id === activeShipmentId);
 
   // Get assigned container IDs for active shipment (for column actions)
   const assignedContainerIds = assignedContainers.map((c) => c.id);
@@ -93,6 +98,11 @@ export function ShipmentsView() {
   const handleGetPrice = (containerIds: number[]) => {
     if (!activeShipmentId || containerIds.length === 0) return;
     getPrice({ shipmentId: activeShipmentId, containerIds });
+  };
+  
+  // Handle request price
+  const handleRequestPrice = (shipmentId: number) => {
+    requestPrice(shipmentId);
   };
 
   // Get columns with actions
@@ -150,6 +160,9 @@ export function ShipmentsView() {
             selectedContainers={selectedContainers}
             onSelectionChange={setSelectedContainers}
             onGetPrice={handleGetPrice}
+            onRequestPrice={handleRequestPrice}
+            shipmentStatus={activeShipment?.status}
+            isRequestingPrice={isRequestingPrice}
           />
         </div>
       </div>
