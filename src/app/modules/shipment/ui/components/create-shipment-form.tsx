@@ -17,9 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { createShipmentSchema, CreateShipmentInput } from "@/lib/zod/shipment.schema";
 import { useCreateShipment } from "@/app/modules/shipment/server/hooks/use-create-shipment";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import { Package } from "lucide-react";
+import { COUNTRIES, getRegionsByCountryCode, type Region } from "@/lib/constants/locations";
 
 type CreateShipmentFormValues = z.input<typeof createShipmentSchema>;
 
@@ -28,8 +30,6 @@ interface CreateShipmentFormProps {
 }
 
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
-  const [pickupExpanded, setPickupExpanded] = useState(true);
-  const [deliveryExpanded, setDeliveryExpanded] = useState(true);
 
   const defaultValues = useMemo<CreateShipmentInput>(
     () => ({
@@ -76,8 +76,35 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
     formState: { errors, isSubmitting, isValid },
   } = form;
+
+  // Watch country values to update region options
+  const pickupCountry = watch("pickup_facility.country");
+  const deliveryCountry = watch("delivery_facility.country");
+  
+  // Get region options based on selected country
+  const pickupRegions = pickupCountry 
+    ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
+        value: r.code,
+        label: r.name,
+      }))
+    : [];
+  
+  const deliveryRegions = deliveryCountry
+    ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
+        value: r.code,
+        label: r.name,
+      }))
+    : [];
+  
+  // Country options
+  const countryOptions = COUNTRIES.map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
 
   const { mutate, isPending } = useCreateShipment({
     onSuccess: (shipmentId) => {
@@ -234,25 +261,37 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
           <Separator />
 
           {/* Pickup Facility */}
-          <div className="rounded-md border">
-            <button
-              type="button"
-              onClick={() => setPickupExpanded(!pickupExpanded)}
-              className="flex w-full items-center justify-between p-4 text-left font-medium hover:bg-accent/50 transition-colors"
-            >
-              <span>Pickup Facility</span>
-              {pickupExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-            {pickupExpanded && (
-              <div className="p-4 pt-0 space-y-4">
+          <div className="rounded-md border p-4 space-y-4">
+            <h3 className="text-sm font-semibold">Pickup Facility</h3>
+            <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="pickup_country">Country</Label>
-                    <Input id="pickup_country" {...register("pickup_facility.country")} />
+                    <Controller
+                      name="pickup_facility.country"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Reset region when country changes
+                            setValue("pickup_facility.region", "");
+                          }}
+                          value={field.value}
+                        >
+                          <SelectTrigger id="pickup_country" className="w-full">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countryOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                     {errors.pickup_facility?.country && (
                       <p className="text-sm text-destructive">
                         {errors.pickup_facility.country.message}
@@ -262,7 +301,23 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="pickup_region">Region</Label>
-                    <Input id="pickup_region" {...register("pickup_facility.region")} />
+                    <Controller
+                      name="pickup_facility.region"
+                      control={control}
+                      render={({ field }) => (
+                        <Combobox
+                          id="pickup_region"
+                          options={pickupRegions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={pickupCountry ? "Select region" : "Select country first"}
+                          searchPlaceholder="Search region..."
+                          emptyMessage="No region found."
+                          disabled={!pickupCountry || pickupRegions.length === 0}
+                          allowCustomValue={false}
+                        />
+                      )}
+                    />
                     {errors.pickup_facility?.region && (
                       <p className="text-sm text-destructive">
                         {errors.pickup_facility.region.message}
@@ -330,32 +385,40 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Delivery Facility */}
-          <div className="rounded-md border">
-            <button
-              type="button"
-              onClick={() => setDeliveryExpanded(!deliveryExpanded)}
-              className="flex w-full items-center justify-between p-4 text-left font-medium hover:bg-accent/50 transition-colors"
-            >
-              <span>Delivery Facility</span>
-              {deliveryExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-            {deliveryExpanded && (
-              <div className="p-4 pt-0 space-y-4">
+          <div className="rounded-md border p-4 space-y-4">
+            <h3 className="text-sm font-semibold">Delivery Facility</h3>
+            <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="delivery_country">Country</Label>
-                    <Input
-                      id="delivery_country"
-                      {...register("delivery_facility.country")}
+                    <Controller
+                      name="delivery_facility.country"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Reset region when country changes
+                            setValue("delivery_facility.region", "");
+                          }}
+                          value={field.value}
+                        >
+                          <SelectTrigger id="delivery_country" className="w-full">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countryOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
                     {errors.delivery_facility?.country && (
                       <p className="text-sm text-destructive">
@@ -366,7 +429,23 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="delivery_region">Region</Label>
-                    <Input id="delivery_region" {...register("delivery_facility.region")} />
+                    <Controller
+                      name="delivery_facility.region"
+                      control={control}
+                      render={({ field }) => (
+                        <Combobox
+                          id="delivery_region"
+                          options={deliveryRegions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={deliveryCountry ? "Select region" : "Select country first"}
+                          searchPlaceholder="Search region..."
+                          emptyMessage="No region found."
+                          disabled={!deliveryCountry || deliveryRegions.length === 0}
+                          allowCustomValue={false}
+                        />
+                      )}
+                    />
                     {errors.delivery_facility?.region && (
                       <p className="text-sm text-destructive">
                         {errors.delivery_facility.region.message}
@@ -437,8 +516,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Actions */}

@@ -13,10 +13,10 @@ import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
+import { PricedShipItemsTable } from "../components/priced-ship-items-table";
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
-  const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
 
   // Fetch data
   const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
@@ -85,14 +85,12 @@ export function ShipmentsView() {
     const newId = parseInt(shipmentId, 10);
     if (!isNaN(newId)) {
       setActiveShipmentId(newId);
-      setSelectedContainers([]); // Clear selection when switching shipments
     }
   };
 
   // Clear selection when switching shipments
   const handleSelectShipment = (shipmentId: number) => {
     setActiveShipmentId(shipmentId);
-    setSelectedContainers([]); // Clear selection
   };
 
   // Handle get price
@@ -112,8 +110,7 @@ export function ShipmentsView() {
     assignedContainers: assignedContainerIds,
     onAssign: handleAssignContainer,
     onRemove: handleRemoveContainer,
-    selectedContainers,
-    onSelectionChange: setSelectedContainers,
+    shipmentStatus: activeShipment?.status,
     data: filteredContainers,
   });
 
@@ -141,7 +138,7 @@ export function ShipmentsView() {
       {activeShipmentId && (
   <ShipmentDocumentsCard shipId={activeShipmentId} />
 )}
-      {/* Main Content: Sidebar + Container Table */}
+      {/* Main Content: Sidebar + Container Table + Priced Items Table */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Shipment Sidebar - Takes 1/4 width, on the left */}
         <div className="lg:col-span-1">
@@ -153,20 +150,22 @@ export function ShipmentsView() {
           />
         </div>
 
-        {/* Container Assignment Table - Takes 3/4 width */}
-        <div className="lg:col-span-3">
+        {/* Right side: Container Table + Priced Items Table stacked vertically - Takes 3/4 width */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Container Assignment Table */}
           <ContainerAssignTable
             columns={columns}
             data={filteredContainers}
             activeShipmentId={activeShipmentId}
             onAssignContainer={handleAssignContainer}
-            selectedContainers={selectedContainers}
-            onSelectionChange={setSelectedContainers}
             onGetPrice={handleGetPrice}
             onRequestPrice={handleRequestPrice}
             shipmentStatus={activeShipment?.status}
             isRequestingPrice={isRequestingPrice}
           />
+
+          {/* Priced Ship Items Table */}
+          <PricedShipItemsTable activeShipmentId={activeShipmentId} />
         </div>
       </div>
     </div>

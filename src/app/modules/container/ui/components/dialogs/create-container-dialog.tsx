@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, Controller } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   createContainerSchema,
@@ -22,6 +29,7 @@ import {
 } from "@/lib/zod/container.schema";
 import { useCreateContainer } from "../../../server/hooks/use-create-container";
 import { z } from "zod";
+import { COUNTRIES } from "@/lib/constants/locations";
 
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
@@ -65,12 +73,18 @@ export function CreateContainerDialog() {
     handleSubmit,
     watch,
     reset,
-    formState: { errors, isSubmitting, isValid },
     control,
     setValue,
+    formState: { errors, isSubmitting, isValid },
   } = form;
 
   const isReturning = watch("is_returning");
+  
+  // Country options
+  const countryOptions = COUNTRIES.map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
 
   const commodities = useFieldArray({
     control: control as any,
@@ -166,26 +180,50 @@ export function CreateContainerDialog() {
 
               <div className="space-y-2">
                 <Label htmlFor="container_size">Container Size</Label>
-                <select
-                  id="container_size"
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  {...register("container_size")}
-                >
-                  <option value="twenty_feet">20 Feet</option>
-                  <option value="forty_feet">40 Feet</option>
-                </select>
+                <Controller
+                  name="container_size"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="container_size" className="w-full">
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="twenty_feet">20 Feet</SelectItem>
+                        <SelectItem value="forty_feet">40 Feet</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.container_size && (
+                  <p className="text-sm text-destructive">
+                    {errors.container_size.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="container_type">Container Type</Label>
-                <select
-                  id="container_type"
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  {...register("container_type")}
-                >
-                  <option value="dry">Dry</option>
-                  <option value="reefer">Reefer</option>
-                </select>
+                <Controller
+                  name="container_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="container_type" className="w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dry">Dry</SelectItem>
+                        <SelectItem value="reefer">Reefer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.container_type && (
+                  <p className="text-sm text-destructive">
+                    {errors.container_type.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -200,14 +238,26 @@ export function CreateContainerDialog() {
 
               <div className="space-y-2">
                 <Label htmlFor="gross_weight_unit">Gross Weight Unit</Label>
-                <select
-                  id="gross_weight_unit"
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  {...register("gross_weight_unit")}
-                >
-                  <option value="kg">kg</option>
-                  <option value="ton">ton</option>
-                </select>
+                <Controller
+                  name="gross_weight_unit"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value || "kg"}>
+                      <SelectTrigger id="gross_weight_unit" className="w-full">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="ton">ton</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.gross_weight_unit && (
+                  <p className="text-sm text-destructive">
+                    {errors.gross_weight_unit.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -222,19 +272,22 @@ export function CreateContainerDialog() {
 
               <div className="space-y-2">
                 <Label htmlFor="is_returning">Is Returning?</Label>
-                <select
-                  id="is_returning"
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                <Select
                   value={isReturning ? "yes" : "no"}
-                  onChange={(e) =>
-                    setValue("is_returning", e.target.value === "yes", {
+                  onValueChange={(value) =>
+                    setValue("is_returning", value === "yes", {
                       shouldValidate: true,
                     })
                   }
                 >
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
+                  <SelectTrigger id="is_returning" className="w-full">
+                    <SelectValue placeholder="Select option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -292,11 +345,29 @@ export function CreateContainerDialog() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="country">Country</Label>
-                    <Input 
-                      id="country"
-                      placeholder="Country" 
-                      {...register("return_location_info.country")} 
+                    <Controller
+                      name="return_location_info.country"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger id="country" className="w-full">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countryOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
+                    {errors.return_location_info?.country && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.country.message}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>

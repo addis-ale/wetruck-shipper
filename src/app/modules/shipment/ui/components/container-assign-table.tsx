@@ -50,8 +50,6 @@ interface ContainerAssignTableProps<TData, TValue> {
   data: TData[];
   activeShipmentId: number | null;
   onAssignContainer?: (containerId: number) => void;
-  selectedContainers?: number[];
-  onSelectionChange?: (containerIds: number[]) => void;
   onGetPrice?: (containerIds: number[]) => void;
   onRequestPrice?: (shipmentId: number) => void;
   shipmentStatus?: string;
@@ -63,13 +61,12 @@ export function ContainerAssignTable<TData, TValue>({
   data,
   activeShipmentId,
   onAssignContainer,
-  selectedContainers = [],
-  onSelectionChange,
   onGetPrice,
   onRequestPrice,
   shipmentStatus,
   isRequestingPrice = false,
 }: ContainerAssignTableProps<TData, TValue>) {
+  const isDisabled = shipmentStatus === "price_requested";
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -182,7 +179,7 @@ export function ContainerAssignTable<TData, TValue>({
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-9"
-                  disabled={!activeShipmentId}
+                  disabled={!activeShipmentId || isDisabled}
                   onFocus={() => {
                     if (debouncedSearch.length > 0) {
                       setSearchOpen(true);
@@ -236,7 +233,7 @@ export function ContainerAssignTable<TData, TValue>({
           </Popover>
           <Popover open={assignModalOpen} onOpenChange={setAssignModalOpen}>
             <PopoverTrigger asChild>
-              <Button disabled={!activeShipmentId} className="shrink-0">
+              <Button disabled={!activeShipmentId || isDisabled} className="shrink-0">
                 <Plus className="h-4 w-4 mr-2" />
                 Assign Container
               </Button>
@@ -340,17 +337,12 @@ export function ContainerAssignTable<TData, TValue>({
           </Table>
         </div>
 
-        {/* Pagination and Get Price Button */}
+        {/* Pagination */}
         {table.getRowModel().rows?.length > 0 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               Showing {table.getRowModel().rows.length} of {data.length}{" "}
               container(s)
-              {selectedContainers.length > 0 && (
-                <span className="ml-2 text-primary">
-                  • {selectedContainers.length} selected
-                </span>
-              )}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -407,19 +399,6 @@ export function ContainerAssignTable<TData, TValue>({
           </div>
         )}
         
-        {/* Get Price Button - For selected containers (if still needed)
-        {selectedContainers.length > 0 && onGetPrice && (
-          <div className="flex justify-end pt-2 border-t">
-            <Button
-              variant="outline"
-              onClick={() => onGetPrice(selectedContainers)}
-              disabled={!activeShipmentId || selectedContainers.length === 0}
-              className="gap-2"
-            >
-              Get Price Quote ({selectedContainers.length})
-            </Button>
-          </div>
-        )} */}
       </CardContent>
     </Card>
   );

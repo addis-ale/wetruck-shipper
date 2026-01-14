@@ -92,6 +92,38 @@ export const shipmentCreateResponseSchema = z.object({
   result: shipmentSchema,
 });
 
+// Ship item schema (for priced items from /api/v1/ship-item/)
+export const shipItemSchema = z.object({
+  id: z.number(),
+  ship_id: z.number(),
+  truck_id: z.number().optional().nullable(),
+  driver_id: z.number().optional().nullable(),
+  transporter_id: z.number(),
+  containers: z.array(z.any()).default([]), // Array of container IDs or objects
+  computed_price: z.number(),
+  currency: z.string(),
+  deleted: z.boolean().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+}).passthrough(); // Allow extra fields from backend
+
+// Ship items list response schema
+export const shipItemsListResponseSchema = z.object({
+  status: z.boolean(),
+  message: z.string().optional(),
+  total: z.number(),
+  page: z.number(),
+  per_page: z.number(),
+  pages: z.number(),
+  items: z.array(shipItemSchema),
+});
+
+// Transporter shipment schema (includes ship_items and containers)
+export const transporterShipmentSchema = shipmentSchema.extend({
+  ship_items: z.array(shipItemSchema).default([]),
+  containers: z.array(z.any()).default([]), // Array of container objects
+}).passthrough(); // Allow extra fields from backend
+
 // Types
 export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 export type UpdateShipmentInput = z.infer<typeof updateShipmentSchema>;
@@ -100,4 +132,7 @@ export type ShipmentListResponse = z.infer<typeof shipmentListResponseSchema>;
 export type ShipmentCreateResponse = z.infer<typeof shipmentCreateResponseSchema>;
 export type Facility = z.infer<typeof facilitySchema>;
 export type ShipmentDetails = z.infer<typeof shipmentDetailsSchema>;
+export type ShipItem = z.infer<typeof shipItemSchema>;
+export type ShipItemsListResponse = z.infer<typeof shipItemsListResponseSchema>;
+export type TransporterShipment = z.infer<typeof transporterShipmentSchema>;
 
