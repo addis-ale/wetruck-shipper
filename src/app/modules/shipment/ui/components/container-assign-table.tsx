@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   ColumnDef,
@@ -35,16 +35,14 @@ import {
   Popover,
   PopoverContent,
   PopoverAnchor,
-  PopoverTrigger,
 } from "@/components/ui/popover";
-import { Search, Plus, Loader2, DollarSign } from "lucide-react";
+import { Search, Loader2, Container as ContainerIcon } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import type { Container } from "@/app/modules/container/server/types/container.types";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
-// Extended container type with ship_id
+// Extended container type
 type ContainerWithShipId = Container & { ship_id?: number | null };
-
 interface ContainerAssignTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -72,46 +70,25 @@ export function ContainerAssignTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
 
-  const debouncedSearch = useDebounce(searchQuery, 800);
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // API search for containers
-  const { data: searchResults, isLoading: isSearching } = useContainers(
-    debouncedSearch && activeShipmentId
+  /** Fetch containers even when search is empty */
+  const { data: containers, isLoading } = useContainers(
+    activeShipmentId
       ? {
-          container_number: debouncedSearch,
-          per_page: 10,
+          container_number: debouncedSearch || undefined,
+          per_page: 20,
         }
       : undefined
   );
 
-
-  const { data: allAvailableContainers, isLoading: isLoadingAvailable } =
-    useContainers(
-      assignModalOpen && activeShipmentId
-        ? {
-            per_page: 50, 
-          }
-        : undefined
-    );
-
-  // Helper function to filter unassigned containers
-  const filterUnassigned = (containers: Container[]) => {
-    return containers.filter((container) => {
+  /** Only show unassigned containers */
+  const availableContainers =
+    containers?.items.filter((container) => {
       const shipId = (container as ContainerWithShipId).ship_id;
-      if (shipId === null || shipId === undefined) return true;
-      if (typeof shipId === "number" && shipId > 0) return false; 
-      if (shipId === 0) return true; 
-      return true; 
-    });
-  };
-
-  const searchContainers = filterUnassigned(searchResults?.items || []);
-
-  const availableContainers = filterUnassigned(
-    allAvailableContainers?.items || []
-  );
+      return shipId === null || shipId === undefined || shipId === 0;
+    }) || [];
 
   const table = useReactTable({
     data,
@@ -130,40 +107,29 @@ export function ContainerAssignTable<TData, TValue>({
     },
   });
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-
-    if (value.length > 0) {
-
-    } else {
-      setSearchOpen(false);
-    }
-  };
-
   useEffect(() => {
-    if (debouncedSearch.length > 0 && searchQuery.length > 0) {
+    if (activeShipmentId) {
       setSearchOpen(true);
     }
-  }, [debouncedSearch, searchQuery]);
+  }, [activeShipmentId]);
 
   const handleContainerSelect = (container: Container) => {
-    if (onAssignContainer && activeShipmentId) {
-      onAssignContainer(container.id);
-      setSearchQuery("");
-      setSearchOpen(false);
-    }
+    onAssignContainer?.(container.id);
+    setSearchQuery("");
+    setSearchOpen(false);
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Container Assignment</CardTitle>
         <CardDescription>
           {activeShipmentId
-            ? "Showing containers for the selected shipment. Use search to find specific containers."
-            : "Select a shipment from the sidebar to manage containers"}
+            ? "Search and assign available containers to this shipment."
+            : "Select a shipment to manage containers."}
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-4">
         {/* Search */}
         <div className="flex items-center gap-2">
@@ -281,36 +247,32 @@ export function ContainerAssignTable<TData, TValue>({
                   </div>
                 )}
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+            )}
+          </PopoverContent>
+        </Popover>
 
         {/* Table */}
-        <div className="rounded-md border">
-          <Table>
+        <div className="rounded-md border w-full overflow-x-auto">
+          <Table className="w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
               ))}
             </TableHeader>
+
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(
@@ -323,13 +285,8 @@ export function ContainerAssignTable<TData, TValue>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    {activeShipmentId
-                      ? "No containers found."
-                      : "Select a shipment to view containers."}
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No containers found.
                   </TableCell>
                 </TableRow>
               )}
