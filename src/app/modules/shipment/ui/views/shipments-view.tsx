@@ -13,7 +13,8 @@ import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
-import { PricedShipItemsTable } from "../components/priced-ship-items-table";
+// TODO: Uncomment when API is ready
+// import { PricedShipItemsTable } from "../components/priced-ship-items-table";
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
@@ -164,8 +165,8 @@ export function ShipmentsView() {
             isRequestingPrice={isRequestingPrice}
           />
 
-          {/* Priced Ship Items Table */}
-          <PricedShipItemsTable activeShipmentId={activeShipmentId} />
+          {/* Priced Ship Items Table - TODO: Uncomment when API is ready */}
+          {/* <PricedShipItemsTable activeShipmentId={activeShipmentId} /> */}
         </div>
       </div>
     </div>
