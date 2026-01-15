@@ -85,7 +85,6 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
 
   const { data: shipment, isLoading, error } = useShipment(shipmentId);
   const { mutate: deleteShipment, isPending: isDeleting } = useDeleteShipment();
@@ -113,8 +112,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
     onRemove: (containerId) => {
       removeContainer({ shipmentId, containerId });
     },
-    selectedContainers,
-    onSelectionChange: setSelectedContainers,
+    shipmentStatus: shipment?.status,
     data: assignedContainers,
   });
 
@@ -528,8 +526,6 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             onAssignContainer={(containerId) => {
               assignContainers({ shipmentId, containerIds: [containerId] });
             }}
-            selectedContainers={selectedContainers}
-            onSelectionChange={setSelectedContainers}
             onGetPrice={handleGetPrice}
             onRequestPrice={handleRequestPrice}
             shipmentStatus={shipment?.status}

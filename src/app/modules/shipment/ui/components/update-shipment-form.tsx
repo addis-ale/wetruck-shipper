@@ -17,10 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { updateShipmentSchema, UpdateShipmentInput } from "@/lib/zod/shipment.schema";
 import { useUpdateShipment } from "@/app/modules/shipment/server/hooks/use-update-shipment";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
+import { COUNTRIES, getRegionsByCountryCode, type Region } from "@/lib/constants/locations";
 
 type UpdateShipmentFormValues = z.input<typeof updateShipmentSchema>;
 
@@ -30,8 +32,6 @@ interface UpdateShipmentFormProps {
 }
 
 export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormProps) {
-  const [pickupExpanded, setPickupExpanded] = useState(true);
-  const [deliveryExpanded, setDeliveryExpanded] = useState(true);
 
   // Format date from ISO string to YYYY-MM-DD for date inputs
   const formatDateForInput = (dateString: string) => {
@@ -65,8 +65,35 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
     formState: { errors, isSubmitting, isValid },
   } = form;
+
+  // Watch country values to update region options
+  const pickupCountry = watch("pickup_facility.country");
+  const deliveryCountry = watch("delivery_facility.country");
+  
+  // Get region options based on selected country
+  const pickupRegions = pickupCountry 
+    ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
+        value: r.code,
+        label: r.name,
+      }))
+    : [];
+  
+  const deliveryRegions = deliveryCountry
+    ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
+        value: r.code,
+        label: r.name,
+      }))
+    : [];
+  
+  // Country options
+  const countryOptions = COUNTRIES.map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
 
   // Reset form when shipment changes
   useEffect(() => {
@@ -193,29 +220,37 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
 
           {/* Pickup Facility */}
           <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setPickupExpanded(!pickupExpanded)}
-              className="flex items-center justify-between w-full text-left"
-            >
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                <span className="font-medium">Pickup Facility</span>
-              </div>
-              {pickupExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-
-            {pickupExpanded && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              <h3 className="text-sm font-semibold">Pickup Facility</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2">
                 <div className="space-y-2">
                   <Label htmlFor="pickup_facility.country">Country *</Label>
-                  <Input
-                    id="pickup_facility.country"
-                    {...register("pickup_facility.country")}
+                  <Controller
+                    name="pickup_facility.country"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Reset region when country changes
+                          setValue("pickup_facility.region", "");
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger id="pickup_facility.country" className="w-full">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                   {errors.pickup_facility?.country && (
                     <p className="text-sm text-destructive">
@@ -226,9 +261,22 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
 
                 <div className="space-y-2">
                   <Label htmlFor="pickup_facility.region">Region *</Label>
-                  <Input
-                    id="pickup_facility.region"
-                    {...register("pickup_facility.region")}
+                  <Controller
+                    name="pickup_facility.region"
+                    control={control}
+                    render={({ field }) => (
+                        <Combobox
+                          id="pickup_facility.region"
+                          options={pickupRegions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={pickupCountry ? "Select region" : "Select country first"}
+                          searchPlaceholder="Search region..."
+                          emptyMessage="No region found."
+                          disabled={!pickupCountry || pickupRegions.length === 0}
+                          allowCustomValue={false}
+                        />
+                    )}
                   />
                   {errors.pickup_facility?.region && (
                     <p className="text-sm text-destructive">
@@ -304,37 +352,44 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     </p>
                   )}
                 </div>
-              </div>
-            )}
+            </div>
           </div>
 
           <Separator />
 
           {/* Delivery Facility */}
           <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setDeliveryExpanded(!deliveryExpanded)}
-              className="flex items-center justify-between w-full text-left"
-            >
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                <span className="font-medium">Delivery Facility</span>
-              </div>
-              {deliveryExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-
-            {deliveryExpanded && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              <h3 className="text-sm font-semibold">Delivery Facility</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2">
                 <div className="space-y-2">
                   <Label htmlFor="delivery_facility.country">Country *</Label>
-                  <Input
-                    id="delivery_facility.country"
-                    {...register("delivery_facility.country")}
+                  <Controller
+                    name="delivery_facility.country"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Reset region when country changes
+                          setValue("delivery_facility.region", "");
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger id="delivery_facility.country" className="w-full">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                   {errors.delivery_facility?.country && (
                     <p className="text-sm text-destructive">
@@ -345,9 +400,22 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
 
                 <div className="space-y-2">
                   <Label htmlFor="delivery_facility.region">Region *</Label>
-                  <Input
-                    id="delivery_facility.region"
-                    {...register("delivery_facility.region")}
+                  <Controller
+                    name="delivery_facility.region"
+                    control={control}
+                    render={({ field }) => (
+                        <Combobox
+                          id="delivery_facility.region"
+                          options={deliveryRegions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={deliveryCountry ? "Select region" : "Select country first"}
+                          searchPlaceholder="Search region..."
+                          emptyMessage="No region found."
+                          disabled={!deliveryCountry || deliveryRegions.length === 0}
+                          allowCustomValue={false}
+                        />
+                    )}
                   />
                   {errors.delivery_facility?.region && (
                     <p className="text-sm text-destructive">
@@ -423,8 +491,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     </p>
                   )}
                 </div>
-              </div>
-            )}
+            </div>
           </div>
 
           <Separator />

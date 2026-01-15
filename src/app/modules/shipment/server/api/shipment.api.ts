@@ -6,6 +6,8 @@ import type {
 import type {
   ShipmentListResponse,
   ShipmentCreateResponse,
+  ShipItemsListResponse,
+  TransporterShipment,
 } from "@/lib/zod/shipment.schema";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -246,5 +248,35 @@ export const shipmentApi = {
     }>(endpoint, {
       method: "POST",
     });
+  },
+
+  // Get ship items (priced items)
+  async getShipItems(params?: {
+    page?: number;
+    per_page?: number;
+    ship_id?: number;
+    transporter_id?: number;
+    status?: "created" | "accepted_by_shipper" | "rejected_by_shipper";
+  }): Promise<ShipItemsListResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.per_page)
+      searchParams.append("per_page", params.per_page.toString());
+    if (params?.ship_id)
+      searchParams.append("ship_id", params.ship_id.toString());
+    if (params?.transporter_id)
+      searchParams.append("transporter_id", params.transporter_id.toString());
+    if (params?.status) searchParams.append("status", params.status);
+
+    const query = searchParams.toString();
+    const endpoint = query ? `/ship-item/?${query}` : `/ship-item/`;
+
+    return apiRequest<ShipItemsListResponse>(endpoint);
+  },
+
+  // Get ship by transporter (includes ship_items and containers)
+  async getByTransporter(shipId: number): Promise<TransporterShipment> {
+    return apiRequest<TransporterShipment>(`/ship/transporter/${shipId}`);
   },
 };

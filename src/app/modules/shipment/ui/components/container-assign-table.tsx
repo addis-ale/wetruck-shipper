@@ -35,8 +35,9 @@ import {
   Popover,
   PopoverContent,
   PopoverAnchor,
+  PopoverTrigger,
 } from "@/components/ui/popover";
-import { Search, Loader2, Container as ContainerIcon } from "lucide-react";
+import { Search, Loader2, Plus } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +49,6 @@ interface ContainerAssignTableProps<TData, TValue> {
   data: TData[];
   activeShipmentId: number | null;
   onAssignContainer?: (containerId: number) => void;
-  selectedContainers?: number[];
-  onSelectionChange?: (containerIds: number[]) => void;
   onGetPrice?: (containerIds: number[]) => void;
   onRequestPrice?: (shipmentId: number) => void;
   shipmentStatus?: string;
@@ -61,17 +60,18 @@ export function ContainerAssignTable<TData, TValue>({
   data,
   activeShipmentId,
   onAssignContainer,
-  selectedContainers = [],
   onGetPrice,
   onRequestPrice,
   shipmentStatus,
   isRequestingPrice = false,
 }: ContainerAssignTableProps<TData, TValue>) {
+  const isDisabled = shipmentStatus === "price_requested";
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -91,6 +91,21 @@ export function ContainerAssignTable<TData, TValue>({
       const shipId = (container as ContainerWithShipId).ship_id;
       return shipId === null || shipId === undefined || shipId === 0;
     }) || [];
+
+  // Handle search change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  // Search containers from available containers
+  const searchContainers = availableContainers.filter((container) =>
+    container.container_number
+      .toLowerCase()
+      .includes(debouncedSearch.toLowerCase())
+  );
+
+  const isSearching = isLoading;
+  const isLoadingAvailable = isLoading;
 
   const table = useReactTable({
     data,
@@ -134,113 +149,127 @@ export function ContainerAssignTable<TData, TValue>({
 
       <CardContent className="space-y-4">
         {/* Search */}
-        <Popover 
-          open={searchOpen && activeShipmentId !== null} 
-          onOpenChange={setSearchOpen}
-        >
-          <PopoverAnchor asChild>
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search containers by number…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => activeShipmentId && setSearchOpen(true)}
-                className="pl-9 w-full"
-                disabled={!activeShipmentId}
-              />
-              {!activeShipmentId && (
-                <div className="absolute inset-0 bg-background/50 cursor-not-allowed rounded-md" />
-              )}
-            </div>
-          </PopoverAnchor>
-
-          <PopoverContent
-            className="p-0 shadow-lg border w-[calc(100vw-2rem)] sm:w-full max-w-none"
-            align="start"
-            sideOffset={4}
-            onOpenAutoFocus={(e) => e.preventDefault()}
-            onCloseAutoFocus={(e) => e.preventDefault()}
-            style={{
-              width: 'var(--radix-popover-trigger-width)',
-              maxWidth: 'none'
-            }}
+        <div className="flex items-center gap-2">
+          <Popover
+            open={searchOpen && debouncedSearch.length > 0}
+            onOpenChange={setSearchOpen}
           >
-            <div className="border-b px-4 py-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">Available Containers</h4>
-                <Badge variant="outline" className="text-xs">
-                  {availableContainers.length} found
-                </Badge>
+            <PopoverAnchor asChild>
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
+                <Input
+                  placeholder="Search containers by number..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-9"
+                  disabled={!activeShipmentId || isDisabled}
+                  onFocus={() => {
+                    if (debouncedSearch.length > 0) {
+                      setSearchOpen(true);
+                    }
+                  }}
+                />
               </div>
-              {searchQuery && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Searching for: "{searchQuery}"
-                </p>
-              )}
-            </div>
-
-            <div className="max-h-[320px] overflow-y-auto">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center p-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
-                  <p className="text-sm text-muted-foreground">Loading containers...</p>
-                </div>
-              ) : availableContainers.length > 0 ? (
-                <div className="divide-y">
-                  {availableContainers.map((container) => (
-                    <button
-                      key={container.id}
-                      onClick={() => handleContainerSelect(container)}
-                      className="w-full p-4 text-left hover:bg-accent transition-colors duration-150 flex items-start gap-3 group"
-                    >
-                      <div className="mt-1 shrink-0">
-                        <ContainerIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm truncate">
-                            {container.container_number}
-                          </span>
-                          <Badge variant="secondary" className="text-xs font-normal shrink-0">
-                            {container.container_size === "twenty_feet" ? "20ft" : "40ft"}
-                          </Badge>
+            </PopoverAnchor>
+            <PopoverContent
+              className="w-[400px] p-0"
+              align="start"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              sideOffset={5}
+            >
+              <div className="max-h-[300px] overflow-y-auto">
+                {isSearching ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : searchContainers.length > 0 ? (
+                  <div className="divide-y">
+                    {searchContainers.map((container) => (
+                      <button
+                        key={container.id}
+                        onClick={() => handleContainerSelect(container)}
+                        className="w-full p-3 text-left hover:bg-accent transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">
+                              {container.container_number}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {container.container_size === "twenty_feet"
+                                ? "20ft"
+                                : "40ft"}{" "}
+                              • {container.container_type}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1 truncate">
-                          Type: {container.container_type}
-                        </div>
-                    
-                      </div>
-                      <div className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
-                        Select →
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <ContainerIcon className="h-10 w-10 text-muted-foreground/50 mb-3" />
-                  <p className="text-sm font-medium text-foreground mb-1">
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
                     No containers found
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {searchQuery 
-                      ? `No available containers matching "${searchQuery}"`
-                      : "All containers are currently assigned or no containers available"}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {availableContainers.length > 0 && (
-              <div className="border-t px-4 py-2 bg-muted/20">
-                <p className="text-xs text-muted-foreground text-center">
-                  Click a container to assign it to this shipment
-                </p>
+                  </div>
+                )}
               </div>
-            )}
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
+          <Popover open={assignModalOpen} onOpenChange={setAssignModalOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                disabled={!activeShipmentId || isDisabled}
+                className="shrink-0"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Assign Container
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[400px] p-0"
+              align="end"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="max-h-[400px] overflow-y-auto">
+                {isLoadingAvailable ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : availableContainers.length > 0 ? (
+                  <div className="divide-y">
+                    {availableContainers.map((container) => (
+                      <button
+                        key={container.id}
+                        onClick={() => {
+                          handleContainerSelect(container);
+                          setAssignModalOpen(false);
+                        }}
+                        className="w-full p-3 text-left hover:bg-accent transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">
+                              {container.container_number}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {container.container_size === "twenty_feet"
+                                ? "20ft"
+                                : "40ft"}{" "}
+                              • {container.container_type}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    No available containers found
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* Table */}
         <div className="rounded-md border w-full overflow-x-auto">
@@ -276,7 +305,10 @@ export function ContainerAssignTable<TData, TValue>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No containers found.
                   </TableCell>
                 </TableRow>
@@ -285,17 +317,12 @@ export function ContainerAssignTable<TData, TValue>({
           </Table>
         </div>
 
-        {/* Pagination and Get Price Button */}
+        {/* Pagination */}
         {table.getRowModel().rows?.length > 0 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               Showing {table.getRowModel().rows.length} of {data.length}{" "}
               container(s)
-              {selectedContainers.length > 0 && (
-                <span className="ml-2 text-primary">
-                  • {selectedContainers.length} selected
-                </span>
-              )}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -324,7 +351,9 @@ export function ContainerAssignTable<TData, TValue>({
             {shipmentStatus === "created" && onRequestPrice ? (
               <Button
                 onClick={() => onRequestPrice(activeShipmentId)}
-                disabled={isRequestingPrice || !activeShipmentId || data.length === 0}
+                disabled={
+                  isRequestingPrice || !activeShipmentId || data.length === 0
+                }
                 className="gap-2"
               >
                 {isRequestingPrice ? (
@@ -334,7 +363,8 @@ export function ContainerAssignTable<TData, TValue>({
                   </>
                 ) : (
                   <>
-                    Request Price ({data.length} container{data.length !== 1 ? "s" : ""})
+                    Request Price ({data.length} container
+                    {data.length !== 1 ? "s" : ""})
                   </>
                 )}
               </Button>
@@ -345,24 +375,13 @@ export function ContainerAssignTable<TData, TValue>({
             ) : shipmentStatus ? (
               <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
                 <span className="text-sm">
-                  Status: {shipmentStatus.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                  Status:{" "}
+                  {shipmentStatus
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
                 </span>
               </div>
             ) : null}
-          </div>
-        )}
-        
-        {/* Get Price Button - For selected containers (if still needed) */}
-        {selectedContainers.length > 0 && onGetPrice && (
-          <div className="flex justify-end pt-2 border-t">
-            <Button
-              variant="outline"
-              onClick={() => onGetPrice(selectedContainers)}
-              disabled={!activeShipmentId || selectedContainers.length === 0}
-              className="gap-2"
-            >
-              Get Price Quote ({selectedContainers.length})
-            </Button>
           </div>
         )}
       </CardContent>

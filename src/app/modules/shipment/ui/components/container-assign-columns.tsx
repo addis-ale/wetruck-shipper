@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Minus } from "lucide-react";
 import {
   Dialog,
@@ -21,8 +20,7 @@ interface ContainerColumnsProps {
   assignedContainers: number[];
   onAssign: (containerId: number) => void;
   onRemove: (containerId: number) => void;
-  selectedContainers?: number[];
-  onSelectionChange?: (containerIds: number[]) => void;
+  shipmentStatus?: string;
   data?: Container[];
 }
 
@@ -31,62 +29,12 @@ export function useContainerAssignColumns({
   assignedContainers,
   onAssign,
   onRemove,
-  selectedContainers = [],
-  onSelectionChange,
+  shipmentStatus,
   data = [],
 }: ContainerColumnsProps): ColumnDef<Container>[] {
+  const isDisabled = shipmentStatus === "price_requested";
+
   return [
-    {
-      id: "select",
-      header: ({ table }) => {
-        const tableData = table.getRowModel().rows.map((row) => row.original);
-        const allSelected = tableData.length > 0 && 
-          tableData.every((container) => selectedContainers.includes(container.id));
-        const someSelected = tableData.some((container) => selectedContainers.includes(container.id)) && !allSelected;
-        
-        return (
-          <Checkbox
-            checked={allSelected ? true : someSelected ? "indeterminate" : false}
-            onCheckedChange={(checked) => {
-              if (!onSelectionChange) return;
-              
-              const currentPageIds = tableData.map((container) => container.id);
-              
-              if (checked) {
-                // Select all containers in current page
-                onSelectionChange([...new Set([...selectedContainers, ...currentPageIds])]);
-              } else {
-                // Deselect all containers in current page
-                onSelectionChange(selectedContainers.filter((id) => !currentPageIds.includes(id)));
-              }
-            }}
-            aria-label="Select all"
-          />
-        );
-      },
-      cell: ({ row }) => {
-        const containerId = row.original.id;
-        const isSelected = selectedContainers.includes(containerId);
-        
-        return (
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => {
-              if (!onSelectionChange) return;
-              
-              if (checked) {
-                onSelectionChange([...selectedContainers, containerId]);
-              } else {
-                onSelectionChange(selectedContainers.filter((id) => id !== containerId));
-              }
-            }}
-            aria-label="Select row"
-          />
-        );
-      },
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       accessorKey: "container_number",
       header: "Container Name",
@@ -156,6 +104,14 @@ export function useContainerAssignColumns({
           );
         }
 
+        if (isDisabled) {
+          return (
+            <span className="text-xs text-muted-foreground">
+              Price requested
+            </span>
+          );
+        }
+
         if (isAssigned) {
           return (
             <>
@@ -164,6 +120,7 @@ export function useContainerAssignColumns({
                 variant="outline"
                 onClick={() => setShowRemoveDialog(true)}
                 className="h-8"
+                disabled={isDisabled}
               >
                 <Minus className="h-3 w-3 mr-1" />
                 Remove
@@ -207,6 +164,7 @@ export function useContainerAssignColumns({
             size="sm"
             onClick={() => onAssign(row.original.id)}
             className="h-8"
+            disabled={isDisabled}
           >
             <Plus className="h-3 w-3 mr-1" />
             Assign

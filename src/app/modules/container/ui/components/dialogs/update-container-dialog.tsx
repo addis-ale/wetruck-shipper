@@ -22,6 +22,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { COUNTRIES } from "@/lib/constants/locations";
 
 import {
   updateContainerSchema,
@@ -108,6 +109,12 @@ export function UpdateContainerDialog({
       form.reset();
     }
   }, [isSuccess, onOpenChange, form]);
+
+  // Country options
+  const countryOptions = COUNTRIES.map((c) => ({
+    value: c.code,
+    label: c.name,
+  }));
 
   const onSubmit = (values: UpdateContainerFormValues) => {
     const parsed = updateContainerSchema.parse(values);
@@ -277,9 +284,29 @@ export function UpdateContainerDialog({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-1">
                   <Label>Country *</Label>
-                  <Input
-                    {...form.register("return_location_info.country")}
+                  <Controller
+                    name="return_location_info.country"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
+                  {form.formState.errors.return_location_info?.country && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.return_location_info.country.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <Label>City *</Label>
