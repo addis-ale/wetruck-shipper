@@ -35,8 +35,9 @@ import {
   Popover,
   PopoverContent,
   PopoverAnchor,
+  PopoverTrigger,
 } from "@/components/ui/popover";
-import { Search, Loader2, Container as ContainerIcon } from "lucide-react";
+import { Search, Loader2, Plus } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,7 @@ export function ContainerAssignTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -89,6 +91,21 @@ export function ContainerAssignTable<TData, TValue>({
       const shipId = (container as ContainerWithShipId).ship_id;
       return shipId === null || shipId === undefined || shipId === 0;
     }) || [];
+
+  // Handle search change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  // Search containers from available containers
+  const searchContainers = availableContainers.filter((container) =>
+    container.container_number
+      .toLowerCase()
+      .includes(debouncedSearch.toLowerCase())
+  );
+
+  const isSearching = isLoading;
+  const isLoadingAvailable = isLoading;
 
   const table = useReactTable({
     data,
@@ -199,7 +216,10 @@ export function ContainerAssignTable<TData, TValue>({
           </Popover>
           <Popover open={assignModalOpen} onOpenChange={setAssignModalOpen}>
             <PopoverTrigger asChild>
-              <Button disabled={!activeShipmentId || isDisabled} className="shrink-0">
+              <Button
+                disabled={!activeShipmentId || isDisabled}
+                className="shrink-0"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Assign Container
               </Button>
@@ -247,9 +267,9 @@ export function ContainerAssignTable<TData, TValue>({
                   </div>
                 )}
               </div>
-            )}
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* Table */}
         <div className="rounded-md border w-full overflow-x-auto">
@@ -285,7 +305,10 @@ export function ContainerAssignTable<TData, TValue>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No containers found.
                   </TableCell>
                 </TableRow>
@@ -328,7 +351,9 @@ export function ContainerAssignTable<TData, TValue>({
             {shipmentStatus === "created" && onRequestPrice ? (
               <Button
                 onClick={() => onRequestPrice(activeShipmentId)}
-                disabled={isRequestingPrice || !activeShipmentId || data.length === 0}
+                disabled={
+                  isRequestingPrice || !activeShipmentId || data.length === 0
+                }
                 className="gap-2"
               >
                 {isRequestingPrice ? (
@@ -338,7 +363,8 @@ export function ContainerAssignTable<TData, TValue>({
                   </>
                 ) : (
                   <>
-                    Request Price ({data.length} container{data.length !== 1 ? "s" : ""})
+                    Request Price ({data.length} container
+                    {data.length !== 1 ? "s" : ""})
                   </>
                 )}
               </Button>
@@ -349,13 +375,15 @@ export function ContainerAssignTable<TData, TValue>({
             ) : shipmentStatus ? (
               <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
                 <span className="text-sm">
-                  Status: {shipmentStatus.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                  Status:{" "}
+                  {shipmentStatus
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
                 </span>
               </div>
             ) : null}
           </div>
         )}
-        
       </CardContent>
     </Card>
   );
