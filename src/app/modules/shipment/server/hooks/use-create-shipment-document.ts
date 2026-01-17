@@ -9,7 +9,7 @@ export function useCreateShipmentDocument(shipId: number) {
       shipmentDocumentsApi.upload(shipId, payload),
 
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shipment-documents", shipId] });
+      qc.invalidateQueries({ queryKey: ["shipment-documents"] });
     },
   });
 }

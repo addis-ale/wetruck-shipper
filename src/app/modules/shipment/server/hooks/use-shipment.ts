@@ -8,11 +8,5 @@ export function useShipment(id: number | null) {
     queryKey: ["shipments", id],
     queryFn: () => shipmentApi.getById(id!),
     enabled: id !== null && id !== undefined,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    refetchInterval: false,
   });
 }

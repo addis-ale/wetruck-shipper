@@ -14,7 +14,7 @@ export function useUploadShipmentDocument(shipId: number) {
       shipmentDocumentsApi.upload(shipId, payload),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["shipment-documents", shipId],
+        queryKey: ["shipment-documents"],
       });
     },
   });

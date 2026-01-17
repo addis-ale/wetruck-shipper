@@ -17,6 +17,7 @@ import {
   Upload,
   Lock,
   Boxes,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -47,6 +48,7 @@ import { PasswordResetDialog } from "@/components/profile/password-reset-dialog"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
+  { name: "Priced Shipments", href: "/dashboard/shipments/priced", icon: CheckCircle2 },
   { name: "Containers", href: "/dashboard/containers", icon: Boxes },
   { name: "Order History", href: "/history", icon: Clock },
   { name: "Live Tracking", href: "/tracking", icon: MapPin },
@@ -251,7 +253,22 @@ export default function DashboardLayout({
             <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden safe-area-bottom shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
               <div className="flex justify-around items-center h-18 px-2 max-w-md mx-auto">
                 {navigation.map((item) => {
-                  const isActive = pathname === item.href;
+                  // Check if this is an exact match
+                  const isExactMatch = pathname === item.href;
+                  
+                  // Check if pathname starts with this href (for child routes)
+                  const isChildRoute = pathname.startsWith(`${item.href}/`);
+                  
+                  // Find if there's a more specific route that also matches
+                  const hasMoreSpecificMatch = navigation.some(
+                    (otherItem) =>
+                      otherItem.href !== item.href &&
+                      otherItem.href.length > item.href.length &&
+                      otherItem.href.startsWith(item.href) &&
+                      (pathname.startsWith(`${otherItem.href}/`) || pathname === otherItem.href)
+                  );
+                  
+                  const isActive = isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
                   return (
                     <Link
                       key={item.name}

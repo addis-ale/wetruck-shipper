@@ -218,13 +218,14 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
             </div>
           </div>
 
-          {/* Pickup Facility */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              <h3 className="text-sm font-semibold">Pickup Facility</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Pickup Facility */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                <h3 className="text-sm font-semibold">Pickup Facility</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2">
                 <div className="space-y-2">
                   <Label htmlFor="pickup_facility.country">Country *</Label>
                   <Controller
@@ -285,7 +286,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="pickup_facility.name">Facility Name *</Label>
                   <Input
                     id="pickup_facility.name"
@@ -298,7 +299,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="pickup_facility.address">Address *</Label>
                   <Input
                     id="pickup_facility.address"
@@ -339,7 +340,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="pickup_facility.contact_email">Contact Email *</Label>
                   <Input
                     id="pickup_facility.contact_email"
@@ -355,15 +356,13 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
             </div>
           </div>
 
-          <Separator />
-
-          {/* Delivery Facility */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              <h3 className="text-sm font-semibold">Delivery Facility</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2">
+            {/* Delivery Facility */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                <h3 className="text-sm font-semibold">Delivery Facility</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2">
                 <div className="space-y-2">
                   <Label htmlFor="delivery_facility.country">Country *</Label>
                   <Controller
@@ -424,7 +423,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="delivery_facility.name">Facility Name *</Label>
                   <Input
                     id="delivery_facility.name"
@@ -437,7 +436,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="delivery_facility.address">Address *</Label>
                   <Input
                     id="delivery_facility.address"
@@ -478,7 +477,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="delivery_facility.contact_email">Contact Email *</Label>
                   <Input
                     id="delivery_facility.contact_email"
@@ -491,6 +490,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     </p>
                   )}
                 </div>
+              </div>
             </div>
           </div>
 

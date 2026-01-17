@@ -8,7 +8,7 @@ export function useDeleteShipmentDocument(shipId: number) {
     mutationFn: (documentId: number) =>
       shipmentDocumentsApi.delete(shipId, documentId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shipment-documents", shipId] });
+      qc.invalidateQueries({ queryKey: ["shipment-documents"] });
     },
   });
 }

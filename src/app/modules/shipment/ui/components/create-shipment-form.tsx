@@ -260,10 +260,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
           <Separator />
 
-          {/* Pickup Facility */}
-          <div className="rounded-md border p-4 space-y-4">
-            <h3 className="text-sm font-semibold">Pickup Facility</h3>
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Pickup Facility */}
+            <div className="rounded-md border p-4 space-y-4">
+              <h3 className="text-sm font-semibold">Pickup Facility</h3>
+              <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="pickup_country">Country</Label>
@@ -371,7 +372,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
 
-                  <div className="space-y-2 sm:col-span-2">
+                  <div className="space-y-2">
                     <Label htmlFor="pickup_contact_email">Contact Email</Label>
                     <Input
                       id="pickup_contact_email"
@@ -388,10 +389,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
             </div>
           </div>
 
-          {/* Delivery Facility */}
-          <div className="rounded-md border p-4 space-y-4">
-            <h3 className="text-sm font-semibold">Delivery Facility</h3>
-            <div>
+            {/* Delivery Facility */}
+            <div className="rounded-md border p-4 space-y-4">
+              <h3 className="text-sm font-semibold">Delivery Facility</h3>
+              <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="delivery_country">Country</Label>
@@ -502,7 +503,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
 
-                  <div className="space-y-2 sm:col-span-2">
+                  <div className="space-y-2">
                     <Label htmlFor="delivery_contact_email">Contact Email</Label>
                     <Input
                       id="delivery_contact_email"
@@ -518,6 +519,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 </div>
             </div>
           </div>
+        </div>
 
           {/* Actions */}
           <div className="flex gap-2 justify-end">

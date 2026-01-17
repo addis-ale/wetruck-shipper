@@ -18,10 +18,16 @@ export const weightUnitEnum = z.enum([
 export const containerStatusEnum = z.enum([
   "created",
   "price_requested",
-  "assigned",
+  "priced",
+  "accepted_by_shipper",
+  "rejected_by_shipper",
+  "allocated",
+  "ready_for_pickup",
   "in_transit",
+  "delivered",
   "completed",
   "cancelled",
+  "assigned",
 ]);
 
 export const containerDetailsSchema = z.object({
@@ -48,10 +54,10 @@ export const createContainerSchema = z.object({
   gross_weight_unit: weightUnitEnum.optional(), // Make optional for read operations
   tare_weight: z.coerce.number().min(0).optional(), // Make optional for read operations
 
-  container_details: containerDetailsSchema.optional(), // Make optional for read operations
+  container_details: containerDetailsSchema.nullable().optional(), // Make optional and nullable for read operations
 
   return_location_info: returnLocationSchema.optional(),
-  sequencing_priority: z.coerce.number().int().min(1).optional(), // Make optional for read operations
+  sequencing_priority: z.union([z.coerce.number().int().min(0), z.null()]).optional(), // Make optional and nullable for read operations, allow 0 and null
 
   is_returning: z.boolean().optional(), // Make optional for read operations
 }).passthrough(); // Allow extra fields from backend

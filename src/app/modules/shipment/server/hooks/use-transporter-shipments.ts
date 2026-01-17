@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { shipmentApi } from "@/app/modules/shipment/server/api/shipment.api";
-import type { ShipItemsListResponse } from "@/lib/zod/shipment.schema";
+import type { ShipItemsListResponse, ShipperShipItemsListResponse } from "@/lib/zod/shipment.schema";
 
 interface UseShipItemsParams {
   page?: number;
@@ -24,4 +24,17 @@ export function useShipItems(params?: UseShipItemsParams) {
 
 // Keep the old hook name for backward compatibility
 export const useTransporterShipments = useShipItems;
+
+// Hook for shipper ship items (grouped by transporter)
+export function useShipperShipItems(params?: {
+  page?: number;
+  per_page?: number;
+}) {
+  return useQuery<ShipperShipItemsListResponse>({
+    queryKey: ["shipper-ship-items", params],
+    queryFn: () => shipmentApi.getShipItemsForShipper(params),
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false,
+  });
+}
 
