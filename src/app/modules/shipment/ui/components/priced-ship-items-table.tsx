@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -17,39 +18,134 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useShipItems } from "@/app/modules/shipment/server/hooks/use-transporter-shipments";
-import type { ShipItem } from "@/lib/zod/shipment.schema";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useShipperShipItems } from "@/app/modules/shipment/server/hooks/use-transporter-shipments";
+import { useAcceptShip } from "@/app/modules/shipment/server/hooks/use-accept-ship";
+import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
+import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PricedShipItemsTableProps {
   activeShipmentId: number | null;
 }
 
-const formatDate = (dateString: string | undefined): string => {
-  if (!dateString) return "N/A";
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return "N/A";
-  }
-};
-
 export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableProps) {
-  const { data, isLoading, error } = useShipItems(
-    activeShipmentId ? { ship_id: activeShipmentId } : undefined
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
+  const { data, isLoading, error } = useShipperShipItems({ page, per_page: perPage });
+  const { data: shipmentsData } = useShipments();
+  const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
+  const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+  // Track accepted shipments (for immediate UI feedback) - must be before early returns
+  const [acceptedShipIds, setAcceptedShipIds] = useState<Set<number>>(new Set());
+  
+  // Create a map of accepted shipment IDs
+  const acceptedShipmentIds = new Set(
+    shipmentsData?.items
+      .filter((shipment) => shipment.status === "accepted_by_shipper")
+      .map((shipment) => shipment.id) || []
   );
+
+  // Clear selections when active shipment changes
+  useEffect(() => {
+    setSelectedItemIds(new Set());
+  }, [activeShipmentId]);
+
+  const handleSelectItem = (itemId: number) => {
+    setSelectedItemIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    // Only select items that are not already accepted
+    const selectableItems = filteredItems.filter(
+      (item) => !acceptedShipIds.has(item.ship_id) && !acceptedShipmentIds.has(item.ship_id)
+    );
+    
+    if (selectedItemIds.size === selectableItems.length) {
+      setSelectedItemIds(new Set());
+    } else {
+      setSelectedItemIds(new Set(selectableItems.map((item) => item.id)));
+    }
+  };
+
+  const handleAcceptSelected = () => {
+    if (selectedItemIds.size > 0) {
+      setAcceptDialogOpen(true);
+    }
+  };
+
+  const confirmAccept = () => {
+    if (selectedItemIds.size > 0 && activeShipmentId) {
+      // Get the ship_item_ids from selected items
+      const shipItemIds = Array.from(selectedItemIds);
+      
+      // Close dialog optimistically
+      setAcceptDialogOpen(false);
+      
+      // Mark this shipment as accepted optimistically
+      setAcceptedShipIds((prev) => new Set(prev).add(activeShipmentId));
+      
+      // Clear selections
+      const selectedIdsBackup = new Set(selectedItemIds);
+      setSelectedItemIds(new Set());
+      
+      // Trigger the mutation with error handling
+      acceptShip(
+        {
+          shipId: activeShipmentId,
+          shipItemIds,
+        },
+        {
+          onError: () => {
+            // Rollback: restore dialog and remove from accepted set
+            setAcceptDialogOpen(true);
+            setSelectedItemIds(selectedIdsBackup);
+            setAcceptedShipIds((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(activeShipmentId);
+              return newSet;
+            });
+          },
+        }
+      );
+    }
+  };
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Priced Ship Items</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Priced Shipments
+          </CardTitle>
           <CardDescription>
-            Ship items with pricing information from transporters
+            All priced shipments with transporter quotes
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -67,52 +163,67 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Priced Ship Items</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Priced Shipments
+          </CardTitle>
           <CardDescription>
-            Ship items with pricing information from transporters
+            All priced shipments with transporter quotes
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive">
-            Error loading priced ship items: {error instanceof Error ? error.message : "Unknown error"}
+            Error loading priced shipments: {error instanceof Error ? error.message : "Unknown error"}
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  const shipItems = data?.items || [];
+  const transporterGroups = data?.items || [];
 
-  if (!activeShipmentId) {
+  // Flatten all ship items and filter by activeShipmentId
+  const allShipItems = transporterGroups.flatMap((group) =>
+    group.ship_items
+      .filter((item) => !activeShipmentId || item.ship_id === activeShipmentId)
+      .map((item) => ({
+        ...item,
+        transporter_id: group.transporter_id,
+        group_currency: group.currency,
+      }))
+  );
+
+  // Group ship items by transporter since we filtered by ship_id
+  const filteredItems = allShipItems.sort((a, b) => a.id - b.id);
+
+  // Calculate totals
+  const totalTransporters = transporterGroups.length;
+  const totalShipItems = allShipItems.length;
+  const totalContainers = transporterGroups.reduce(
+    (sum, group) => sum + group.total_containers,
+    0
+  );
+  const totalPrice = transporterGroups.reduce(
+    (sum, group) => sum + group.total_price,
+    0
+  );
+  const primaryCurrency = transporterGroups[0]?.currency || "ETB";
+
+  if (transporterGroups.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Priced Ship Items</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Priced Shipments
+          </CardTitle>
           <CardDescription>
-            Ship items with pricing information from transporters
+            All priced shipments with transporter quotes
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Select a shipment to view priced ship items.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (shipItems.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Priced Ship Items</CardTitle>
-          <CardDescription>
-            Ship items with pricing information from transporters
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No priced ship items available for this shipment.
+          <p className="text-sm text-muted-foreground text-center py-8">
+            No priced shipments available.
           </p>
         </CardContent>
       </Card>
@@ -120,59 +231,234 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Priced Ship Items</CardTitle>
-        <CardDescription>
-          Ship items with pricing information from transporters ({shipItems.length} item{shipItems.length !== 1 ? "s" : ""})
-          {activeShipmentId && ` for Ship #${activeShipmentId}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Containers</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Currency</TableHead>
-                <TableHead>Transporter ID</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {shipItems.map((item: ShipItem) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">
-                    #{item.id}
-                  </TableCell>
-                  <TableCell>
-                    {Array.isArray(item.containers) && item.containers.length > 0
-                      ? item.containers.length === 1
-                        ? String(item.containers[0])
-                        : `${item.containers.length} containers`
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {item.computed_price !== undefined && item.computed_price !== null
-                      ? item.computed_price.toLocaleString()
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>{item.currency || "ETB"}</TableCell>
-                  <TableCell>{item.transporter_id || "N/A"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {item.status || "N/A"}
-                    </Badge>
-                  </TableCell>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Transporter Quotes
+          </CardTitle>
+          <CardDescription>
+            {filteredItems.length} transporter quote{filteredItems.length !== 1 ? "s" : ""} for shipment #{activeShipmentId}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      checked={selectedItemIds.size > 0 && selectedItemIds.size === filteredItems.filter(
+                        (item) => !acceptedShipIds.has(item.ship_id) && !acceptedShipmentIds.has(item.ship_id)
+                      ).length}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Container Numbers</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead>Currency</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {filteredItems.length > 0 ? (
+                  filteredItems.map((item) => {
+                    const containerCount = Array.isArray(item.containers) ? item.containers.length : 0;
+                    const rowKey = `${item.transporter_id}-${item.id}`;
+                    const isAccepted = acceptedShipIds.has(item.ship_id) || acceptedShipmentIds.has(item.ship_id);
+                    const isSelected = selectedItemIds.has(item.id);
+
+                    return (
+                      <TableRow key={rowKey}>
+                        {/* Checkbox */}
+                        <TableCell>
+                          {isAccepted ? (
+                            <Checkbox checked={false} disabled />
+                          ) : (
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => handleSelectItem(item.id)}
+                            />
+                          )}
+                        </TableCell>
+                        {/* Container Numbers */}
+                        <TableCell>
+                          {containerCount > 0 ? (
+                            <span className="text-sm font-medium">
+                              {containerCount} container{containerCount !== 1 ? "s" : ""}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">0 containers</span>
+                          )}
+                        </TableCell>
+                        {/* Price */}
+                        <TableCell className="text-right font-semibold">
+                          {item.computed_price !== undefined && item.computed_price !== null
+                            ? item.computed_price.toLocaleString()
+                            : "0"}
+                        </TableCell>
+                        {/* Currency */}
+                        <TableCell>{item.currency || item.group_currency || "ETB"}</TableCell>
+                        {/* Status */}
+                        <TableCell className="text-right">
+                          {isAccepted ? (
+                            <Badge variant="secondary" className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Accepted
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Pending</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                      No quotes found for this shipment.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Accept Selected Button */}
+          {selectedItemIds.size > 0 && (
+            <div className="flex justify-end mt-4">
+              <Button
+                onClick={handleAcceptSelected}
+                disabled={isAccepting}
+                className="gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Accept Selected ({selectedItemIds.size})
+              </Button>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {data && data.pages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
+              <div className="flex items-center gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, data.total)} of {data.total} results
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1 || isLoading}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1 || isLoading}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-1 px-2">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      Page {page} of {data.pages || 1}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= data.pages || isLoading}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setPage(data.pages)}
+                    disabled={page >= data.pages || isLoading}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Select
+                  value={perPage.toString()}
+                  onValueChange={(value) => {
+                    setPerPage(Number(value));
+                    setPage(1);
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="h-8 text-xs sm:text-sm w-[70px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Accept Confirmation Dialog */}
+      <Dialog open={acceptDialogOpen} onOpenChange={setAcceptDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Accept Selected Quotes</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to accept {selectedItemIds.size} selected quote{selectedItemIds.size !== 1 ? "s" : ""}?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              This action will accept the selected transporter quotes for shipment #{activeShipmentId}.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAcceptDialogOpen(false);
+              }}
+              disabled={isAccepting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmAccept}
+              disabled={isAccepting}
+              className="gap-2"
+            >
+              {isAccepting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                  Accepting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Accept Quote
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
-

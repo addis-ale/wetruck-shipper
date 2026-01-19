@@ -9,31 +9,36 @@ import { UploadShipmentDocumentDialog } from "./upload-shipment-document-dialog"
 export function UploadShipmentDocumentCard({
   shipId,
 }: {
-  shipId: number;
+  shipId: number | null;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <div className="border rounded-md p-4 flex items-center justify-between">
+      <div className="border rounded-md p-4 flex items-center justify-between bg-card text-card-foreground shadow-sm">
         <div>
-          <p className="font-medium">Documents</p>
+          <p className="font-medium">Shipment Documents</p>
           <p className="text-sm text-muted-foreground">
-            Upload shipment-related documents
+            Manage files related to this shipment
           </p>
         </div>
 
-        <Button onClick={() => setOpen(true)}>
+        <Button 
+          onClick={() => setOpen(true)}
+          disabled={!shipId}
+        >
           <Plus className="mr-2 h-4 w-4" />
-          Upload Document
+          Upload
         </Button>
       </div>
 
-      <UploadShipmentDocumentDialog
-        shipId={shipId}
-        open={open}
-        onOpenChange={setOpen}
-      />
+      {shipId && (
+        <UploadShipmentDocumentDialog
+          shipId={shipId}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
     </>
   );
 }

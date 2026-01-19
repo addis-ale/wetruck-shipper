@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { containerSchema } from "./container.schema";
 
 // Enums
 export const originDestinationEnum = z.enum([
@@ -93,13 +94,14 @@ export const shipmentCreateResponseSchema = z.object({
 });
 
 // Ship item schema (for priced items from /api/v1/ship-item/)
+// Containers are full container objects with all fields
 export const shipItemSchema = z.object({
   id: z.number(),
   ship_id: z.number(),
   truck_id: z.number().optional().nullable(),
   driver_id: z.number().optional().nullable(),
   transporter_id: z.number(),
-  containers: z.array(z.any()).default([]), // Array of container IDs or objects
+  containers: z.array(containerSchema).default([]), // Array of full container objects
   computed_price: z.number(),
   currency: z.string(),
   deleted: z.boolean().optional(),
@@ -124,6 +126,26 @@ export const transporterShipmentSchema = shipmentSchema.extend({
   containers: z.array(z.any()).default([]), // Array of container objects
 }).passthrough(); // Allow extra fields from backend
 
+// Shipper ship items response schema (grouped by transporter)
+// Response from /api/v1/ship-item/shipper
+export const shipperShipItemsItemSchema = z.object({
+  transporter_id: z.number(),
+  ship_items: z.array(shipItemSchema).default([]),
+  total_price: z.number(),
+  total_containers: z.number(),
+  currency: z.string(),
+}).passthrough();
+
+export const shipperShipItemsListResponseSchema = z.object({
+  status: z.boolean(),
+  message: z.string().optional(),
+  total: z.number(),
+  page: z.number(),
+  per_page: z.number(),
+  pages: z.number(),
+  items: z.array(shipperShipItemsItemSchema),
+});
+
 // Types
 export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 export type UpdateShipmentInput = z.infer<typeof updateShipmentSchema>;
@@ -135,4 +157,6 @@ export type ShipmentDetails = z.infer<typeof shipmentDetailsSchema>;
 export type ShipItem = z.infer<typeof shipItemSchema>;
 export type ShipItemsListResponse = z.infer<typeof shipItemsListResponseSchema>;
 export type TransporterShipment = z.infer<typeof transporterShipmentSchema>;
+export type ShipperShipItemsItem = z.infer<typeof shipperShipItemsItemSchema>;
+export type ShipperShipItemsListResponse = z.infer<typeof shipperShipItemsListResponseSchema>;
 

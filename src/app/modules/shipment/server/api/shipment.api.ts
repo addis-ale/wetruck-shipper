@@ -8,6 +8,8 @@ import type {
   ShipmentCreateResponse,
   ShipItemsListResponse,
   TransporterShipment,
+  ShipperShipItemsListResponse,
+  ShipItem,
 } from "@/lib/zod/shipment.schema";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -278,5 +280,55 @@ export const shipmentApi = {
   // Get ship by transporter (includes ship_items and containers)
   async getByTransporter(shipId: number): Promise<TransporterShipment> {
     return apiRequest<TransporterShipment>(`/ship/transporter/${shipId}`);
+  },
+
+  // Get ship items for shipper (grouped by transporter)
+  async getShipItemsForShipper(params?: {
+    page?: number;
+    per_page?: number;
+  }): Promise<ShipperShipItemsListResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.per_page) searchParams.append("per_page", params.per_page.toString());
+    
+    const query = searchParams.toString();
+    const endpoint = query ? `/ship-item/shipper?${query}` : "/ship-item/shipper";
+    return apiRequest<ShipperShipItemsListResponse>(endpoint);
+  },
+
+  // Get single ship item by ID for shipper (with full container details)
+  async getShipItemByIdForShipper(shipItemId: number): Promise<ShipItem> {
+    return apiRequest<ShipItem>(`/ship-item/${shipItemId}/shipper`);
+  },
+
+  // Accept a transporter's quote for a shipment (old endpoint - kept for backward compatibility)
+  async acceptShipItem(shipItemId: number): Promise<{
+    status: boolean;
+    message: string;
+  }> {
+    return apiRequest<{
+      status: boolean;
+      message: string;
+    }>(`/ship-item/${shipItemId}/accept`, {
+      method: "POST",
+    });
+  },
+
+  // Accept a shipment by selecting ship items
+  async acceptShip(shipId: number, shipItemIds: number[]): Promise<{
+    status: boolean;
+    error_message: string | null;
+    success_message: string | null;
+    result: string;
+  }> {
+    return apiRequest<{
+      status: boolean;
+      error_message: string | null;
+      success_message: string | null;
+      result: string;
+    }>(`/ship/ship/${shipId}/accept-ship`, {
+      method: "POST",
+      body: JSON.stringify({ ship_item_ids: shipItemIds }),
+    });
   },
 };
