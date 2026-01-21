@@ -115,6 +115,7 @@ async function apiRequest<T>(
 }
 const LOCATION_ENUM_MAP: Record<string, string> = {
   "addis ababa": "Addis Ababa",
+  "addis_ababa": "Addis Ababa",
   "adama": "Adama",
   "dukem": "Dukem",
   "bishoftu": "Bishoftu",
@@ -123,10 +124,18 @@ const LOCATION_ENUM_MAP: Record<string, string> = {
   "djibouti": "Djibouti",
 };
 
+
 function normalizeLocation(value?: string): string | undefined {
-  if (!value) return value;
-  return LOCATION_ENUM_MAP[value.trim().toLowerCase()] ?? value;
+  if (!value) return undefined;
+
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
+
+  return LOCATION_ENUM_MAP[normalized];
 }
+
 
 export const shipmentApi = {
   // Get all shipments with pagination and filters
