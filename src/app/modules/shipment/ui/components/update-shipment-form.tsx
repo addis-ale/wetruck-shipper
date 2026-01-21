@@ -223,7 +223,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                <h3 className="text-sm font-semibold">Pickup Facility</h3>
+                <h3 className="text-sm font-semibold">Pickup Address</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2">
                 <div className="space-y-2">
@@ -360,7 +360,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                <h3 className="text-sm font-semibold">Delivery Facility</h3>
+                <h3 className="text-sm font-semibold">Delivery Address</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2">
                 <div className="space-y-2">

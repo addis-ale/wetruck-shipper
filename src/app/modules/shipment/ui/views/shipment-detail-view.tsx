@@ -368,7 +368,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Building2 className="h-5 w-5" />
-                    Pickup Facility
+                    Pickup Address
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -404,7 +404,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <CheckCircle2 className="h-5 w-5" />
-                    Delivery Facility
+                    Delivery Address
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
