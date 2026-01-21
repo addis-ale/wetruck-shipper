@@ -263,7 +263,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Pickup Facility */}
             <div className="rounded-md border p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Pickup Facility</h3>
+              <h3 className="text-sm font-semibold">Pickup Address</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -391,7 +391,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
             {/* Delivery Facility */}
             <div className="rounded-md border p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Delivery Facility</h3>
+              <h3 className="text-sm font-semibold">Delivery Address</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
