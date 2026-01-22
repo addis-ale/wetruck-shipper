@@ -35,9 +35,8 @@ import {
   Popover,
   PopoverContent,
   PopoverAnchor,
-  PopoverTrigger,
 } from "@/components/ui/popover";
-import { Search, Loader2, Plus } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Badge } from "@/components/ui/badge";
@@ -71,18 +70,20 @@ export function ContainerAssignTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const debouncedSearch = useDebounce(searchQuery, 500);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  /** Fetch containers even when search is empty */
-  const { data: containers, isLoading } = useContainers(
-    activeShipmentId
-      ? {
-          container_number: debouncedSearch || undefined,
-          per_page: 20,
-        }
-      : undefined
+  /** Fetch containers when focused - limit to 5 when showing initial results, 10 when searching */
+  const { data: containers, isLoading, isFetching } = useContainers(
+    {
+      container_number: debouncedSearch || undefined,
+      per_page: debouncedSearch ? 10 : 5,
+    },
+    { 
+      enabled: !!activeShipmentId && searchOpen,
+      staleTime: 0, // Always refetch when params change
+    }
   );
 
   /** Only show unassigned containers */
@@ -97,15 +98,7 @@ export function ContainerAssignTable<TData, TValue>({
     setSearchQuery(value);
   };
 
-  // Search containers from available containers
-  const searchContainers = availableContainers.filter((container) =>
-    container.container_number
-      .toLowerCase()
-      .includes(debouncedSearch.toLowerCase())
-  );
-
-  const isSearching = isLoading;
-  const isLoadingAvailable = isLoading;
+  const isSearching = isLoading || isFetching;
 
   const table = useReactTable({
     data,
@@ -124,16 +117,36 @@ export function ContainerAssignTable<TData, TValue>({
     },
   });
 
+  // Close popover when shipment changes
   useEffect(() => {
-    if (activeShipmentId) {
-      setSearchOpen(true);
-    }
+    setSearchOpen(false);
+    setSearchQuery("");
+    setIsFocused(false);
   }, [activeShipmentId]);
 
   const handleContainerSelect = (container: Container) => {
     onAssignContainer?.(container.id);
     setSearchQuery("");
     setSearchOpen(false);
+    setIsFocused(false);
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    setSearchOpen(true);
+  };
+
+  const handleBlur = (e: React.FocusEvent) => {
+    // Check if the new focus target is inside the popover
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (relatedTarget?.closest('[data-radix-popper-content-wrapper]')) {
+      return; // Don't close if clicking inside popover
+    }
+    // Delay closing to allow click on popover items
+    setTimeout(() => {
+      setSearchOpen(false);
+      setIsFocused(false);
+    }, 150);
   };
 
   return (
@@ -151,7 +164,7 @@ export function ContainerAssignTable<TData, TValue>({
         {/* Search */}
         <div className="flex items-center gap-2">
           <Popover
-            open={searchOpen && debouncedSearch.length > 0}
+            open={searchOpen && isFocused}
             onOpenChange={setSearchOpen}
           >
             <PopoverAnchor asChild>
@@ -163,11 +176,8 @@ export function ContainerAssignTable<TData, TValue>({
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-9"
                   disabled={!activeShipmentId || isDisabled}
-                  onFocus={() => {
-                    if (debouncedSearch.length > 0) {
-                      setSearchOpen(true);
-                    }
-                  }}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                 />
               </div>
             </PopoverAnchor>
@@ -182,9 +192,14 @@ export function ContainerAssignTable<TData, TValue>({
                   <div className="flex items-center justify-center p-4">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
-                ) : searchContainers.length > 0 ? (
+                ) : availableContainers.length > 0 ? (
                   <div className="divide-y">
-                    {searchContainers.map((container) => (
+                    {!debouncedSearch && (
+                      <div className="px-3 py-2 text-xs text-muted-foreground bg-muted/50">
+                        Showing {availableContainers.length} available containers • Type to search
+                      </div>
+                    )}
+                    {availableContainers.map((container) => (
                       <button
                         key={container.id}
                         onClick={() => handleContainerSelect(container)}
@@ -208,62 +223,7 @@ export function ContainerAssignTable<TData, TValue>({
                   </div>
                 ) : (
                   <div className="p-4 text-sm text-muted-foreground text-center">
-                    No containers found
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Popover open={assignModalOpen} onOpenChange={setAssignModalOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                disabled={!activeShipmentId || isDisabled}
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Assign Container
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[400px] p-0"
-              align="end"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="max-h-[400px] overflow-y-auto">
-                {isLoadingAvailable ? (
-                  <div className="flex items-center justify-center p-4">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  </div>
-                ) : availableContainers.length > 0 ? (
-                  <div className="divide-y">
-                    {availableContainers.map((container) => (
-                      <button
-                        key={container.id}
-                        onClick={() => {
-                          handleContainerSelect(container);
-                          setAssignModalOpen(false);
-                        }}
-                        className="w-full p-3 text-left hover:bg-accent transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">
-                              {container.container_number}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {container.container_size === "twenty_feet"
-                                ? "20ft"
-                                : "40ft"}{" "}
-                              • {container.container_type}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 text-sm text-muted-foreground text-center">
-                    No available containers found
+                    {debouncedSearch ? "No containers found" : "No available containers"}
                   </div>
                 )}
               </div>

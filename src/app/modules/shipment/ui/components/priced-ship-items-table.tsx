@@ -31,7 +31,7 @@ import {
 import { useShipperShipItems } from "@/app/modules/shipment/server/hooks/use-transporter-shipments";
 import { useAcceptShip } from "@/app/modules/shipment/server/hooks/use-accept-ship";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
-import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info } from "lucide-react";
 import Link from "next/link";
 import {
   Select,
@@ -40,10 +40,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PricedShipItemsTableProps {
   activeShipmentId: number | null;
 }
+
+// Helper function to format numbers with 2 decimal places
+const formatPrice = (value: number): string => {
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableProps) {
   const [page, setPage] = useState(1);
@@ -256,7 +270,10 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                     />
                   </TableHead>
                   <TableHead>Container Numbers</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead>Return Status</TableHead>
+                  <TableHead className="text-right">Base Price</TableHead>
+                  <TableHead className="text-right">Return Fee</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                   <TableHead>Currency</TableHead>
                   <TableHead className="text-right">Status</TableHead>
                 </TableRow>
@@ -265,9 +282,23 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                 {filteredItems.length > 0 ? (
                   filteredItems.map((item) => {
                     const containerCount = Array.isArray(item.containers) ? item.containers.length : 0;
+                    const containers = Array.isArray(item.containers) ? item.containers : [];
+                    const returningCount = containers.filter((c) => c.is_returning === true).length;
+                    const notReturningCount = containerCount - returningCount;
                     const rowKey = `${item.transporter_id}-${item.id}`;
                     const isAccepted = acceptedShipIds.has(item.ship_id) || acceptedShipmentIds.has(item.ship_id);
                     const isSelected = selectedItemIds.has(item.id);
+                    
+                    // Calculate return fee: 10,000 ETB per returning container
+                    const RETURN_FEE_PER_CONTAINER_ETB = 10000;
+                    const returnFeeETB = returningCount * RETURN_FEE_PER_CONTAINER_ETB;
+                    // Ensure basePrice is a number (API might return string)
+                    const basePrice = item.computed_price !== undefined && item.computed_price !== null 
+                      ? Number(item.computed_price) 
+                      : 0;
+                    const currency = item.currency || item.group_currency || "ETB";
+                    // Calculate total: base price plus return fee if there are returning containers
+                    const totalPrice = basePrice + returnFeeETB;
 
                     return (
                       <TableRow key={rowKey}>
@@ -292,11 +323,74 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                             <span className="text-muted-foreground">0 containers</span>
                           )}
                         </TableCell>
-                        {/* Price */}
-                        <TableCell className="text-right font-semibold">
-                          {item.computed_price !== undefined && item.computed_price !== null
-                            ? item.computed_price.toLocaleString()
-                            : "0"}
+                        {/* Return Status */}
+                        <TableCell>
+                          {containerCount > 0 ? (
+                            <div className="flex flex-col gap-1">
+                              {returningCount > 0 && (
+                                <Badge variant="secondary" className="w-fit text-xs">
+                                  Returning
+                                </Badge>
+                              )}
+                              {notReturningCount > 0 && (
+                                <Badge variant="outline" className="w-fit text-xs">
+                                  One-way
+                                </Badge>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
+                        {/* Base Price */}
+                        <TableCell className="text-right">
+                          <span className="font-medium">
+                            {formatPrice(basePrice)}
+                          </span>
+                        </TableCell>
+                        {/* Return Fee */}
+                        <TableCell className="text-right">
+                          {returnFeeETB > 0 ? (
+                            <div className="flex items-center justify-end gap-1.5">
+                              <span className="text-amber-600 font-medium">
+                                {formatPrice(returnFeeETB)}
+                              </span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-xs">
+                                    <div className="space-y-1.5">
+                                      <p className="font-semibold">Return Fee Details:</p>
+                                      <div className="space-y-1 text-xs">
+                                        <div className="flex justify-between gap-4">
+                                          <span>Returning Containers:</span>
+                                          <span>{returningCount} container{returningCount !== 1 ? "s" : ""}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                          <span>Fee per Container:</span>
+                                          <span>10,000.00 ETB</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4 pt-1 border-t border-border font-semibold">
+                                          <span>Total Return Fee:</span>
+                                          <span>{formatPrice(returnFeeETB)} ETB</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        {/* Total */}
+                        <TableCell className="text-right">
+                          <span className="font-semibold">
+                            {formatPrice(totalPrice)}
+                          </span>
                         </TableCell>
                         {/* Currency */}
                         <TableCell>{item.currency || item.group_currency || "ETB"}</TableCell>
@@ -316,7 +410,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                       No quotes found for this shipment.
                     </TableCell>
                   </TableRow>
