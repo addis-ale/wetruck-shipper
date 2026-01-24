@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
 import { ContainerAssignTable } from "@/app/modules/shipment/ui/components/container-assign-table";
@@ -13,7 +13,7 @@ import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Package } from "lucide-react";
 import { PricedShipItemsTable } from "@/app/modules/shipment/ui/components/priced-ship-items-table";
@@ -22,18 +22,31 @@ import { AcceptedShipItemsTable } from "@/app/modules/shipment/ui/components/acc
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
   const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("created");
 
   // Fetch data
   const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
   
-  const shipments = shipmentsResponse?.items || [];
+  const allShipments = shipmentsResponse?.items || [];
 
-  // Auto-select first shipment when shipments load and no shipment is selected
+  // Filter shipments by status based on active tab
+  const filteredShipments = useMemo(() => 
+    allShipments.filter((s) => s.status === activeTab),
+    [allShipments, activeTab]
+  );
+
+  // Auto-select first shipment when filtered list changes
   useEffect(() => {
-    if (shipments.length > 0 && activeShipmentId === null) {
-      setActiveShipmentId(shipments[0].id);
+    if (filteredShipments.length > 0) {
+      // Only auto-select if current activeShipmentId is not in the filtered list
+      const isStillInList = filteredShipments.some((s) => s.id === activeShipmentId);
+      if (!isStillInList) {
+        setActiveShipmentId(filteredShipments[0].id);
+      }
+    } else {
+      setActiveShipmentId(null);
     }
-  }, [shipments, activeShipmentId]);
+  }, [filteredShipments, activeShipmentId]);
   
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
   const { data: assignedContainersData, isLoading: assignedContainersLoading } = useContainers(
@@ -68,7 +81,7 @@ export function ShipmentsView() {
   const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
   
   // Get active shipment status
-  const activeShipment = shipments.find(s => s.id === activeShipmentId);
+  const activeShipment = allShipments.find(s => s.id === activeShipmentId);
 
   // Get assigned container IDs for active shipment (for column actions)
   const assignedContainerIds = assignedContainers.map((c) => c.id);
@@ -123,7 +136,7 @@ export function ShipmentsView() {
   });
 
   // Loading state - only show skeleton on initial load, not on refetch
-  if (shipmentsLoading && !shipments.length) {
+  if (shipmentsLoading && !allShipments.length) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-[400px] w-full" />
@@ -229,7 +242,7 @@ export function ShipmentsView() {
             </div>
           </div>
         </div>
-      </div>
+      </Tabs>
     </div>
   );
 }

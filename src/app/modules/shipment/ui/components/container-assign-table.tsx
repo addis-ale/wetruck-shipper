@@ -177,7 +177,7 @@ export function ContainerAssignTable<TData, TValue>({
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-9"
-                  disabled={!activeShipmentId || isDisabled}
+                  disabled={!activeShipmentId || shipmentStatus !== "created"}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                 />
@@ -229,9 +229,9 @@ export function ContainerAssignTable<TData, TValue>({
                   </div>
                 )}
               </div>
-            )}
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* Table */}
         <div className="rounded-md border w-full overflow-x-auto">
