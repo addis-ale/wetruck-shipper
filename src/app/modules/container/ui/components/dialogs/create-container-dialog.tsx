@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,52 +23,138 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import {
   createContainerSchema,
   CreateContainerInput,
 } from "@/lib/zod/container.schema";
-import { useCreateContainer } from "../../../server/hooks/use-create-container";
-import { z } from "zod";
 import { COUNTRIES } from "@/lib/constants/locations";
+import { useCreateContainer } from "../../../server/hooks/use-create-container";
 
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
+type BackendErrorShape =
+  | {
+      message?: string;
+      detail?: unknown;
+      fields?: Record<string, unknown>;
+      errors?: unknown;
+    }
+  | unknown;
+
+/* -------------------------------------------------------------------------- */
+/*                           Backend Error Helpers                             */
+/* -------------------------------------------------------------------------- */
+
+function safeString(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val === "string") return val;
+  if (typeof val === "number" || typeof val === "boolean") return String(val);
+  return null;
+}
+
+function extractFieldErrors(
+  responseData: BackendErrorShape
+): Record<string, string> | null {
+  const data = responseData as any;
+
+  // { fields: { "a.b": "msg" } }
+  if (data?.fields && typeof data.fields === "object") {
+    const out: Record<string, string> = {};
+    Object.entries(data.fields).forEach(([k, v]) => {
+      out[k] = safeString(v) ?? "Invalid value";
+    });
+    return Object.keys(out).length ? out : null;
+  }
+
+  // { errors: { "a.b": ["msg"] } }
+  if (data?.errors && typeof data.errors === "object") {
+    const out: Record<string, string> = {};
+    Object.entries(data.errors).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        out[k] = v.map(safeString).filter(Boolean).join(", ");
+      } else {
+        out[k] = safeString(v) ?? "Invalid value";
+      }
+    });
+    return Object.keys(out).length ? out : null;
+  }
+
+  // FastAPI / Pydantic style
+  if (Array.isArray(data?.detail)) {
+    const out: Record<string, string> = {};
+    data.detail.forEach((item: any) => {
+      if (!Array.isArray(item?.loc)) return;
+      const path = item.loc
+        .filter((p: unknown) => p !== "body")
+        .map((p: unknown) => safeString(p))
+        .filter(Boolean)
+        .join(".");
+      if (path) out[path] = safeString(item?.msg) ?? "Invalid value";
+    });
+    return Object.keys(out).length ? out : null;
+  }
+
+  return null;
+}
+
+function extractFormMessage(data: BackendErrorShape, fallback: string) {
+  const msg =
+    safeString((data as any)?.message) ||
+    safeString((data as any)?.detail) ||
+    safeString((data as any)?.error);
+  return msg ?? fallback;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                Component                                   */
+/* -------------------------------------------------------------------------- */
 
 export function CreateContainerDialog() {
   const [open, setOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const defaultValues = useMemo<CreateContainerInput>(
-    () => ({
-      container_number: "",
-      container_size: "twenty_feet",
-      container_type: "dry",
-      gross_weight: 0,
-      gross_weight_unit: "kg",
-      tare_weight: 0,
-      container_details: {
-        commodity: [""],
-        instruction: "",
-      },
-      return_location_info: {
-        country: "",
-        city: "",
-        port: "",
-        address: "",
-      },
-      sequencing_priority: 1,
-      is_returning: true,
-    }),
-    []
-  );
+const defaultValues = useMemo<CreateContainerFormValues>(
+  () => ({
+    container_number: "",
+    container_size: "twenty_feet",
+    container_type: "dry",
+
+    gross_weight: 0,
+    gross_weight_unit: "kg",
+    tare_weight: 0,
+
+    container_details: {
+      commodity: [""],
+      instruction: "",
+    },
+
+    return_location_info: {
+      country: "",
+      city: "",
+      port: "",
+      address: "",
+    },
+
+    sequencing_priority: 1,
+    is_returning: true,
+    recommended_truck_type: "flatbed",
+  }),
+  []
+);
+
 
   const form = useForm<CreateContainerFormValues>({
     resolver: zodResolver(createContainerSchema),
     defaultValues,
     mode: "onChange",
   });
-  
+
   const {
     register,
     handleSubmit,
@@ -75,55 +162,82 @@ export function CreateContainerDialog() {
     reset,
     control,
     setValue,
+    setError,
     formState: { errors, isSubmitting, isValid },
   } = form;
 
   const isReturning = watch("is_returning");
-  
-  // Country options
+
+const commodities = useFieldArray({
+  control: control as any,
+  name: "container_details.commodity",
+});
+
   const countryOptions = COUNTRIES.map((c) => ({
     value: c.code,
     label: c.name,
   }));
 
-  const commodities = useFieldArray({
-    control: control as any,
-    name: "container_details.commodity",
-  });
-  
-  // mutation
-  const { mutate, isPending } = useCreateContainer({
+  const { mutateAsync, isPending } = useCreateContainer({
     onSuccess: () => {
+      setFormError(null);
       setOpen(false);
       reset(defaultValues);
     },
   });
 
-  const submitting = isPending || isSubmitting;
+  const submitting = isSubmitting || isPending;
 
-  // submit
-  function onSubmit(values: CreateContainerFormValues) {
-    // ✅ parse → coercion happens here
-    const parsed = createContainerSchema.parse(values);
-  
-    const payload: CreateContainerInput = {
-      ...parsed,
-      container_details: {
+  async function onSubmit(values: CreateContainerFormValues) {
+    setFormError(null);
+
+    Object.keys(errors).forEach((field) => {
+      setError(field as any, undefined as any);
+    });
+
+    try {
+      const parsed = createContainerSchema.parse(values);
+
+   const payload: CreateContainerInput = {
+  ...parsed,
+
+  container_details: parsed.container_details
+    ? {
         ...parsed.container_details,
-        commodity: parsed.container_details.commodity
-          .map((c) => c.trim())
-          .filter(Boolean),
-      },
-      return_location_info: parsed.is_returning
-        ? parsed.return_location_info
-        : undefined,
-    };
-  
-    mutate(payload);
-  }
-  
+        commodity:
+          parsed.container_details.commodity
+            ?.map((c) => c.trim())
+            .filter(Boolean) || [],
+      }
+    : undefined,
 
-  // ui
+  return_location_info: parsed.is_returning
+    ? parsed.return_location_info
+    : undefined,
+};
+
+
+      await mutateAsync(payload);
+    } catch (err: any) {
+      const responseData = err?.response?.data ?? err;
+
+      const fieldErrors = extractFieldErrors(responseData);
+      if (fieldErrors) {
+        Object.entries(fieldErrors).forEach(([path, message]) => {
+          setError(path as any, { type: "server", message });
+        });
+        return;
+      }
+
+      setFormError(
+        extractFormMessage(
+          responseData,
+          "Failed to create container. Please review your inputs and try again."
+        )
+      );
+    }
+  }
+
   return (
     <>
       <Button onClick={() => setOpen(true)}>Add Container</Button>
@@ -132,30 +246,34 @@ export function CreateContainerDialog() {
         open={open}
         onOpenChange={(v) => {
           setOpen(v);
-          if (!v) reset(defaultValues);
+          if (!v) {
+            setFormError(null);
+            reset(defaultValues);
+          }
         }}
       >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="shrink-0">
+          <DialogHeader>
             <DialogTitle>Add Container</DialogTitle>
             <DialogDescription>
               Fill the container details and save.
             </DialogDescription>
           </DialogHeader>
 
-          <form 
-            className="flex-1 overflow-y-auto pr-1 space-y-6" 
-            onSubmit={handleSubmit(onSubmit)}
+          {/* ====================== FORM ====================== */}
+          <form
             id="create-container-form"
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex-1 overflow-y-auto pr-1 space-y-6"
           >
-            {/* Top fields */}
+            {/* ================= TOP FIELDS ================= */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Container Number */}
               <div className="space-y-2">
-                <Label htmlFor="container_number">Container Number</Label>
-                <Input 
-                  id="container_number"
-                  {...register("container_number")} 
-                />
+                <Label htmlFor="container_number" required>
+                  Container Number
+                </Label>
+                <Input id="container_number" {...register("container_number")} />
                 {errors.container_number && (
                   <p className="text-sm text-destructive">
                     {errors.container_number.message}
@@ -163,13 +281,16 @@ export function CreateContainerDialog() {
                 )}
               </div>
 
+              {/* Sequencing Priority */}
               <div className="space-y-2">
-                <Label htmlFor="sequencing_priority">Sequencing Priority</Label>
-                <Input 
+                <Label htmlFor="sequencing_priority">
+                  Sequencing Priority
+                </Label>
+                <Input
                   id="sequencing_priority"
-                  type="number" 
-                  min={1} 
-                  {...register("sequencing_priority")} 
+                  type="number"
+                  min={1}
+                  {...register("sequencing_priority")}
                 />
                 {errors.sequencing_priority && (
                   <p className="text-sm text-destructive">
@@ -178,14 +299,15 @@ export function CreateContainerDialog() {
                 )}
               </div>
 
+              {/* Container Size */}
               <div className="space-y-2">
                 <Label htmlFor="container_size">Container Size</Label>
                 <Controller
                   name="container_size"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="container_size" className="w-full">
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="container_size">
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
                       <SelectContent>
@@ -202,23 +324,30 @@ export function CreateContainerDialog() {
                 )}
               </div>
 
+              {/* Container Type */}
               <div className="space-y-2">
                 <Label htmlFor="container_type">Container Type</Label>
-                <Controller
-                  name="container_type"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="container_type" className="w-full">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dry">Dry</SelectItem>
-                        <SelectItem value="reefer">Reefer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+<Controller<CreateContainerFormValues, "recommended_truck_type">
+  name="recommended_truck_type"
+  control={control}
+  render={({ field }) => (
+    <Select
+      onValueChange={field.onChange}
+      value={field.value ?? undefined}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select truck type" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="flatbed">Flatbed</SelectItem>
+        <SelectItem value="trailer">Trailer</SelectItem>
+      </SelectContent>
+    </Select>
+  )}
+/>
+
+
+
                 {errors.container_type && (
                   <p className="text-sm text-destructive">
                     {errors.container_type.message}
@@ -226,24 +355,36 @@ export function CreateContainerDialog() {
                 )}
               </div>
 
+              {/* Gross Weight */}
               <div className="space-y-2">
                 <Label htmlFor="gross_weight">Gross Weight</Label>
-                <Input 
+                <Input
                   id="gross_weight"
-                  type="number" 
-                  min={0} 
-                  {...register("gross_weight")} 
+                  type="number"
+                  min={0}
+                  {...register("gross_weight")}
                 />
+                {errors.gross_weight && (
+                  <p className="text-sm text-destructive">
+                    {errors.gross_weight.message}
+                  </p>
+                )}
               </div>
 
+              {/* Gross Weight Unit */}
               <div className="space-y-2">
-                <Label htmlFor="gross_weight_unit">Gross Weight Unit</Label>
+                <Label htmlFor="gross_weight_unit">
+                  Gross Weight Unit
+                </Label>
                 <Controller
                   name="gross_weight_unit"
                   control={control}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || "kg"}>
-                      <SelectTrigger id="gross_weight_unit" className="w-full">
+                    <Select
+                      value={field.value || "kg"}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id="gross_weight_unit">
                         <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
                       <SelectContent>
@@ -260,27 +401,34 @@ export function CreateContainerDialog() {
                 )}
               </div>
 
+              {/* Tare Weight */}
               <div className="space-y-2">
                 <Label htmlFor="tare_weight">Tare Weight</Label>
-                <Input 
+                <Input
                   id="tare_weight"
-                  type="number" 
-                  min={0} 
-                  {...register("tare_weight")} 
+                  type="number"
+                  min={0}
+                  {...register("tare_weight")}
                 />
+                {errors.tare_weight && (
+                  <p className="text-sm text-destructive">
+                    {errors.tare_weight.message}
+                  </p>
+                )}
               </div>
 
+              {/* Is Returning */}
               <div className="space-y-2">
                 <Label htmlFor="is_returning">Is Returning?</Label>
                 <Select
                   value={isReturning ? "yes" : "no"}
-                  onValueChange={(value) =>
-                    setValue("is_returning", value === "yes", {
+                  onValueChange={(v) =>
+                    setValue("is_returning", v === "yes", {
                       shouldValidate: true,
                     })
                   }
                 >
-                  <SelectTrigger id="is_returning" className="w-full">
+                  <SelectTrigger id="is_returning">
                     <SelectValue placeholder="Select option" />
                   </SelectTrigger>
                   <SelectContent>
@@ -291,27 +439,28 @@ export function CreateContainerDialog() {
               </div>
             </div>
 
-            {/* Container details */}
+            {/* ================= CONTAINER DETAILS ================= */}
             <div className="rounded-md border p-4 space-y-4">
               <div className="font-medium">Container Details</div>
 
               <div className="space-y-2">
                 <Label htmlFor="instruction">Instruction</Label>
-                <Input 
+                <Input
                   id="instruction"
-                  {...register("container_details.instruction")} 
+                  {...register("container_details.instruction")}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Commodity</Label>
-
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
                   {commodities.fields.map((field, idx) => (
                     <div key={field.id} className="flex gap-2">
                       <Input
                         placeholder={`Commodity ${idx + 1}`}
-                        {...register(`container_details.commodity.${idx}`)}
+                        {...register(
+                          `container_details.commodity.${idx}` as const
+                        )}
                       />
                       <Button
                         type="button"
@@ -330,14 +479,13 @@ export function CreateContainerDialog() {
                   type="button"
                   variant="secondary"
                   onClick={() => commodities.append("")}
-                  className="mt-2"
                 >
                   Add Commodity
                 </Button>
               </div>
             </div>
 
-            {/* Return location */}
+            {/* ================= RETURN LOCATION ================= */}
             {isReturning && (
               <div className="rounded-md border p-4 space-y-4">
                 <div className="font-medium">Return Location</div>
@@ -349,66 +497,68 @@ export function CreateContainerDialog() {
                       name="return_location_info.country"
                       control={control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger id="country" className="w-full">
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger id="country">
                             <SelectValue placeholder="Select country" />
                           </SelectTrigger>
                           <SelectContent>
-                            {countryOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
+                            {countryOptions.map((c) => (
+                              <SelectItem key={c.value} value={c.value}>
+                                {c.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       )}
                     />
-                    {errors.return_location_info?.country && (
-                      <p className="text-sm text-destructive">
-                        {errors.return_location_info.country.message}
-                      </p>
-                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
-                    <Input 
+                    <Input
                       id="city"
-                      placeholder="City" 
-                      {...register("return_location_info.city")} 
+                      {...register("return_location_info.city")}
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="port">Port</Label>
-                    <Input 
+                    <Input
                       id="port"
-                      placeholder="Port" 
-                      {...register("return_location_info.port")} 
+                      {...register("return_location_info.port")}
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="address">Address</Label>
-                    <Input 
+                    <Input
                       id="address"
-                      placeholder="Address" 
-                      {...register("return_location_info.address")} 
+                      {...register("return_location_info.address")}
                     />
                   </div>
                 </div>
               </div>
             )}
 
-
-            <div className="pb-4"></div>
+            {/* ================= FORM ERROR ================= */}
+            {formError && (
+              <Alert variant="destructive">
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
           </form>
 
-          <DialogFooter className="shrink-0 gap-2 pt-4 border-t mt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <DialogFooter className="border-t pt-4">
+            <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={submitting || !isValid}
+            <Button
+              type="submit"
               form="create-container-form"
+              disabled={submitting || !isValid}
             >
               {submitting ? "Saving..." : "Add Container"}
             </Button>
