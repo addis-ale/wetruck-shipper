@@ -29,6 +29,7 @@ export const useTransporterShipments = useShipItems;
 export function useShipperShipItems(params?: {
   page?: number;
   per_page?: number;
+  ship_id?: number;
 }) {
   return useQuery<ShipperShipItemsListResponse>({
     queryKey: ["shipper-ship-items", params],
