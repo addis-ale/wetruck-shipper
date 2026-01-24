@@ -39,18 +39,17 @@ export function Sidebar({
     >
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
-        <div className="flex items-center gap-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-primary">
-            <Package className="size-4" />
-          </div>
-          <span className="font-bold text-xl text-white tracking-tight">
-            WeTruck
-          </span>
+        <div className="flex items-center">
+          <img
+            src="https://www.wetruck.ai/images/logo.png"
+            alt="WeTruck"
+            className="h-8 w-auto"
+          />
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
+      <nav className="flex-1 space-y-1 px-4 py-6 mt-4 overflow-y-auto">
         {navigation.map((item) => {
           // Check if this is an exact match
           const isExactMatch = pathname === item.href;

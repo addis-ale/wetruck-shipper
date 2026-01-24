@@ -127,12 +127,11 @@ export default function DashboardLayout({
 
               <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                 <div className="flex items-center flex-1 min-w-0">
-                  <h1 className="text-lg font-bold sm:text-xl text-primary truncate flex items-center gap-2">
-                    <span className="hidden xs:inline">
-                      WeTruck
-                    </span>
-                    <span>Shipper</span>
-                  </h1>
+                  <img
+                    src="https://www.wetruck.ai/images/logo.png"
+                    alt="WeTruck"
+                    className="h-7 w-auto lg:hidden"
+                  />
                 </div>
                 <div className="flex items-center gap-x-3 sm:gap-x-6">
                   <ModeToggle />
