@@ -1,4 +1,15 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// Support both NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_BASE_URL for compatibility
+const envApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+// If the env var includes /api/v1, use it as-is, otherwise add /api/v1
+const baseUrl = envApiUrl || 'http://127.0.0.1:8000';
+const apiBaseUrl = baseUrl.includes('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
+
+const API_URL = apiBaseUrl;
+
+// Debug: Log the API URL in development
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  console.log("🔗 Organization API URL:", API_URL);
+}
 
 // Helper to get auth token from localStorage or cookies
 function getAuthToken(): string | null {
@@ -30,6 +41,22 @@ function getAuthHeaders(): Record<string, string> {
     headers["Authorization"] = `Bearer ${token}`;
   }
   return headers;
+}
+
+// Helper to parse response text and handle HTML errors
+function parseResponse(text: string, endpoint: string): any {
+  // Check if response is HTML (404 page) instead of JSON
+  if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+    throw new Error(`API endpoint not found. Check if backend is running and URL is correct: ${API_URL}${endpoint}`);
+  }
+  
+  if (!text) return undefined;
+  
+  try {
+    return JSON.parse(text);
+  } catch (parseError) {
+    throw new Error(`Invalid JSON response from ${endpoint}: ${text.substring(0, 100)}...`);
+  }
 }
 
 export interface OrganizationDocument {
@@ -81,7 +108,7 @@ export const organizationApi = {
 
     const status = response.status;
     const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
+    const result = parseResponse(text, '/organization/documents');
 
     if (!response.ok) {
       return {
@@ -106,7 +133,7 @@ export const organizationApi = {
 
     const status = response.status;
     const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
+    const result = parseResponse(text, '/organization/documents/list');
 
     if (!response.ok) {
       return {
@@ -136,7 +163,7 @@ export const organizationApi = {
 
     const status = response.status;
     const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
+    const result = parseResponse(text, `/organization/documents/${documentId}/get`);
 
     if (!response.ok) {
       return {
@@ -177,7 +204,7 @@ export const organizationApi = {
 
     const status = response.status;
     const text = await response.text();
-    const result = text ? JSON.parse(text) : undefined;
+    const result = parseResponse(text, `/organization/documents/${documentId}/update`);
 
     if (!response.ok) {
       return {
@@ -207,7 +234,7 @@ export const organizationApi = {
 
     if (!response.ok) {
       const text = await response.text();
-      const result = text ? JSON.parse(text) : undefined;
+      const result = parseResponse(text, `/organization/documents/${documentId}/delete`);
       return {
         error: result?.detail || result?.message || "Failed to delete document",
         status,

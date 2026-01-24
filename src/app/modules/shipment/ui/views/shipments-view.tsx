@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
 import { ContainerAssignTable } from "@/app/modules/shipment/ui/components/container-assign-table";
@@ -13,26 +13,40 @@ import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Package, MapPin, Calendar, FileText, ChevronRight } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Package } from "lucide-react";
+import { PricedShipItemsTable } from "@/app/modules/shipment/ui/components/priced-ship-items-table";
+import { AcceptedShipItemsTable } from "@/app/modules/shipment/ui/components/accepted-ship-items-table";
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
   const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("created");
 
   // Fetch data
   const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
   
-  const shipments = shipmentsResponse?.items || [];
+  const allShipments = shipmentsResponse?.items || [];
 
-  // Auto-select first shipment when shipments load and no shipment is selected
+  // Filter shipments by status based on active tab
+  const filteredShipments = useMemo(() => 
+    allShipments.filter((s) => s.status === activeTab),
+    [allShipments, activeTab]
+  );
+
+  // Auto-select first shipment when filtered list changes
   useEffect(() => {
-    if (shipments.length > 0 && activeShipmentId === null) {
-      setActiveShipmentId(shipments[0].id);
+    if (filteredShipments.length > 0) {
+      // Only auto-select if current activeShipmentId is not in the filtered list
+      const isStillInList = filteredShipments.some((s) => s.id === activeShipmentId);
+      if (!isStillInList) {
+        setActiveShipmentId(filteredShipments[0].id);
+      }
+    } else {
+      setActiveShipmentId(null);
     }
-  }, [shipments, activeShipmentId]);
+  }, [filteredShipments, activeShipmentId]);
   
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
   const { data: assignedContainersData, isLoading: assignedContainersLoading } = useContainers(
@@ -67,7 +81,7 @@ export function ShipmentsView() {
   const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
   
   // Get active shipment status
-  const activeShipment = shipments.find(s => s.id === activeShipmentId);
+  const activeShipment = allShipments.find(s => s.id === activeShipmentId);
 
   // Get assigned container IDs for active shipment (for column actions)
   const assignedContainerIds = assignedContainers.map((c) => c.id);
@@ -122,7 +136,7 @@ export function ShipmentsView() {
   });
 
   // Loading state - only show skeleton on initial load, not on refetch
-  if (shipmentsLoading && !shipments.length) {
+  if (shipmentsLoading && !allShipments.length) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-[400px] w-full" />
@@ -139,103 +153,96 @@ export function ShipmentsView() {
   }
 
   return (
-    <div className="min-h-screen  p-6 space-y-8">
-      {/* Header Section */}
-      <div className="space-y-2">
-  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shipment Management</h1>
-  <p className="text-gray-600 dark:text-gray-300">Create and manage your shipments, assign containers, and track progress</p>
-</div>
+    <div className="space-y-6">
+      {/* Create Shipment Form */}
+      <CreateShipmentForm onSuccess={handleShipmentCreated} />
+      <ShipmentDocumentsCard shipId={activeShipmentId} />
 
-      {/* Create Shipment Card */}
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Package className="h-5 w-5 text-blue-600" />
-            Create New Shipment
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CreateShipmentForm onSuccess={handleShipmentCreated} />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="created" onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1 bg-muted/50 border">
+          <TabsTrigger value="created" className="flex items-center gap-2 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <span className="hidden sm:inline">Created</span>
+            <Badge variant="secondary" className="ml-1 h-5 min-w-5 justify-center px-1">
+              {allShipments.filter(s => s.status === "created").length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="price_requested" className="flex items-center gap-2 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <span className="hidden sm:inline">Price Requested</span>
+            <Badge variant="secondary" className="ml-1 h-5 min-w-5 justify-center px-1">
+              {allShipments.filter(s => s.status === "price_requested").length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="priced" className="flex items-center gap-2 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <span className="hidden sm:inline">Priced</span>
+            <Badge variant="secondary" className="ml-1 h-5 min-w-5 justify-center px-1">
+              {allShipments.filter(s => s.status === "priced").length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="accepted_by_shipper" className="flex items-center gap-2 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <span className="hidden sm:inline">Accepted</span>
+            <Badge variant="secondary" className="ml-1 h-5 min-w-5 justify-center px-1">
+              {allShipments.filter(s => s.status === "accepted_by_shipper").length}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Main Content Section - Sidebar on left, content on right */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Shipment Sidebar - Takes 1/4 width on left, starts from top */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6"> {/* Make it stick when scrolling */}
-            <Card className="border-gray-200 shadow-sm h-[calc(100vh-8rem)] flex flex-col">
-              <CardHeader className="pb-3 border-b">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  Active Shipments
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  {shipments.length} shipment{shipments.length !== 1 ? 's' : ''} total
-                </p>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-auto p-0">
-                <div className="p-4">
-                  <ShipmentSidebar
-                    shipments={shipments}
-                    activeShipmentId={activeShipmentId}
-                    onSelectShipment={handleSelectShipment}
-                    containerCounts={containerCounts}
-                  />
+        <div className="mt-6">
+          {/* Main Content: Sidebar + Container Table */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Shipment Sidebar - Takes 1/4 width, on the left */}
+            <div className="lg:col-span-1">
+              <ShipmentSidebar
+                shipments={filteredShipments}
+                activeShipmentId={activeShipmentId}
+                onSelectShipment={handleSelectShipment}
+                containerCounts={containerCounts}
+              />
+            </div>
+
+            {/* Right side: Content Area - Takes 3/4 width */}
+            <div className="lg:col-span-3">
+              {filteredShipments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 px-4 text-center border rounded-lg bg-muted/20 h-full">
+                  <Package className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-xl font-semibold mb-2">
+                    {activeTab === "created" 
+                      ? "No shipments created"
+                      : activeTab === "price_requested"
+                      ? "No price requests"
+                      : activeTab === "priced"
+                      ? "No quotes received"
+                      : "No shipments accepted"}
+                  </h3>
+                  <p className="text-muted-foreground max-w-md">
+                    {activeTab === "created"
+                      ? "Get started by creating your first shipment using the form above."
+                      : activeTab === "price_requested"
+                      ? "Once you request pricing for a shipment, it will appear here."
+                      : activeTab === "priced"
+                      ? "Shipments awaiting transporter quotes will appear here once priced."
+                      : "Your accepted shipments and their final quotes will be listed here."}
+                  </p>
                 </div>
-              </CardContent>
-             
-            </Card>
+              ) : activeTab === "priced" ? (
+                <PricedShipItemsTable activeShipmentId={activeShipmentId} />
+              ) : activeTab === "accepted_by_shipper" ? (
+                <AcceptedShipItemsTable activeShipmentId={activeShipmentId} />
+              ) : (
+                <ContainerAssignTable
+                  columns={columns}
+                  data={filteredContainers}
+                  activeShipmentId={activeShipmentId}
+                  onAssignContainer={handleAssignContainer}
+                  onGetPrice={handleGetPrice}
+                  onRequestPrice={handleRequestPrice}
+                  shipmentStatus={activeShipment?.status}
+                  isRequestingPrice={isRequestingPrice}
+                />
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Main Content Area - Takes 3/4 width on right */}
-        <div className="lg:col-span-3 space-y-8">
-          {/* Documents Card */}
-          {activeShipmentId && (
-            <Card className="border-gray-200 shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Shipment Documents
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ShipmentDocumentsCard shipId={activeShipmentId} />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Container Assignment Card */}
-          <Card className="border-gray-200 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Package className="h-5 w-5 text-green-600" />
-                Container Assignment
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                {activeShipmentId 
-                  ? "Search and assign available containers to this shipment" 
-                  : "Select a shipment from the left to assign containers"}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ContainerAssignTable
-                columns={columns}
-                data={filteredContainers}
-                activeShipmentId={activeShipmentId}
-                onAssignContainer={handleAssignContainer}
-                selectedContainers={selectedContainers}
-                onSelectionChange={setSelectedContainers}
-                onGetPrice={handleGetPrice}
-                onRequestPrice={handleRequestPrice}
-                shipmentStatus={activeShipment?.status}
-                isRequestingPrice={isRequestingPrice}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      </Tabs>
     </div>
   );
 }

@@ -172,7 +172,7 @@ function QuoteCard({
 }
 
 export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
-  const { data, isLoading, error } = useShipperShipItems();
+  const { data, isLoading, error } = useShipperShipItems({ ship_id: shipId });
   const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
   const { data: shipment } = useShipment(shipId);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);

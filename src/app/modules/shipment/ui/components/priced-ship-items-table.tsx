@@ -31,7 +31,7 @@ import {
 import { useShipperShipItems } from "@/app/modules/shipment/server/hooks/use-transporter-shipments";
 import { useAcceptShip } from "@/app/modules/shipment/server/hooks/use-accept-ship";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
-import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info } from "lucide-react";
 import Link from "next/link";
 import {
   Select,
@@ -40,19 +40,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PricedShipItemsTableProps {
   activeShipmentId: number | null;
 }
 
+// Helper function to format numbers with 2 decimal places
+const formatPrice = (value: number): string => {
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableProps) {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
-  const { data, isLoading, error } = useShipperShipItems({ page, per_page: perPage });
+  const { data, isLoading, error } = useShipperShipItems({ 
+    page, 
+    per_page: perPage,
+    ship_id: activeShipmentId || undefined,
+  });
   const { data: shipmentsData } = useShipments();
   const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
-  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
+  const [selectedTransporterIds, setSelectedTransporterIds] = useState<Set<number>>(new Set());
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
+  const [containersModalOpen, setContainersModalOpen] = useState(false);
+  const [selectedTransporterGroup, setSelectedTransporterGroup] = useState<any>(null);
   // Track accepted shipments (for immediate UI feedback) - must be before early returns
   const [acceptedShipIds, setAcceptedShipIds] = useState<Set<number>>(new Set());
   
@@ -65,44 +85,84 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
 
   // Clear selections when active shipment changes
   useEffect(() => {
-    setSelectedItemIds(new Set());
+    setSelectedTransporterIds(new Set());
   }, [activeShipmentId]);
 
-  const handleSelectItem = (itemId: number) => {
-    setSelectedItemIds((prev) => {
+  const handleSelectTransporter = (transporterId: number) => {
+    setSelectedTransporterIds((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
+      if (newSet.has(transporterId)) {
+        newSet.delete(transporterId);
       } else {
-        newSet.add(itemId);
+        newSet.add(transporterId);
       }
       return newSet;
     });
   };
 
+  // Get transporter groups data (defined early for use in handlers)
+  const transporterGroups = data?.items || [];
+  
+  // Filter transporter groups by activeShipmentId (already filtered by API, but double-check)
+  const filteredTransporterGroups = transporterGroups.filter((group) => {
+    if (!activeShipmentId) return true;
+    return group.ship_items.some((item) => item.ship_id === activeShipmentId);
+  });
+
+  // Helper function to check if transporter has any returning containers
+  const hasReturningContainers = (group: typeof filteredTransporterGroups[0]): boolean => {
+    return group.ship_items.some((shipItem) => 
+      shipItem.containers?.some((container) => container.is_returning === true)
+    );
+  };
+
+  // Handle opening containers modal
+  const handleOpenContainersModal = (group: typeof filteredTransporterGroups[0]) => {
+    setSelectedTransporterGroup(group);
+    setContainersModalOpen(true);
+  };
+
+  // Get all containers from a transporter group
+  const getAllContainersFromGroup = (group: typeof filteredTransporterGroups[0]) => {
+    const containers: any[] = [];
+    group.ship_items.forEach((shipItem) => {
+      if (shipItem.containers && Array.isArray(shipItem.containers)) {
+        containers.push(...shipItem.containers);
+      }
+    });
+    return containers;
+  };
+
   const handleSelectAll = () => {
-    // Only select items that are not already accepted
-    const selectableItems = filteredItems.filter(
-      (item) => !acceptedShipIds.has(item.ship_id) && !acceptedShipmentIds.has(item.ship_id)
+    // Only select transporters that are not already accepted
+    const selectableTransporters = filteredTransporterGroups.filter(
+      (group) => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
     );
     
-    if (selectedItemIds.size === selectableItems.length) {
-      setSelectedItemIds(new Set());
+    if (selectedTransporterIds.size === selectableTransporters.length) {
+      setSelectedTransporterIds(new Set());
     } else {
-      setSelectedItemIds(new Set(selectableItems.map((item) => item.id)));
+      setSelectedTransporterIds(new Set(selectableTransporters.map((group) => group.transporter_id)));
     }
   };
 
   const handleAcceptSelected = () => {
-    if (selectedItemIds.size > 0) {
+    if (selectedTransporterIds.size > 0) {
       setAcceptDialogOpen(true);
     }
   };
 
   const confirmAccept = () => {
-    if (selectedItemIds.size > 0 && activeShipmentId) {
-      // Get the ship_item_ids from selected items
-      const shipItemIds = Array.from(selectedItemIds);
+    if (selectedTransporterIds.size > 0 && activeShipmentId) {
+      // Get all ship_item_ids from selected transporters
+      const shipItemIds: number[] = [];
+      filteredTransporterGroups.forEach((group) => {
+        if (selectedTransporterIds.has(group.transporter_id)) {
+          group.ship_items.forEach((item) => {
+            shipItemIds.push(item.id);
+          });
+        }
+      });
       
       // Close dialog optimistically
       setAcceptDialogOpen(false);
@@ -111,8 +171,8 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
       setAcceptedShipIds((prev) => new Set(prev).add(activeShipmentId));
       
       // Clear selections
-      const selectedIdsBackup = new Set(selectedItemIds);
-      setSelectedItemIds(new Set());
+      const selectedIdsBackup = new Set(selectedTransporterIds);
+      setSelectedTransporterIds(new Set());
       
       // Trigger the mutation with error handling
       acceptShip(
@@ -124,7 +184,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
           onError: () => {
             // Rollback: restore dialog and remove from accepted set
             setAcceptDialogOpen(true);
-            setSelectedItemIds(selectedIdsBackup);
+            setSelectedTransporterIds(selectedIdsBackup);
             setAcceptedShipIds((prev) => {
               const newSet = new Set(prev);
               newSet.delete(activeShipmentId);
@@ -180,36 +240,20 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
     );
   }
 
-  const transporterGroups = data?.items || [];
-
-  // Flatten all ship items and filter by activeShipmentId
-  const allShipItems = transporterGroups.flatMap((group) =>
-    group.ship_items
-      .filter((item) => !activeShipmentId || item.ship_id === activeShipmentId)
-      .map((item) => ({
-        ...item,
-        transporter_id: group.transporter_id,
-        group_currency: group.currency,
-      }))
-  );
-
-  // Group ship items by transporter since we filtered by ship_id
-  const filteredItems = allShipItems.sort((a, b) => a.id - b.id);
 
   // Calculate totals
-  const totalTransporters = transporterGroups.length;
-  const totalShipItems = allShipItems.length;
-  const totalContainers = transporterGroups.reduce(
-    (sum, group) => sum + group.total_containers,
+  const totalTransporters = filteredTransporterGroups.length;
+  const totalContainers = filteredTransporterGroups.reduce(
+    (sum, group) => sum + (group.total_containers || 0),
     0
   );
-  const totalPrice = transporterGroups.reduce(
-    (sum, group) => sum + group.total_price,
+  const totalPrice = filteredTransporterGroups.reduce(
+    (sum, group) => sum + (Number(group.total_price) || 0),
     0
   );
-  const primaryCurrency = transporterGroups[0]?.currency || "ETB";
+  const primaryCurrency = filteredTransporterGroups[0]?.currency || "ETB";
 
-  if (transporterGroups.length === 0) {
+  if (filteredTransporterGroups.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -239,7 +283,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
             Transporter Quotes
           </CardTitle>
           <CardDescription>
-            {filteredItems.length} transporter quote{filteredItems.length !== 1 ? "s" : ""} for shipment #{activeShipmentId}
+            {totalTransporters} transporter quote{totalTransporters !== 1 ? "s" : ""} for shipment #{activeShipmentId}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -249,25 +293,41 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                 <TableRow>
                   <TableHead className="w-[50px]">
                     <Checkbox
-                      checked={selectedItemIds.size > 0 && selectedItemIds.size === filteredItems.filter(
-                        (item) => !acceptedShipIds.has(item.ship_id) && !acceptedShipmentIds.has(item.ship_id)
+                      checked={selectedTransporterIds.size > 0 && selectedTransporterIds.size === filteredTransporterGroups.filter(
+                        (group) => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
                       ).length}
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Container Numbers</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead>Number of Containers</TableHead>
+                  <TableHead>Return Status</TableHead>
+                  <TableHead className="text-right">Total Price</TableHead>
                   <TableHead>Currency</TableHead>
                   <TableHead className="text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredItems.length > 0 ? (
-                  filteredItems.map((item) => {
-                    const containerCount = Array.isArray(item.containers) ? item.containers.length : 0;
-                    const rowKey = `${item.transporter_id}-${item.id}`;
-                    const isAccepted = acceptedShipIds.has(item.ship_id) || acceptedShipmentIds.has(item.ship_id);
-                    const isSelected = selectedItemIds.has(item.id);
+                {filteredTransporterGroups.length > 0 ? (
+                  filteredTransporterGroups.map((group) => {
+                    const rowKey = `transporter-${group.transporter_id}`;
+                    const isAccepted = acceptedShipIds.has(activeShipmentId || 0) || acceptedShipmentIds.has(activeShipmentId || 0);
+                    const isSelected = selectedTransporterIds.has(group.transporter_id);
+                    const hasReturning = hasReturningContainers(group);
+                    
+                    // Calculate returning containers count and return fee
+                    // Flat fee of 10,000 ETB if at least 1 container is returning
+                    const RETURN_FEE_ETB = 10000;
+                    const returningContainers = group.ship_items.reduce((count, shipItem) => {
+                      return count + (shipItem.containers?.filter((c) => c.is_returning === true).length || 0);
+                    }, 0);
+                    const returnFeeETB = returningContainers > 0 ? RETURN_FEE_ETB : 0;
+                    
+                    // Ensure total_price is a number (API might return string)
+                    const totalPrice = group.total_price !== undefined && group.total_price !== null 
+                      ? Number(group.total_price) 
+                      : 0;
+                    const currency = group.currency || "ETB";
+                    const containerCount = group.total_containers || 0;
 
                     return (
                       <TableRow key={rowKey}>
@@ -278,28 +338,53 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                           ) : (
                             <Checkbox
                               checked={isSelected}
-                              onCheckedChange={() => handleSelectItem(item.id)}
+                              onCheckedChange={() => handleSelectTransporter(group.transporter_id)}
                             />
                           )}
                         </TableCell>
-                        {/* Container Numbers */}
+                        {/* Number of Containers */}
                         <TableCell>
-                          {containerCount > 0 ? (
-                            <span className="text-sm font-medium">
-                              {containerCount} container{containerCount !== 1 ? "s" : ""}
-                            </span>
+                          <button
+                            onClick={() => handleOpenContainersModal(group)}
+                            className="text-sm font-medium text-primary hover:underline cursor-pointer"
+                          >
+                            {containerCount} container{containerCount !== 1 ? "s" : ""}
+                          </button>
+                        </TableCell>
+                        {/* Return Status */}
+                        <TableCell>
+                          {hasReturning ? (
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="secondary" className="w-fit text-xs">
+                                Returning
+                              </Badge>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-xs">
+                                    <p className="text-sm">
+                                      A flat fee of 10,000 ETB is added when at least 1 container is returning. This fee is included in the total price.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           ) : (
-                            <span className="text-muted-foreground">0 containers</span>
+                            <Badge variant="outline" className="w-fit text-xs">
+                              One-way
+                            </Badge>
                           )}
                         </TableCell>
-                        {/* Price */}
-                        <TableCell className="text-right font-semibold">
-                          {item.computed_price !== undefined && item.computed_price !== null
-                            ? item.computed_price.toLocaleString()
-                            : "0"}
+                        {/* Total Price */}
+                        <TableCell className="text-right">
+                          <span className="font-semibold">
+                            {formatPrice(totalPrice)}
+                          </span>
                         </TableCell>
                         {/* Currency */}
-                        <TableCell>{item.currency || item.group_currency || "ETB"}</TableCell>
+                        <TableCell>{currency}</TableCell>
                         {/* Status */}
                         <TableCell className="text-right">
                           {isAccepted ? (
@@ -316,7 +401,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                       No quotes found for this shipment.
                     </TableCell>
                   </TableRow>
@@ -326,7 +411,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
           </div>
 
           {/* Accept Selected Button */}
-          {selectedItemIds.size > 0 && (
+          {selectedTransporterIds.size > 0 && (
             <div className="flex justify-end mt-4">
               <Button
                 onClick={handleAcceptSelected}
@@ -334,7 +419,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                 className="gap-2"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Accept Selected ({selectedItemIds.size})
+                Accept Selected ({selectedTransporterIds.size} transporter{selectedTransporterIds.size !== 1 ? "s" : ""})
               </Button>
             </div>
           )}
@@ -421,12 +506,12 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
           <DialogHeader>
             <DialogTitle>Accept Selected Quotes</DialogTitle>
             <DialogDescription>
-              Are you sure you want to accept {selectedItemIds.size} selected quote{selectedItemIds.size !== 1 ? "s" : ""}?
+              Are you sure you want to accept {selectedTransporterIds.size} selected transporter quote{selectedTransporterIds.size !== 1 ? "s" : ""}?
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
-              This action will accept the selected transporter quotes for shipment #{activeShipmentId}.
+              This action will accept all ship items from the selected transporter{selectedTransporterIds.size !== 1 ? "s" : ""} for shipment #{activeShipmentId}.
             </p>
           </div>
           <DialogFooter>
@@ -455,6 +540,82 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                   Accept Quote
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Containers Detail Modal */}
+      <Dialog open={containersModalOpen} onOpenChange={setContainersModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Container Details</DialogTitle>
+            <DialogDescription>
+              {selectedTransporterGroup && (
+                <>Showing {getAllContainersFromGroup(selectedTransporterGroup).length} container{getAllContainersFromGroup(selectedTransporterGroup).length !== 1 ? "s" : ""} for this transporter</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedTransporterGroup && (
+              <div className="space-y-4">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Container Number</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Weight</TableHead>
+                        <TableHead>Return Status</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getAllContainersFromGroup(selectedTransporterGroup).map((container, index) => (
+                        <TableRow key={container.id || index}>
+                          <TableCell className="font-medium">
+                            {container.container_number || "-"}
+                          </TableCell>
+                          <TableCell>
+                            {container.container_size === "twenty_feet" ? "20ft" : container.container_size === "forty_feet" ? "40ft" : container.container_size || "-"}
+                          </TableCell>
+                          <TableCell>
+                            {container.container_type ? container.container_type.charAt(0).toUpperCase() + container.container_type.slice(1) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {container.gross_weight ? `${container.gross_weight} ${container.gross_weight_unit || "kg"}` : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {container.is_returning ? (
+                              <Badge variant="secondary" className="w-fit text-xs">
+                                Returning
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="w-fit text-xs">
+                                One-way
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="w-fit text-xs">
+                              {container.status || "N/A"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setContainersModalOpen(false)}
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

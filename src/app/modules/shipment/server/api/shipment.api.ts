@@ -322,14 +322,21 @@ export const shipmentApi = {
   async getShipItemsForShipper(params?: {
     page?: number;
     per_page?: number;
+    ship_id?: number;
   }): Promise<ShipperShipItemsListResponse> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append("page", params.page.toString());
     if (params?.per_page) searchParams.append("per_page", params.per_page.toString());
+    if (params?.ship_id) searchParams.append("ship_id", params.ship_id.toString());
     
     const query = searchParams.toString();
     const endpoint = query ? `/ship-item/shipper?${query}` : "/ship-item/shipper";
     return apiRequest<ShipperShipItemsListResponse>(endpoint);
+  },
+
+  // Get accepted ship items for a specific shipment
+  async getAcceptedShipItems(shipId: number): Promise<ShipItem[]> {
+    return apiRequest<ShipItem[]>(`${API_PATH}/${shipId}/list-accepted-ship-items`);
   },
 
   // Get single ship item by ID for shipper (with full container details)
