@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Package } from "lucide-react";
 import { PricedShipItemsTable } from "@/app/modules/shipment/ui/components/priced-ship-items-table";
+import { AcceptedShipItemsTable } from "@/app/modules/shipment/ui/components/accepted-ship-items-table";
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
@@ -224,8 +225,10 @@ export function ShipmentsView() {
                       : "Your accepted shipments and their final quotes will be listed here."}
                   </p>
                 </div>
-              ) : activeTab === "priced" || activeTab === "accepted_by_shipper" ? (
+              ) : activeTab === "priced" ? (
                 <PricedShipItemsTable activeShipmentId={activeShipmentId} />
+              ) : activeTab === "accepted_by_shipper" ? (
+                <AcceptedShipItemsTable activeShipmentId={activeShipmentId} />
               ) : (
                 <ContainerAssignTable
                   columns={columns}

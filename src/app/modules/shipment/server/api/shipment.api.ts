@@ -298,6 +298,11 @@ export const shipmentApi = {
     return apiRequest<ShipperShipItemsListResponse>(endpoint);
   },
 
+  // Get accepted ship items for a specific shipment
+  async getAcceptedShipItems(shipId: number): Promise<ShipItem[]> {
+    return apiRequest<ShipItem[]>(`${API_PATH}/${shipId}/list-accepted-ship-items`);
+  },
+
   // Get single ship item by ID for shipper (with full container details)
   async getShipItemByIdForShipper(shipItemId: number): Promise<ShipItem> {
     return apiRequest<ShipItem>(`/ship-item/${shipItemId}/shipper`);
