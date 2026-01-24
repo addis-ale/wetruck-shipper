@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
 import { ContainerAssignTable } from "@/app/modules/shipment/ui/components/container-assign-table";
@@ -21,40 +21,26 @@ import { AcceptedShipItemsTable } from "@/app/modules/shipment/ui/components/acc
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("created");
+  const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
 
   // Fetch data
-  const { data: shipmentsResponse, isLoading: shipmentsLoading } =
-    useShipments();
+  const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
+  
+  const shipments = shipmentsResponse?.items || [];
 
-  const allShipments = shipmentsResponse?.items || [];
-
-  // Filter shipments by status based on active tab
-  const filteredShipments = useMemo(() => 
-    allShipments.filter((s) => s.status === activeTab),
-    [allShipments, activeTab]
-  );
-
-  // Auto-select first shipment when filtered list changes
+  // Auto-select first shipment when shipments load and no shipment is selected
   useEffect(() => {
-    if (filteredShipments.length > 0) {
-      // Only auto-select if current activeShipmentId is not in the filtered list
-      const isStillInList = filteredShipments.some((s) => s.id === activeShipmentId);
-      if (!isStillInList) {
-        setActiveShipmentId(filteredShipments[0].id);
-      }
-    } else {
-      setActiveShipmentId(null);
+    if (shipments.length > 0 && activeShipmentId === null) {
+      setActiveShipmentId(shipments[0].id);
     }
-  }, [filteredShipments, activeShipmentId]);
-
+  }, [shipments, activeShipmentId]);
+  
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
-  const { data: assignedContainersData, isLoading: assignedContainersLoading } =
-    useContainers(
-      activeShipmentId ? { ship_id: activeShipmentId } : undefined,
-      { enabled: !!activeShipmentId }
-    );
-
+  const { data: assignedContainersData, isLoading: assignedContainersLoading } = useContainers(
+    activeShipmentId ? { ship_id: activeShipmentId } : undefined,
+    { enabled: !!activeShipmentId }
+  );
+  
   // Fetch all containers for counts and search
   const { data: allContainersData } = useContainers();
 
@@ -79,11 +65,10 @@ export function ShipmentsView() {
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
   const { mutate: getPrice, isPending: isGettingPrice } = useGetPrice();
-  const { mutate: requestPrice, isPending: isRequestingPrice } =
-    useRequestPrice();
-
+  const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
+  
   // Get active shipment status
-  const activeShipment = allShipments.find((s) => s.id === activeShipmentId);
+  const activeShipment = shipments.find(s => s.id === activeShipmentId);
 
   // Get assigned container IDs for active shipment (for column actions)
   const assignedContainerIds = assignedContainers.map((c) => c.id);
@@ -91,10 +76,7 @@ export function ShipmentsView() {
   // Handle container assignment
   const handleAssignContainer = (containerId: number) => {
     if (!activeShipmentId) return;
-    assignContainers({
-      shipmentId: activeShipmentId,
-      containerIds: [containerId],
-    });
+    assignContainers({ shipmentId: activeShipmentId, containerIds: [containerId] });
   };
 
   // Handle container removal
@@ -108,12 +90,14 @@ export function ShipmentsView() {
     const newId = parseInt(shipmentId, 10);
     if (!isNaN(newId)) {
       setActiveShipmentId(newId);
+      setSelectedContainers([]); // Clear selection when switching shipments
     }
   };
 
   // Clear selection when switching shipments
   const handleSelectShipment = (shipmentId: number) => {
     setActiveShipmentId(shipmentId);
+    setSelectedContainers([]); // Clear selection
   };
 
   // Handle get price
@@ -121,7 +105,7 @@ export function ShipmentsView() {
     if (!activeShipmentId || containerIds.length === 0) return;
     getPrice({ shipmentId: activeShipmentId, containerIds });
   };
-
+  
   // Handle request price
   const handleRequestPrice = (shipmentId: number) => {
     requestPrice(shipmentId);
@@ -133,12 +117,13 @@ export function ShipmentsView() {
     assignedContainers: assignedContainerIds,
     onAssign: handleAssignContainer,
     onRemove: handleRemoveContainer,
-    shipmentStatus: activeShipment?.status,
+    selectedContainers,
+    onSelectionChange: setSelectedContainers,
     data: filteredContainers,
   });
 
   // Loading state - only show skeleton on initial load, not on refetch
-  if (shipmentsLoading && !allShipments.length) {
+  if (shipmentsLoading && !shipments.length) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-[400px] w-full" />
@@ -244,7 +229,7 @@ export function ShipmentsView() {
             </div>
           </div>
         </div>
-      </Tabs>
+      </div>
     </div>
   );
 }

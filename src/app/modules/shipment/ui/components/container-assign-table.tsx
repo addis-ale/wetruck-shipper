@@ -48,6 +48,8 @@ interface ContainerAssignTableProps<TData, TValue> {
   data: TData[];
   activeShipmentId: number | null;
   onAssignContainer?: (containerId: number) => void;
+  selectedContainers?: number[];
+  onSelectionChange?: (containerIds: number[]) => void;
   onGetPrice?: (containerIds: number[]) => void;
   onRequestPrice?: (shipmentId: number) => void;
   shipmentStatus?: string;
@@ -59,12 +61,12 @@ export function ContainerAssignTable<TData, TValue>({
   data,
   activeShipmentId,
   onAssignContainer,
+  selectedContainers = [],
   onGetPrice,
   onRequestPrice,
   shipmentStatus,
   isRequestingPrice = false,
 }: ContainerAssignTableProps<TData, TValue>) {
-  const isDisabled = shipmentStatus === "price_requested";
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -227,9 +229,9 @@ export function ContainerAssignTable<TData, TValue>({
                   </div>
                 )}
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+            )}
+          </PopoverContent>
+        </Popover>
 
         {/* Table */}
         <div className="rounded-md border w-full overflow-x-auto">
@@ -265,10 +267,7 @@ export function ContainerAssignTable<TData, TValue>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
                     No containers found.
                   </TableCell>
                 </TableRow>
@@ -277,12 +276,17 @@ export function ContainerAssignTable<TData, TValue>({
           </Table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination and Get Price Button */}
         {table.getRowModel().rows?.length > 0 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               Showing {table.getRowModel().rows.length} of {data.length}{" "}
               container(s)
+              {selectedContainers.length > 0 && (
+                <span className="ml-2 text-primary">
+                  • {selectedContainers.length} selected
+                </span>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -311,9 +315,7 @@ export function ContainerAssignTable<TData, TValue>({
             {shipmentStatus === "created" && onRequestPrice ? (
               <Button
                 onClick={() => onRequestPrice(activeShipmentId)}
-                disabled={
-                  isRequestingPrice || !activeShipmentId || data.length === 0
-                }
+                disabled={isRequestingPrice || !activeShipmentId || data.length === 0}
                 className="gap-2"
               >
                 {isRequestingPrice ? (
@@ -323,8 +325,7 @@ export function ContainerAssignTable<TData, TValue>({
                   </>
                 ) : (
                   <>
-                    Request Price ({data.length} container
-                    {data.length !== 1 ? "s" : ""})
+                    Request Price ({data.length} container{data.length !== 1 ? "s" : ""})
                   </>
                 )}
               </Button>
@@ -335,13 +336,24 @@ export function ContainerAssignTable<TData, TValue>({
             ) : shipmentStatus ? (
               <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
                 <span className="text-sm">
-                  Status:{" "}
-                  {shipmentStatus
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  Status: {shipmentStatus.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </span>
               </div>
             ) : null}
+          </div>
+        )}
+        
+        {/* Get Price Button - For selected containers (if still needed) */}
+        {selectedContainers.length > 0 && onGetPrice && (
+          <div className="flex justify-end pt-2 border-t">
+            <Button
+              variant="outline"
+              onClick={() => onGetPrice(selectedContainers)}
+              disabled={!activeShipmentId || selectedContainers.length === 0}
+              className="gap-2"
+            >
+              Get Price Quote ({selectedContainers.length})
+            </Button>
           </div>
         )}
       </CardContent>

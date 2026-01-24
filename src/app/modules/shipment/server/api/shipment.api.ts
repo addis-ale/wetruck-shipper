@@ -113,6 +113,29 @@ async function apiRequest<T>(
 
   return response.json();
 }
+const LOCATION_ENUM_MAP: Record<string, string> = {
+  "addis ababa": "Addis Ababa",
+  "addis_ababa": "Addis Ababa",
+  "adama": "Adama",
+  "dukem": "Dukem",
+  "bishoftu": "Bishoftu",
+  "hawassa": "Hawassa",
+  "shashemene": "Shashemene",
+  "djibouti": "Djibouti",
+};
+
+
+function normalizeLocation(value?: string): string | undefined {
+  if (!value) return undefined;
+
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, " ");
+
+  return LOCATION_ENUM_MAP[normalized];
+}
+
 
 export const shipmentApi = {
   // Get all shipments with pagination and filters
@@ -128,9 +151,15 @@ export const shipmentApi = {
     if (params?.page) searchParams.append("page", params.page.toString());
     if (params?.per_page)
       searchParams.append("per_page", params.per_page.toString());
-    if (params?.origin) searchParams.append("origin", params.origin);
+    if (params?.origin)
+      searchParams.append("origin", normalizeLocation(params.origin) ?? params.origin);
+    
     if (params?.destination)
-      searchParams.append("destination", params.destination);
+      searchParams.append(
+        "destination",
+        normalizeLocation(params.destination) ?? params.destination
+      );
+    
     if (params?.status) searchParams.append("status", params.status);
 
     const query = searchParams.toString();
@@ -146,13 +175,20 @@ export const shipmentApi = {
 
   // Create shipment
   async create(data: CreateShipmentPayload): Promise<Shipment> {
+    const normalizedData: CreateShipmentPayload = {
+      ...data,
+      origin: normalizeLocation(data.origin),
+      destination: normalizeLocation(data.destination),
+    };
+  
     const response = await apiRequest<ShipmentCreateResponse>(`${API_PATH}/`, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(normalizedData),
     });
-
+  
     return response.result;
   },
+  
 
   // Update shipment (PATCH)
   async update(id: number, data: UpdateShipmentPayload): Promise<Shipment> {
