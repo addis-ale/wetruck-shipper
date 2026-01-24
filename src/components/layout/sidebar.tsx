@@ -40,10 +40,10 @@ export function Sidebar({
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
         <div className="flex items-center gap-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-primary">
             <Package className="size-4" />
           </div>
-          <span className="font-bold text-xl text-primary tracking-tight">
+          <span className="font-bold text-xl text-white tracking-tight">
             WeTruck
           </span>
         </div>
@@ -54,10 +54,10 @@ export function Sidebar({
         {navigation.map((item) => {
           // Check if this is an exact match
           const isExactMatch = pathname === item.href;
-          
+
           // Check if pathname starts with this href (for child routes)
           const isChildRoute = pathname.startsWith(`${item.href}/`);
-          
+
           // Find if there's a more specific route that also matches
           // (a route with a longer href that starts with this item's href)
           const hasMoreSpecificMatch = navigation.some(
@@ -67,7 +67,7 @@ export function Sidebar({
               otherItem.href.startsWith(item.href) &&
               (pathname.startsWith(`${otherItem.href}/`) || pathname === otherItem.href)
           );
-          
+
           const isActive = isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
 
           return (

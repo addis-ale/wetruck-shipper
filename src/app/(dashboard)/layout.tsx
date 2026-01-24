@@ -128,7 +128,7 @@ export default function DashboardLayout({
               <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                 <div className="flex items-center flex-1 min-w-0">
                   <h1 className="text-lg font-bold sm:text-xl text-primary truncate flex items-center gap-2">
-                    <span className="text-amber-600 hidden xs:inline">
+                    <span className="hidden xs:inline">
                       WeTruck
                     </span>
                     <span>Shipper</span>
@@ -139,8 +139,8 @@ export default function DashboardLayout({
                   <button className="relative text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-accent">
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-1 right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                     </span>
                     <span className="sr-only">View notifications</span>
                   </button>
@@ -255,10 +255,10 @@ export default function DashboardLayout({
                 {navigation.map((item) => {
                   // Check if this is an exact match
                   const isExactMatch = pathname === item.href;
-                  
+
                   // Check if pathname starts with this href (for child routes)
                   const isChildRoute = pathname.startsWith(`${item.href}/`);
-                  
+
                   // Find if there's a more specific route that also matches
                   const hasMoreSpecificMatch = navigation.some(
                     (otherItem) =>
@@ -267,7 +267,7 @@ export default function DashboardLayout({
                       otherItem.href.startsWith(item.href) &&
                       (pathname.startsWith(`${otherItem.href}/`) || pathname === otherItem.href)
                   );
-                  
+
                   const isActive = isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
                   return (
                     <Link
