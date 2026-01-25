@@ -39,8 +39,8 @@ export const facilitySchema = z.object({
 // Shipment details schema
 export const shipmentDetailsSchema = z.object({
   bill_of_lading_number: z.string().min(1, "Bill of lading number is required"),
-  pickup_number: z.string().min(1, "Pickup number is required"),
-  delivery_number: z.string().min(1, "Delivery number is required"),
+  pickup_number: z.string().optional(),
+  delivery_number: z.string().optional(),
 });
 
 // Base shipment schema (without refinement)

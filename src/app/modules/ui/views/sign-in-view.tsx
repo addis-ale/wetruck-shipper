@@ -35,7 +35,6 @@ export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  /* CAPTCHA State - Commented out
   const [captchaData, setCaptchaData] = useState<{
     id: string;
     solution: string;
@@ -43,7 +42,6 @@ export const SignInView = () => {
   const [captchaId, setCaptchaId] = useState<string>("");
   const [captchaSolution, setCaptchaSolution] = useState<string>("");
   const refreshCaptchaRef = useRef<(() => void) | null>(null);
-  */
 
   // Redirect to dashboard if already logged in (only on mount, not after login)
   useEffect(() => {
@@ -60,7 +58,6 @@ export const SignInView = () => {
     },
   });
 
-  /* CAPTCHA Callbacks - Commented out
   const handleCaptchaVerified = useCallback((id: string, solution: string) => {
     setCaptchaId(id);
     setCaptchaSolution(solution);
@@ -78,14 +75,13 @@ export const SignInView = () => {
       setError(msg);
     }
   }, []);
-  */
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       setPending(true);
       setError(null);
 
-      await login(data.email, data.password /*, captchaId, captchaSolution */);
+      await login(data.email, data.password, captchaId, captchaSolution);
       // Redirect immediately after successful login using replace to avoid history entry
       router.replace("/dashboard");
     } catch (err) {
@@ -93,7 +89,6 @@ export const SignInView = () => {
       const errorMessage = err instanceof Error ? err.message : "";
       const lowerErrorMessage = errorMessage.toLowerCase();
 
-      /* CAPTCHA Error Handling - Commented out
       // CAPTCHA errors - check first and refresh captcha
       if (
         lowerErrorMessage.includes("captcha") ||
@@ -119,7 +114,6 @@ export const SignInView = () => {
         }
         return;
       }
-      */
 
       // Network/Connection errors
       if (
@@ -312,8 +306,7 @@ export const SignInView = () => {
                     />
                   </div>
 
-                  {/* CAPTCHA Component - Commented out */}
-                  {/* <div className="pt-2">
+                  <div className="pt-2">
                     <CaptchaComponent
                       onCaptchaVerified={handleCaptchaVerified}
                       onError={handleCaptchaError}
@@ -323,7 +316,7 @@ export const SignInView = () => {
                         refreshCaptchaRef.current = refreshFn;
                       }}
                     />
-                  </div> */}
+                  </div>
 
                   {error && (
                     <Alert
@@ -341,10 +334,9 @@ export const SignInView = () => {
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
                     disabled={
-                      pending
-                      /* ||
+                      pending ||
                       !captchaId ||
-                      captchaSolution.trim().length === 0 */
+                      captchaSolution.trim().length === 0
                     }
                   >
                     {pending ? (

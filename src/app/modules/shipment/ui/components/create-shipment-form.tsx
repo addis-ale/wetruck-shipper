@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -30,7 +30,6 @@ interface CreateShipmentFormProps {
 }
 
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
-
   const defaultValues = useMemo<CreateShipmentInput>(
     () => ({
       origin: "addis_ababa",
@@ -57,8 +56,6 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       },
       shipment_details: {
         bill_of_lading_number: "",
-        pickup_number: "",
-        delivery_number: "",
       },
       status: "created",
     }),
@@ -133,8 +130,8 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Basic Info and Shipment Details in one row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="origin">Origin</Label>
               <Controller
@@ -212,49 +209,18 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 <p className="text-sm text-destructive">{errors.delivery_date.message}</p>
               )}
             </div>
-          </div>
 
-          <Separator />
-
-          {/* Shipment Details */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Shipment Details</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="bill_of_lading_number">Bill of Lading Number</Label>
-                <Input
-                  id="bill_of_lading_number"
-                  {...register("shipment_details.bill_of_lading_number")}
-                />
-                {errors.shipment_details?.bill_of_lading_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.bill_of_lading_number.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pickup_number">Pickup Number</Label>
-                <Input id="pickup_number" {...register("shipment_details.pickup_number")} />
-                {errors.shipment_details?.pickup_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.pickup_number.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="delivery_number">Delivery Number</Label>
-                <Input
-                  id="delivery_number"
-                  {...register("shipment_details.delivery_number")}
-                />
-                {errors.shipment_details?.delivery_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.delivery_number.message}
-                  </p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="bill_of_lading_number">Bill of Lading Number</Label>
+              <Input
+                id="bill_of_lading_number"
+                {...register("shipment_details.bill_of_lading_number")}
+              />
+              {errors.shipment_details?.bill_of_lading_number && (
+                <p className="text-sm text-destructive">
+                  {errors.shipment_details.bill_of_lading_number.message}
+                </p>
+              )}
             </div>
           </div>
 
