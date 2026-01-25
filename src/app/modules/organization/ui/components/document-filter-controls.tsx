@@ -17,9 +17,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const DOCUMENT_TYPES = [
-  { value: "trade_licence", label: "Trade Licence" },
-  { value: "id", label: "ID" },
-  { value: "other", label: "Other" },
+  { value: "TRADE_LICENCE", label: "Trade Licence" },
+  { value: "AUTHORISED_CONTACT_PERSON_COMPANY_ID", label: "Authorised Contact Person Company ID" },
+  { value: "OTHER", label: "Other" },
 ] as const;
 
 const DOCUMENT_STATUSES = [
@@ -36,14 +36,14 @@ const ENTITY_TYPES = [
 interface DocumentFilterControlsProps {
   filters: {
     status?: "pending" | "approved" | "rejected" | null;
-    document_type?: "trade_licence" | "id" | "other" | null;
+    document_type?: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | null;
     entity_type?: "truck" | "driver" | null;
   };
   onStatusFilter: (
     status: "pending" | "approved" | "rejected" | "all" | null
   ) => void;
   onDocumentTypeFilter: (
-    type: "trade_licence" | "id" | "other" | "all" | null
+    type: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | "all" | null
   ) => void;
   onEntityTypeFilter: (type: "truck" | "driver" | "all" | null) => void;
   onClearFilters: () => void;

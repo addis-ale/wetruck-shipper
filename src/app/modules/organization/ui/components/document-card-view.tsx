@@ -51,6 +51,18 @@ export function DocumentCardView({
     });
   };
 
+  const formatDocumentType = (type?: string) => {
+    if (!type) return "Document";
+    // Handle both uppercase (from UI) and lowercase (from backend)
+    const typeUpper = type.toUpperCase();
+    const typeMap: Record<string, string> = {
+      TRADE_LICENCE: "Trade Licence",
+      AUTHORISED_CONTACT_PERSON_COMPANY_ID: "Authorised Contact Person Company ID",
+      OTHER: "Other",
+    };
+    return typeMap[typeUpper] || type.replace(/_/g, " ");
+  };
+
   if (documents.length === 0) {
     return (
       <div className="text-center py-12">
@@ -76,10 +88,8 @@ export function DocumentCardView({
               <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
                 <File className="h-3.5 w-3.5" />
               </div>
-              <h3 className="font-semibold text-xs text-foreground capitalize truncate flex-1">
-                {doc.document_type
-                  ? doc.document_type.replace(/_/g, " ")
-                  : "Document"}
+              <h3 className="font-semibold text-xs text-foreground truncate flex-1">
+                {formatDocumentType(doc.document_type)}
               </h3>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
