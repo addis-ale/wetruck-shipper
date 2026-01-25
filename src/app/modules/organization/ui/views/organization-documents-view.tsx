@@ -55,7 +55,7 @@ export function OrganizationDocumentsView() {
   // Filter state
   const [filters, setFilters] = useState<{
     status?: "pending" | "approved" | "rejected" | null;
-    document_type?: "trade_licence" | "id" | "other" | null;
+    document_type?: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | null;
     entity_type?: "truck" | "driver" | null;
   }>({});
 
@@ -192,7 +192,7 @@ export function OrganizationDocumentsView() {
   };
 
   const handleDocumentTypeFilter = (
-    type: "trade_licence" | "id" | "other" | "all" | null
+    type: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | "all" | null
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -217,7 +217,8 @@ export function OrganizationDocumentsView() {
   // Filter documents based on active filters and search term
   const filteredDocuments = (documents || []).filter((doc) => {
     if (filters.status && doc.status !== filters.status) return false;
-    if (filters.document_type && doc.document_type !== filters.document_type)
+    // Compare case-insensitively since backend may return lowercase
+    if (filters.document_type && doc.document_type?.toLowerCase() !== filters.document_type.toLowerCase())
       return false;
     if (filters.entity_type && doc.entity_type !== filters.entity_type)
       return false;

@@ -24,6 +24,18 @@ import type { OrganizationDocument } from "@/lib/api/organization";
 
 export type OrganizationDocumentTableRow = OrganizationDocument;
 
+const formatDocumentType = (type?: string) => {
+  if (!type) return "Document";
+  // Handle both uppercase (from UI) and lowercase (from backend)
+  const typeUpper = type.toUpperCase();
+  const typeMap: Record<string, string> = {
+    TRADE_LICENCE: "Trade Licence",
+    AUTHORISED_CONTACT_PERSON_COMPANY_ID: "Authorised Contact Person Company ID",
+    OTHER: "Other",
+  };
+  return typeMap[typeUpper] || type.replace(/_/g, " ");
+};
+
 export const organizationDocumentColumns = (
   onView: (id: string) => Promise<void>,
   onEdit: (id: string) => void,
@@ -51,10 +63,8 @@ export const organizationDocumentColumns = (
       return (
         <div className="flex items-center gap-2 min-w-[120px] sm:min-w-[140px]">
           <File className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium text-xs sm:text-sm capitalize">
-            {doc.document_type
-              ? doc.document_type.replace(/_/g, " ")
-              : "Document"}
+          <span className="font-medium text-xs sm:text-sm">
+            {formatDocumentType(doc.document_type)}
           </span>
         </div>
       );
