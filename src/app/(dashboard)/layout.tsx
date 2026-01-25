@@ -18,6 +18,8 @@ import {
   Lock,
   Boxes,
   CheckCircle2,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -60,6 +62,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const pathname = usePathname();
@@ -110,11 +113,17 @@ export default function DashboardLayout({
           </div>
 
           {/* Static sidebar for desktop */}
-          <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col border-r bg-sidebar">
-            <Sidebar />
+          <aside className={cn(
+            "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r bg-sidebar transition-all duration-300 z-50",
+            isSidebarCollapsed ? "lg:w-20" : "lg:w-72"
+          )}>
+            <Sidebar collapsed={isSidebarCollapsed} />
           </aside>
 
-          <div className="flex flex-1 flex-col lg:pl-72">
+          <div className={cn(
+            "flex flex-1 flex-col transition-all duration-300",
+            isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+          )}>
             <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/95 px-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 sm:gap-x-6 sm:px-6 lg:px-8">
               <button
                 type="button"
@@ -123,6 +132,19 @@ export default function DashboardLayout({
               >
                 <Menu className="h-6 w-6" aria-hidden="true" />
                 <span className="sr-only">Open sidebar</span>
+              </button>
+
+              <button
+                type="button"
+                className="hidden lg:flex -ml-2 p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-all"
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              >
+                {isSidebarCollapsed ? (
+                  <PanelLeftOpen className="h-5 w-5" />
+                ) : (
+                  <PanelLeftClose className="h-5 w-5" />
+                )}
+                <span className="sr-only">Toggle Sidebar</span>
               </button>
 
               <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">

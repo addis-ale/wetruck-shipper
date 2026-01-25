@@ -24,32 +24,46 @@ const navigation = [
 export function Sidebar({
   className,
   onClose,
+  collapsed = false,
 }: {
   className?: string;
   onClose?: () => void;
+  collapsed?: boolean;
 }) {
   const pathname = usePathname();
 
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-sidebar text-sidebar-foreground",
+        "flex h-full flex-col bg-sidebar text-sidebar-foreground transition-all duration-300",
+        collapsed ? "w-20" : "w-full",
         className
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-6">
+      <div className={cn(
+        "flex h-16 shrink-0 items-center border-b border-sidebar-border px-6 transition-all duration-300",
+        collapsed && "px-4 justify-center"
+      )}>
         <div className="flex items-center">
           <img
             src="https://www.wetruck.ai/images/logo.png"
             alt="WeTruck"
-            className="h-8 w-auto"
+            className={cn("h-8 w-auto transition-all", collapsed ? "scale-90" : "")}
           />
+          {!collapsed && (
+            <span className="ml-3 text-xl font-bold text-sidebar-primary tracking-tight">
+              WeTruck
+            </span>
+          )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-4 py-6 mt-4 overflow-y-auto">
+      <nav className={cn(
+        "flex-1 space-y-1 px-4 py-6 mt-4 overflow-y-auto transition-all duration-300",
+        collapsed && "px-2"
+      )}>
         {navigation.map((item) => {
           // Check if this is an exact match
           const isExactMatch = pathname === item.href;
@@ -75,22 +89,29 @@ export function Sidebar({
               href={item.href}
               onClick={onClose}
               className={cn(
-                "group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                collapsed && "justify-center px-2"
               )}
+              title={collapsed ? item.name : ""}
             >
               <item.icon
                 className={cn(
-                  "mr-3 h-5 w-5 shrink-0 transition-colors",
+                  "h-5 w-5 shrink-0 transition-colors",
+                  collapsed ? "" : "mr-3",
                   isActive
                     ? "text-sidebar-primary"
                     : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground"
                 )}
                 aria-hidden="true"
               />
-              {item.name}
+              {!collapsed && (
+                <span className="truncate animate-in fade-in duration-300 px-1">
+                  {item.name}
+                </span>
+              )}
             </Link>
           );
         })}
