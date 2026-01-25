@@ -12,6 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import type { OrganizationDocument } from "@/lib/api/organization";
 
+const formatDocumentType = (type?: string) => {
+  if (!type) return "document";
+  // Handle both uppercase (from UI) and lowercase (from backend)
+  const typeUpper = type.toUpperCase();
+  const typeMap: Record<string, string> = {
+    TRADE_LICENCE: "Trade Licence",
+    AUTHORISED_CONTACT_PERSON_COMPANY_ID: "Authorised Contact Person Company ID",
+    OTHER: "Other",
+  };
+  return typeMap[typeUpper] || type.replace(/_/g, " ");
+};
+
 interface DeleteDocumentModalProps {
   document: OrganizationDocument | null;
   isOpen: boolean;
@@ -51,8 +63,8 @@ export function DeleteDocumentModal({
           </DialogTitle>
           <DialogDescription className="pt-2">
             Are you sure you want to delete this{" "}
-            <span className="font-bold text-primary capitalize">
-              {document.document_type?.replace(/_/g, " ") || "document"}
+            <span className="font-bold text-primary">
+              {formatDocumentType(document.document_type)}
             </span>
             ? This action cannot be undone.
           </DialogDescription>
