@@ -18,6 +18,8 @@ import {
   Lock,
   Boxes,
   CheckCircle2,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -60,6 +62,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const pathname = usePathname();
@@ -110,11 +113,17 @@ export default function DashboardLayout({
           </div>
 
           {/* Static sidebar for desktop */}
-          <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col border-r bg-sidebar">
-            <Sidebar />
+          <aside className={cn(
+            "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r bg-sidebar transition-all duration-300 z-50",
+            isSidebarCollapsed ? "lg:w-20" : "lg:w-72"
+          )}>
+            <Sidebar collapsed={isSidebarCollapsed} />
           </aside>
 
-          <div className="flex flex-1 flex-col lg:pl-72">
+          <div className={cn(
+            "flex flex-1 flex-col transition-all duration-300",
+            isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+          )}>
             <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/95 px-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 sm:gap-x-6 sm:px-6 lg:px-8">
               <button
                 type="button"
@@ -125,22 +134,34 @@ export default function DashboardLayout({
                 <span className="sr-only">Open sidebar</span>
               </button>
 
+              <button
+                type="button"
+                className="hidden lg:flex -ml-2 p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-all"
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              >
+                {isSidebarCollapsed ? (
+                  <PanelLeftOpen className="h-5 w-5" />
+                ) : (
+                  <PanelLeftClose className="h-5 w-5" />
+                )}
+                <span className="sr-only">Toggle Sidebar</span>
+              </button>
+
               <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                 <div className="flex items-center flex-1 min-w-0">
-                  <h1 className="text-lg font-bold sm:text-xl text-primary truncate flex items-center gap-2">
-                    <span className="text-amber-600 hidden xs:inline">
-                      WeTruck
-                    </span>
-                    <span>Shipper</span>
-                  </h1>
+                  <img
+                    src="https://www.wetruck.ai/images/logo.png"
+                    alt="WeTruck"
+                    className="h-7 w-auto lg:hidden"
+                  />
                 </div>
                 <div className="flex items-center gap-x-3 sm:gap-x-6">
                   <ModeToggle />
                   <button className="relative text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-accent">
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-1 right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                     </span>
                     <span className="sr-only">View notifications</span>
                   </button>
@@ -255,10 +276,10 @@ export default function DashboardLayout({
                 {navigation.map((item) => {
                   // Check if this is an exact match
                   const isExactMatch = pathname === item.href;
-                  
+
                   // Check if pathname starts with this href (for child routes)
                   const isChildRoute = pathname.startsWith(`${item.href}/`);
-                  
+
                   // Find if there's a more specific route that also matches
                   const hasMoreSpecificMatch = navigation.some(
                     (otherItem) =>
@@ -267,7 +288,7 @@ export default function DashboardLayout({
                       otherItem.href.startsWith(item.href) &&
                       (pathname.startsWith(`${otherItem.href}/`) || pathname === otherItem.href)
                   );
-                  
+
                   const isActive = isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
                   return (
                     <Link

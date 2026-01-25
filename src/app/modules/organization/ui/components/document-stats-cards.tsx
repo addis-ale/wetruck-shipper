@@ -29,12 +29,12 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
         </div>
       </div>
 
-      <div className="p-2 sm:p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl shadow-none">
+      <div className="p-2 sm:p-3 bg-primary/5 border border-primary/10 rounded-xl shadow-none">
         <div className="flex items-center justify-between">
-          <div className="p-1 bg-amber-500/10 rounded-lg text-amber-500">
+          <div className="p-1 bg-primary/10 rounded-lg text-primary">
             <Clock className="h-3.5 w-3.5" />
           </div>
-          <span className="hidden sm:inline-block text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline-block text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
             Pending
           </span>
         </div>
@@ -42,7 +42,7 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
           <h3 className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
             Pending
           </h3>
-          <p className="text-lg sm:text-2xl font-bold text-amber-500">
+          <p className="text-lg sm:text-2xl font-bold text-primary">
             {pending}
           </p>
         </div>

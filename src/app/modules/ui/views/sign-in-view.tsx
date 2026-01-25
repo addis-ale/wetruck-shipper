@@ -35,6 +35,7 @@ export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  /* CAPTCHA State - Commented out
   const [captchaData, setCaptchaData] = useState<{
     id: string;
     solution: string;
@@ -42,6 +43,7 @@ export const SignInView = () => {
   const [captchaId, setCaptchaId] = useState<string>("");
   const [captchaSolution, setCaptchaSolution] = useState<string>("");
   const refreshCaptchaRef = useRef<(() => void) | null>(null);
+  */
 
   // Redirect to dashboard if already logged in (only on mount, not after login)
   useEffect(() => {
@@ -58,6 +60,7 @@ export const SignInView = () => {
     },
   });
 
+  /* CAPTCHA Callbacks - Commented out
   const handleCaptchaVerified = useCallback((id: string, solution: string) => {
     setCaptchaId(id);
     setCaptchaSolution(solution);
@@ -75,13 +78,14 @@ export const SignInView = () => {
       setError(msg);
     }
   }, []);
+  */
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       setPending(true);
       setError(null);
 
-      await login(data.email, data.password, captchaId, captchaSolution);
+      await login(data.email, data.password /*, captchaId, captchaSolution */);
       // Redirect immediately after successful login using replace to avoid history entry
       router.replace("/dashboard");
     } catch (err) {
@@ -89,6 +93,7 @@ export const SignInView = () => {
       const errorMessage = err instanceof Error ? err.message : "";
       const lowerErrorMessage = errorMessage.toLowerCase();
 
+      /* CAPTCHA Error Handling - Commented out
       // CAPTCHA errors - check first and refresh captcha
       if (
         lowerErrorMessage.includes("captcha") ||
@@ -114,6 +119,7 @@ export const SignInView = () => {
         }
         return;
       }
+      */
 
       // Network/Connection errors
       if (
@@ -230,7 +236,7 @@ export const SignInView = () => {
                 >
                   <div className="space-y-2 text-center md:text-left">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
-                      Shipper <span className="text-amber-600">Portal</span>
+                      Shipper Portal
                     </h1>
                     <p className="text-muted-foreground text-sm">
                       Enter your credentials to access your dashboard.
@@ -272,7 +278,7 @@ export const SignInView = () => {
                             </FormLabel>
                             <a
                               href="#"
-                              className="text-xs text-amber-600 hover:text-amber-700 hover:underline"
+                              className="text-xs text-primary hover:text-primary/80 hover:underline"
                             >
                               Forgot?
                             </a>
@@ -306,8 +312,8 @@ export const SignInView = () => {
                     />
                   </div>
 
-                  {/* CAPTCHA Component */}
-                  <div className="pt-2">
+                  {/* CAPTCHA Component - Commented out */}
+                  {/* <div className="pt-2">
                     <CaptchaComponent
                       onCaptchaVerified={handleCaptchaVerified}
                       onError={handleCaptchaError}
@@ -317,7 +323,7 @@ export const SignInView = () => {
                         refreshCaptchaRef.current = refreshFn;
                       }}
                     />
-                  </div>
+                  </div> */}
 
                   {error && (
                     <Alert
@@ -335,9 +341,10 @@ export const SignInView = () => {
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
                     disabled={
-                      pending ||
+                      pending
+                      /* ||
                       !captchaId ||
-                      captchaSolution.trim().length === 0
+                      captchaSolution.trim().length === 0 */
                     }
                   >
                     {pending ? (
@@ -356,7 +363,7 @@ export const SignInView = () => {
                     </span>
                     <a
                       href="#"
-                      className="text-amber-600 font-semibold hover:underline"
+                      className="text-primary font-semibold hover:underline"
                     >
                       Sign Up
                     </a>
@@ -379,9 +386,9 @@ export const SignInView = () => {
                 <div className="space-y-4">
                   <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
                     Move Forward, <br />
-                    <span className="text-amber-500">Go Wide!</span>
+                    <span>Go Wide!</span>
                   </h2>
-                  <div className="h-1 w-20 bg-amber-500 mx-auto rounded-full" />
+                  <div className="h-1 w-20 bg-white mx-auto rounded-full" />
                 </div>
 
                 <p className="text-white/80 text-base max-w-[300px] leading-relaxed font-light italic">
@@ -407,18 +414,18 @@ export const SignInView = () => {
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-400">
           &copy; {new Date().getFullYear()}{" "}
-          <span className="text-amber-600 font-medium">WeTruck</span> TechEnable
+          <span className="text-primary font-medium">WeTruck</span> TechEnable
           Solutions PLC.
           <a
             href="#"
-            className="ml-2 text-amber-600 hover:text-amber-700 underline underline-offset-4 transition-colors"
+            className="ml-2 text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
           >
             Terms
           </a>
-          <span className="mx-2 text-amber-600">•</span>
+          <span className="mx-2 text-primary">•</span>
           <a
             href="#"
-            className="text-amber-600 hover:text-amber-700 underline underline-offset-4 transition-colors"
+            className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
           >
             Privacy
           </a>

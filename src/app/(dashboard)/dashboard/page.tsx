@@ -28,7 +28,7 @@ export default function ShipperDashboard() {
       value: "5",
       icon: Clock,
       description: "Awaiting your acceptance",
-      color: "text-amber-600",
+      color: "text-primary",
     },
     {
       title: "Completed",
@@ -216,17 +216,17 @@ export default function ShipperDashboard() {
             <CardTitle>Action Required</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-start gap-4 rounded-xl border border-border/50 bg-background p-4 shadow-xs transition-all hover:border-amber-500/30 hover:shadow-sm group">
-              <div className="p-2 rounded-lg bg-amber-50 group-hover:bg-amber-100 transition-colors">
-                <AlertCircle className="h-5 w-5 text-amber-600" />
+            <div className="flex items-start gap-4 rounded-xl border border-border/50 bg-background p-4 shadow-xs transition-all hover:border-primary/30 hover:shadow-sm group">
+              <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
+                <AlertCircle className="h-5 w-5 text-primary" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-bold leading-none group-hover:text-amber-700 transition-colors">
+                <p className="text-sm font-bold leading-none group-hover:text-primary transition-colors">
                   Review Quotes for SHP-002
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   The system has calculated the price. You have{" "}
-                  <span className="font-bold text-amber-600">18 hours</span>{" "}
+                  <span className="font-bold text-primary">18 hours</span>{" "}
                   left to accept.
                 </p>
               </div>

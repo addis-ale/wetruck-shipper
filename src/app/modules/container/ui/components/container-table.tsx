@@ -12,8 +12,6 @@ type Props = {
 export function ContainerTable({ filters }: Props) {
   const { data, isLoading, error } = useContainers(filters);
 
-  if (isLoading) return <div>Loading containers...</div>;
-  
   if (error) {
     console.error("Container table error:", error);
     return <div>Error loading containers: {error.message}</div>;
@@ -29,6 +27,7 @@ export function ContainerTable({ filters }: Props) {
     <DataTable
       columns={containerColumns}
       data={data?.items ?? []}
+      isLoading={isLoading}
     />
   );
 }
