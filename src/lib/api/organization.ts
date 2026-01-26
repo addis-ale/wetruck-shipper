@@ -97,7 +97,8 @@ export const organizationApi = {
   uploadDocument: async (file: File, documentType: string) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("document_type", documentType);
+    // Convert to lowercase as backend expects lowercase enum values
+    formData.append("document_type", documentType.toLowerCase());
 
     const response = await fetch(`${API_URL}/organization/documents`, {
       method: "POST",
@@ -186,7 +187,8 @@ export const organizationApi = {
     const formData = new FormData();
 
     if (data.document_type) {
-      formData.append("document_type", data.document_type);
+      // Convert to lowercase as backend expects lowercase enum values
+      formData.append("document_type", data.document_type.toLowerCase());
     }
     if (data.file) {
       formData.append("file", data.file);

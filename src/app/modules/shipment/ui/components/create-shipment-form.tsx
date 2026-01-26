@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -50,12 +50,12 @@ interface CreateShipmentFormProps {
 
 type BackendErrorShape =
   | {
-      message?: unknown;
-      detail?: unknown;
-      error?: unknown;
-      fields?: Record<string, unknown>;
-      errors?: unknown;
-    }
+    message?: unknown;
+    detail?: unknown;
+    error?: unknown;
+    fields?: Record<string, unknown>;
+    errors?: unknown;
+  }
   | unknown;
 
 function safeString(val: unknown): string | null {
@@ -183,8 +183,6 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       },
       shipment_details: {
         bill_of_lading_number: "",
-        pickup_number: "",
-        delivery_number: "",
       },
       status: "created",
     }),
@@ -215,16 +213,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   // Get region options based on selected country
   const pickupRegions = pickupCountry
     ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
 
   const deliveryRegions = deliveryCountry
     ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
 
   // Country options
@@ -232,6 +230,25 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
     value: c.code,
     label: c.name,
   }));
+
+  // Auto-set region to "Djibouti" when Djibouti country is selected
+  useEffect(() => {
+    if (pickupCountry === "dj") {
+      const djiboutiRegions = getRegionsByCountryCode("dj");
+      if (djiboutiRegions.length > 0) {
+        setValue("pickup_facility.region", djiboutiRegions[0].code);
+      }
+    }
+  }, [pickupCountry, setValue]);
+
+  useEffect(() => {
+    if (deliveryCountry === "dj") {
+      const djiboutiRegions = getRegionsByCountryCode("dj");
+      if (djiboutiRegions.length > 0) {
+        setValue("delivery_facility.region", djiboutiRegions[0].code);
+      }
+    }
+  }, [deliveryCountry, setValue]);
 
   const shipmentMutation = useCreateShipment({
     onSuccess: (shipmentId) => {
@@ -243,7 +260,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
   const submitting = shipmentMutation.isPending || isSubmitting;
 
-const onSubmit: SubmitHandler<CreateShipmentFormValues> = async (values) => {
+  const onSubmit: SubmitHandler<CreateShipmentFormValues> = async (values) => {
 
     setFormError(null);
 
@@ -299,8 +316,8 @@ const onSubmit: SubmitHandler<CreateShipmentFormValues> = async (values) => {
 
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Basic Info and Shipment Details in one row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="origin" required>
                 Origin
@@ -388,388 +405,410 @@ const onSubmit: SubmitHandler<CreateShipmentFormValues> = async (values) => {
                 </p>
               )}
             </div>
-          </div>
 
-          <Separator />
-
-          {/* Shipment Details */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Shipment Details</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="bill_of_lading_number" required>
-                  Bill of Lading Number
-                </Label>
-                <Input
-                  id="bill_of_lading_number"
-                  {...register("shipment_details.bill_of_lading_number")}
-                />
-                {errors.shipment_details?.bill_of_lading_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.bill_of_lading_number.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pickup_number" required>
-                  Pickup Number
-                </Label>
-                <Input
-                  id="pickup_number"
-                  {...register("shipment_details.pickup_number")}
-                />
-                {errors.shipment_details?.pickup_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.pickup_number.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="delivery_number" required>
-                  Delivery Number
-                </Label>
-                <Input
-                  id="delivery_number"
-                  {...register("shipment_details.delivery_number")}
-                />
-                {errors.shipment_details?.delivery_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.delivery_number.message}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Pickup Facility */}
-            <div className="rounded-md border p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Pickup Address</h3>
-              <div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="bill_of_lading_number">Bill of Lading Number</Label>
+              <Input
+                id="bill_of_lading_number"
+                {...register("shipment_details.bill_of_lading_number")}
+              />
+              {errors.shipment_details?.bill_of_lading_number && (
+                <p className="text-sm text-destructive">
+                  {errors.shipment_details.bill_of_lading_number.message}
+                </p>
+              )}
+              {/* Shipment Details */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Shipment Details</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_country" required>
-                      Country
-                    </Label>
-                    <Controller
-                      name="pickup_facility.country"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Reset region when country changes
-                            setValue("pickup_facility.region", "");
-                          }}
-                          value={field.value}
-                        >
-                          <SelectTrigger id="pickup_country" className="w-full">
-                            <SelectValue placeholder="Select country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countryOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.pickup_facility?.country && (
-                      <p className="text-sm text-destructive">
-                        {errors.pickup_facility.country.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="pickup_region" required>
-                      Region
-                    </Label>
-                    <Controller
-                      name="pickup_facility.region"
-                      control={control}
-                      render={({ field }) => (
-                        <Combobox
-                          id="pickup_region"
-                          options={pickupRegions}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={
-                            pickupCountry ? "Select region" : "Select country first"
-                          }
-                          searchPlaceholder="Search region..."
-                          emptyMessage="No region found."
-                          disabled={!pickupCountry || pickupRegions.length === 0}
-                          allowCustomValue={false}
-                        />
-                      )}
-                    />
-                    {errors.pickup_facility?.region && (
-                      <p className="text-sm text-destructive">
-                        {errors.pickup_facility.region.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="pickup_name" required>
-                      Facility Name
-                    </Label>
-                    <Input id="pickup_name" {...register("pickup_facility.name")} />
-                    {errors.pickup_facility?.name && (
-                      <p className="text-sm text-destructive">
-                        {errors.pickup_facility.name.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="pickup_address" required>
-                      Address
+                    <Label htmlFor="bill_of_lading_number" required>
+                      Bill of Lading Number
                     </Label>
                     <Input
-                      id="pickup_address"
-                      {...register("pickup_facility.address")}
+                      id="bill_of_lading_number"
+                      {...register("shipment_details.bill_of_lading_number")}
                     />
-                    {errors.pickup_facility?.address && (
+                    {errors.shipment_details?.bill_of_lading_number && (
                       <p className="text-sm text-destructive">
-                        {errors.pickup_facility.address.message}
+                        {errors.shipment_details.bill_of_lading_number.message}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_contact_name" required>
-                      Contact Name
+                    <Label htmlFor="pickup_number" required>
+                      Pickup Number
                     </Label>
                     <Input
-                      id="pickup_contact_name"
-                      {...register("pickup_facility.contact_name")}
+                      id="pickup_number"
+                      {...register("shipment_details.pickup_number")}
                     />
-                    {errors.pickup_facility?.contact_name && (
+                    {errors.shipment_details?.pickup_number && (
                       <p className="text-sm text-destructive">
-                        {errors.pickup_facility.contact_name.message}
+                        {errors.shipment_details.pickup_number.message}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_contact_phone" required>
-                      Contact Phone
+                    <Label htmlFor="delivery_number" required>
+                      Delivery Number
                     </Label>
                     <Input
-                      id="pickup_contact_phone"
-                      {...register("pickup_facility.contact_phone_number")}
+                      id="delivery_number"
+                      {...register("shipment_details.delivery_number")}
                     />
-                    {errors.pickup_facility?.contact_phone_number && (
+                    {errors.shipment_details?.delivery_number && (
                       <p className="text-sm text-destructive">
-                        {errors.pickup_facility.contact_phone_number.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="pickup_contact_email" required>
-                      Contact Email
-                    </Label>
-                    <Input
-                      id="pickup_contact_email"
-                      type="email"
-                      {...register("pickup_facility.contact_email")}
-                    />
-                    {errors.pickup_facility?.contact_email && (
-                      <p className="text-sm text-destructive">
-                        {errors.pickup_facility.contact_email.message}
+                        {errors.shipment_details.delivery_number.message}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Delivery Facility */}
-            <div className="rounded-md border p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Delivery Address</h3>
-              <div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_country" required>
-                      Country
-                    </Label>
-                    <Controller
-                      name="delivery_facility.country"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Reset region when country changes
-                            setValue("delivery_facility.region", "");
-                          }}
-                          value={field.value}
-                        >
-                          <SelectTrigger id="delivery_country" className="w-full">
-                            <SelectValue placeholder="Select country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countryOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.delivery_facility?.country && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.country.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_region" required>
-                      Region
-                    </Label>
-                    <Controller
-                      name="delivery_facility.region"
-                      control={control}
-                      render={({ field }) => (
-                        <Combobox
-                          id="delivery_region"
-                          options={deliveryRegions}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={
-                            deliveryCountry ? "Select region" : "Select country first"
-                          }
-                          searchPlaceholder="Search region..."
-                          emptyMessage="No region found."
-                          disabled={!deliveryCountry || deliveryRegions.length === 0}
-                          allowCustomValue={false}
+              <Separator />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Pickup Facility */}
+                <div className="rounded-md border p-4 space-y-4">
+                  <h3 className="text-sm font-semibold">Pickup Address</h3>
+                  <div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_country" required>
+                          Country
+                        </Label>
+                        <Controller
+                          name="pickup_facility.country"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Auto-set region for Djibouti, otherwise reset
+                                if (value === "dj") {
+                                  const djiboutiRegions = getRegionsByCountryCode("dj");
+                                  if (djiboutiRegions.length > 0) {
+                                    setValue("pickup_facility.region", djiboutiRegions[0].code);
+                                  }
+                                } else {
+                                  setValue("pickup_facility.region", "");
+                                }
+                              }}
+                              value={field.value}
+                            >
+                              <SelectTrigger id="pickup_country" className="w-full">
+                                <SelectValue placeholder="Select country" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {countryOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                         />
-                      )}
-                    />
-                    {errors.delivery_facility?.region && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.region.message}
-                      </p>
-                    )}
-                  </div>
+                        {errors.pickup_facility?.country && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.country.message}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_name" required>
-                      Facility Name
-                    </Label>
-                    <Input
-                      id="delivery_name"
-                      {...register("delivery_facility.name")}
-                    />
-                    {errors.delivery_facility?.name && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.name.message}
-                      </p>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_region" required>
+                          Region
+                        </Label>
+                        <Controller
+                          name="pickup_facility.region"
+                          control={control}
+                          render={({ field }) => (
+                            <Combobox
+                              id="pickup_region"
+                              options={pickupRegions}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder={
+                                pickupCountry ? "Select region" : "Select country first"
+                              }
+                              searchPlaceholder="Search region..."
+                              emptyMessage="No region found."
+                              disabled={!pickupCountry || pickupRegions.length === 0}
+                              allowCustomValue={false}
+                            />
+                          )}
+                        />
+                        {errors.pickup_facility?.region && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.region.message}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_address" required>
-                      Address
-                    </Label>
-                    <Input
-                      id="delivery_address"
-                      {...register("delivery_facility.address")}
-                    />
-                    {errors.delivery_facility?.address && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.address.message}
-                      </p>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_name" required>
+                          Facility Name
+                        </Label>
+                        <Input id="pickup_name" {...register("pickup_facility.name")} />
+                        {errors.pickup_facility?.name && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.name.message}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_contact_name" required>
-                      Contact Name
-                    </Label>
-                    <Input
-                      id="delivery_contact_name"
-                      {...register("delivery_facility.contact_name")}
-                    />
-                    {errors.delivery_facility?.contact_name && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.contact_name.message}
-                      </p>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_address" required>
+                          Address
+                        </Label>
+                        <Input
+                          id="pickup_address"
+                          {...register("pickup_facility.address")}
+                        />
+                        {errors.pickup_facility?.address && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.address.message}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_contact_phone" required>
-                      Contact Phone
-                    </Label>
-                    <Input
-                      id="delivery_contact_phone"
-                      {...register("delivery_facility.contact_phone_number")}
-                    />
-                    {errors.delivery_facility?.contact_phone_number && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.contact_phone_number.message}
-                      </p>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_contact_name" required>
+                          Contact Name
+                        </Label>
+                        <Input
+                          id="pickup_contact_name"
+                          {...register("pickup_facility.contact_name")}
+                        />
+                        {errors.pickup_facility?.contact_name && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.contact_name.message}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_contact_email" required>
-                      Contact Email
-                    </Label>
-                    <Input
-                      id="delivery_contact_email"
-                      type="email"
-                      {...register("delivery_facility.contact_email")}
-                    />
-                    {errors.delivery_facility?.contact_email && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.contact_email.message}
-                      </p>
-                    )}
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_contact_phone" required>
+                          Contact Phone
+                        </Label>
+                        <Input
+                          id="pickup_contact_phone"
+                          {...register("pickup_facility.contact_phone_number")}
+                        />
+                        {errors.pickup_facility?.contact_phone_number && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.contact_phone_number.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="pickup_contact_email" required>
+                          Contact Email
+                        </Label>
+                        <Input
+                          id="pickup_contact_email"
+                          type="email"
+                          {...register("pickup_facility.contact_email")}
+                        />
+                        {errors.pickup_facility?.contact_email && (
+                          <p className="text-sm text-destructive">
+                            {errors.pickup_facility.contact_email.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delivery Facility */}
+                <div className="rounded-md border p-4 space-y-4">
+                  <h3 className="text-sm font-semibold">Delivery Address</h3>
+                  <div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_country" required>
+                          Country
+                        </Label>
+                        <Controller
+                          name="delivery_facility.country"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Auto-set region for Djibouti, otherwise reset
+                                if (value === "dj") {
+                                  const djiboutiRegions = getRegionsByCountryCode("dj");
+                                  if (djiboutiRegions.length > 0) {
+                                    setValue("delivery_facility.region", djiboutiRegions[0].code);
+                                  }
+                                } else {
+                                  setValue("delivery_facility.region", "");
+                                }
+                              }}
+                              value={field.value}
+                            >
+                              <SelectTrigger id="delivery_country" className="w-full">
+                                <SelectValue placeholder="Select country" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {countryOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {errors.delivery_facility?.country && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.country.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_region" required>
+                          Region
+                        </Label>
+                        <Controller
+                          name="delivery_facility.region"
+                          control={control}
+                          render={({ field }) => (
+                            <Combobox
+                              id="delivery_region"
+                              options={deliveryRegions}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder={
+                                deliveryCountry ? "Select region" : "Select country first"
+                              }
+                              searchPlaceholder="Search region..."
+                              emptyMessage="No region found."
+                              disabled={!deliveryCountry || deliveryRegions.length === 0}
+                              allowCustomValue={false}
+                            />
+                          )}
+                        />
+                        {errors.delivery_facility?.region && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.region.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_name" required>
+                          Facility Name
+                        </Label>
+                        <Input
+                          id="delivery_name"
+                          {...register("delivery_facility.name")}
+                        />
+                        {errors.delivery_facility?.name && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.name.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_address" required>
+                          Address
+                        </Label>
+                        <Input
+                          id="delivery_address"
+                          {...register("delivery_facility.address")}
+                        />
+                        {errors.delivery_facility?.address && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.address.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_contact_name" required>
+                          Contact Name
+                        </Label>
+                        <Input
+                          id="delivery_contact_name"
+                          {...register("delivery_facility.contact_name")}
+                        />
+                        {errors.delivery_facility?.contact_name && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.contact_name.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_contact_phone" required>
+                          Contact Phone
+                        </Label>
+                        <Input
+                          id="delivery_contact_phone"
+                          {...register("delivery_facility.contact_phone_number")}
+                        />
+                        {errors.delivery_facility?.contact_phone_number && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.contact_phone_number.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery_contact_email" required>
+                          Contact Email
+                        </Label>
+                        <Input
+                          id="delivery_contact_email"
+                          type="email"
+                          {...register("delivery_facility.contact_email")}
+                        />
+                        {errors.delivery_facility?.contact_email && (
+                          <p className="text-sm text-destructive">
+                            {errors.delivery_facility.contact_email.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* ✅ Form-level backend error fallback */}
-          {formError && (
-            <div className="rounded-md border border-destructive bg-destructive/10 p-3">
-              <p className="text-sm text-destructive">{formError}</p>
-            </div>
-          )}
+              {/* ✅ Form-level backend error fallback */}
+              {formError && (
+                <div className="rounded-md border border-destructive bg-destructive/10 p-3">
+                  <p className="text-sm text-destructive">{formError}</p>
+                </div>
+              )}
 
-          {/* Actions */}
-          <div className="flex gap-2 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setFormError(null);
-                reset(defaultValues);
-              }}
-              disabled={submitting}
-            >
-              Reset
-            </Button>
+              {/* Actions */}
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFormError(null);
+                    reset(defaultValues);
+                  }}
+                  disabled={submitting}
+                >
+                  Reset
+                </Button>
 
-            <Button type="submit" disabled={submitting || !isValid}>
-              {submitting ? "Creating..." : "Create Shipment"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  );
+                <Button type="submit" disabled={submitting || !isValid}>
+                  {submitting ? "Creating..." : "Create Shipment"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        );
 }

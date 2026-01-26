@@ -48,7 +48,9 @@ export function EditDocumentModal({
   // Initialize form when document changes
   useEffect(() => {
     if (document) {
-      setDocumentType(document.document_type || "");
+      // Convert lowercase from backend to uppercase for UI consistency
+      const docType = document.document_type?.toUpperCase() || "";
+      setDocumentType(docType);
       setSelectedFile(null);
       setError(null);
       if (fileInputRef.current) {
@@ -129,9 +131,9 @@ export function EditDocumentModal({
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="trade_licence">Trade Licence</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="TRADE_LICENCE">Trade Licence</SelectItem>
+                <SelectItem value="AUTHORISED_CONTACT_PERSON_COMPANY_ID">Authorised Contact Person Company ID</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

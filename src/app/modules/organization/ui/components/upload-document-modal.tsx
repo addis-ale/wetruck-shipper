@@ -188,9 +188,9 @@ export function UploadDocumentModal({
                 <SelectValue placeholder="Choose document type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="trade_licence">Trade Licence</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="TRADE_LICENCE">Trade Licence</SelectItem>
+                <SelectItem value="AUTHORISED_CONTACT_PERSON_COMPANY_ID">Authorised Contact Person Company ID</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

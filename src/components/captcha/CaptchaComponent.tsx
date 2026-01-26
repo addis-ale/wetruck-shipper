@@ -53,26 +53,24 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
     isVerifiedRef.current = isVerified;
   }, [fetchCaptcha, cleanup, isVerified]);
 
-  // Initial fetch and auto-refresh - only on login page
+  // Initial fetch and auto-refresh - only on login page, or if manually triggered
   useEffect(() => {
-    // Only fetch if we're on the login page
-    if (!isLoginPage) {
-      return;
-    }
-
     isMountedRef.current = true;
 
-    // Initial fetch
+    // Always fetch on mount to show captcha
     fetchCaptchaRef.current();
 
-    // Auto-refresh every 55 seconds if not verified
-    intervalRef.current = setInterval(() => {
-      if (isMountedRef.current && !isVerifiedRef.current && isLoginPage) {
-        fetchCaptchaRef.current();
-      }
-    }, 55000);
+    // If on login page, also set up auto-refresh
+    if (isLoginPage) {
+      // Auto-refresh every 55 seconds if not verified
+      intervalRef.current = setInterval(() => {
+        if (isMountedRef.current && !isVerifiedRef.current && isLoginPage) {
+          fetchCaptchaRef.current();
+        }
+      }, 55000);
+    }
 
-    // Cleanup on unmount or when leaving login page
+    // Cleanup on unmount
     return () => {
       isMountedRef.current = false;
       if (intervalRef.current) {
@@ -82,19 +80,19 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
       // Call hook cleanup
       cleanupRef.current();
     };
-  }, [isLoginPage]); // Re-run if login page status changes
+  }, [isLoginPage, deferVerification]); // Re-run if login page status changes
 
   // Expose refresh function to parent
   useEffect(() => {
     if (onRefreshReady) {
       onRefreshReady(() => {
-        if (isMountedRef.current && isLoginPage) {
+        if (isMountedRef.current) {
           fetchCaptcha();
           setUserInput("");
         }
       });
     }
-  }, [fetchCaptcha, onRefreshReady, isLoginPage]);
+  }, [fetchCaptcha, onRefreshReady]);
 
   // Handle errors
   useEffect(() => {
@@ -183,12 +181,12 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (isMountedRef.current && isLoginPage) {
+              if (isMountedRef.current) {
                 fetchCaptchaRef.current();
                 setUserInput("");
               }
             }}
-            disabled={isLoading || disabled || !isLoginPage}
+            disabled={isLoading || disabled}
             className="p-1.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Refresh CAPTCHA"
             title="Refresh CAPTCHA"
