@@ -89,8 +89,9 @@ export const captchaService = {
                 if (imageBlob.size === 0) {
                     throw new Error('Received empty image from server.');
                 }
-            } catch (blobError: any) {
-                console.error('❌ Failed to create blob:', blobError);
+            } catch (blobError: unknown) {
+                const error = blobError as Error;
+                console.error('❌ Failed to create blob:', error);
                 throw new Error('Failed to load image. Please try again.');
             }
 
@@ -126,15 +127,16 @@ export const captchaService = {
                 captchaId,
                 imageUrl,
             };
-        } catch (error: any) {
-            console.error('❌ CAPTCHA Fetch Error:', error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error('❌ CAPTCHA Fetch Error:', err);
             console.error('❌ Error details:', {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
+                name: err.name,
+                message: err.message,
+                stack: err.stack,
             });
             
-            const errorMsg = error.message || 'Unknown error';
+            const errorMsg = err.message || 'Unknown error';
             
             // Make error messages user-friendly
             if (errorMsg.toLowerCase().includes('cors') || errorMsg.toLowerCase().includes('header')) {
@@ -172,8 +174,9 @@ export const captchaService = {
 
             const data = await response.json();
             return data;
-        } catch (error: any) {
-            const errorMessage = error.message || 'Network error during CAPTCHA verification';
+        } catch (error: unknown) {
+            const err = error as Error;
+            const errorMessage = err.message || 'Network error during CAPTCHA verification';
             const lowerMsg = errorMessage.toLowerCase();
             
             // Make error messages user-friendly

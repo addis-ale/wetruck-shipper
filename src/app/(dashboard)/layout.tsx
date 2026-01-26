@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  PlusCircle,
   Package,
   Clock,
   MapPin,
@@ -149,6 +148,7 @@ export default function DashboardLayout({
 
               <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                 <div className="flex items-center flex-1 min-w-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="https://www.wetruck.ai/images/logo.png"
                     alt="WeTruck"

@@ -31,8 +31,7 @@ import {
 import { useShipperShipItems } from "@/app/modules/shipment/server/hooks/use-transporter-shipments";
 import { useAcceptShip } from "@/app/modules/shipment/server/hooks/use-accept-ship";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
-import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info } from "lucide-react";
-import Link from "next/link";
+import { Package, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -72,7 +71,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
   const [selectedTransporterIds, setSelectedTransporterIds] = useState<Set<number>>(new Set());
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
   const [containersModalOpen, setContainersModalOpen] = useState(false);
-  const [selectedTransporterGroup, setSelectedTransporterGroup] = useState<any>(null);
+  const [selectedTransporterGroup, setSelectedTransporterGroup] = useState<typeof filteredTransporterGroups[0] | null>(null);
   // Track accepted shipments (for immediate UI feedback) - must be before early returns
   const [acceptedShipIds, setAcceptedShipIds] = useState<Set<number>>(new Set());
   
@@ -124,7 +123,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
 
   // Get all containers from a transporter group
   const getAllContainersFromGroup = (group: typeof filteredTransporterGroups[0]) => {
-    const containers: any[] = [];
+    const containers: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string; is_returning?: boolean; status?: string }> = [];
     group.ship_items.forEach((shipItem) => {
       if (shipItem.containers && Array.isArray(shipItem.containers)) {
         containers.push(...shipItem.containers);
@@ -136,7 +135,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
   const handleSelectAll = () => {
     // Only select transporters that are not already accepted
     const selectableTransporters = filteredTransporterGroups.filter(
-      (group) => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
+      () => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
     );
     
     if (selectedTransporterIds.size === selectableTransporters.length) {
@@ -243,15 +242,6 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
 
   // Calculate totals
   const totalTransporters = filteredTransporterGroups.length;
-  const totalContainers = filteredTransporterGroups.reduce(
-    (sum, group) => sum + (group.total_containers || 0),
-    0
-  );
-  const totalPrice = filteredTransporterGroups.reduce(
-    (sum, group) => sum + (Number(group.total_price) || 0),
-    0
-  );
-  const primaryCurrency = filteredTransporterGroups[0]?.currency || "ETB";
 
   if (filteredTransporterGroups.length === 0) {
     return (
@@ -294,7 +284,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                   <TableHead className="w-[50px]">
                     <Checkbox
                       checked={selectedTransporterIds.size > 0 && selectedTransporterIds.size === filteredTransporterGroups.filter(
-                        (group) => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
+                        () => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
                       ).length}
                       onCheckedChange={handleSelectAll}
                     />
@@ -313,14 +303,6 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                     const isAccepted = acceptedShipIds.has(activeShipmentId || 0) || acceptedShipmentIds.has(activeShipmentId || 0);
                     const isSelected = selectedTransporterIds.has(group.transporter_id);
                     const hasReturning = hasReturningContainers(group);
-                    
-                    // Calculate returning containers count and return fee
-                    // Flat fee of 10,000 ETB if at least 1 container is returning
-                    const RETURN_FEE_ETB = 10000;
-                    const returningContainers = group.ship_items.reduce((count, shipItem) => {
-                      return count + (shipItem.containers?.filter((c) => c.is_returning === true).length || 0);
-                    }, 0);
-                    const returnFeeETB = returningContainers > 0 ? RETURN_FEE_ETB : 0;
                     
                     // Ensure total_price is a number (API might return string)
                     const totalPrice = group.total_price !== undefined && group.total_price !== null 

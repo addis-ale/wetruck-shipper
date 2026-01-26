@@ -48,8 +48,8 @@ function QuoteCard({
   isAccepting,
   isAccepted
 }: { 
-  quoteItem: any; 
-  onAccept: (item: any) => void; 
+  quoteItem: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }; 
+  onAccept: (item: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }) => void; 
   isAccepting: boolean;
   isAccepted: boolean;
 }) {
@@ -106,7 +106,7 @@ function QuoteCard({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {displayItem.containers.map((container: any) => (
+                      {displayItem.containers.map((container) => (
                         <TableRow key={container.id}>
                           <TableCell className="font-medium">
                             {container.container_number || "N/A"}
@@ -176,7 +176,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
   const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
   const { data: shipment } = useShipment(shipId);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<{ id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number }> } | null>(null);
   
   // Check if shipment is already accepted
   const isShipmentAccepted = shipment?.status === "accepted_by_shipper";
@@ -199,7 +199,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
         acc.items.push(item);
         return acc;
       },
-      { shipId, transporters: [] as number[], items: [] as any[] }
+      { shipId, transporters: [] as number[], items: [] as Array<{ id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }> }
     );
 
   // Calculate total containers across all quotes
@@ -208,7 +208,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
     return sum + count;
   }, 0) || 0;
 
-  const handleAccept = (item: any) => {
+  const handleAccept = (item: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number }> }) => {
     setSelectedItem(item);
     setAcceptDialogOpen(true);
   };

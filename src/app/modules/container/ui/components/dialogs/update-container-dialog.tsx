@@ -121,10 +121,12 @@ export function UpdateContainerDialog({
   
     const payload: UpdateContainerInput = {
       ...parsed,
-      container_details: {
+      container_details: parsed.container_details ? {
         ...parsed.container_details,
-        commodity: parsed.container_details.commodity.filter(Boolean),
-      },
+        commodity: parsed.container_details.commodity
+          ? parsed.container_details.commodity.filter(Boolean)
+          : [],
+      } : undefined,
       return_location_info: parsed.is_returning
         ? parsed.return_location_info
         : undefined,

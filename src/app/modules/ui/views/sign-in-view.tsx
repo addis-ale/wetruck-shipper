@@ -35,10 +35,6 @@ export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaData, setCaptchaData] = useState<{
-    id: string;
-    solution: string;
-  } | null>(null);
   const [captchaId, setCaptchaId] = useState<string>("");
   const [captchaSolution, setCaptchaSolution] = useState<string>("");
   const refreshCaptchaRef = useRef<(() => void) | null>(null);
@@ -61,7 +57,6 @@ export const SignInView = () => {
   const handleCaptchaVerified = useCallback((id: string, solution: string) => {
     setCaptchaId(id);
     setCaptchaSolution(solution);
-    setCaptchaData({ id, solution });
   }, []);
 
   const handleCaptchaError = useCallback((msg: string) => {
@@ -106,7 +101,6 @@ export const SignInView = () => {
         );
         // Refresh captcha on error
         setCaptchaSolution("");
-        setCaptchaData(null);
         setCaptchaId("");
         // Trigger captcha refresh
         if (refreshCaptchaRef.current) {

@@ -85,7 +85,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
                     setOpen(false);
                     setFile(null);
                   },
-                  onError: (err: any) => {
+                  onError: (err: Error) => {
                     toast.error(err.message || "Upload failed");
                   },
                 }

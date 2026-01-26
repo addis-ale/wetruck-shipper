@@ -73,7 +73,7 @@ async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    let errorData: any = {};
+    let errorData: { detail?: unknown; message?: string; error_message?: string } = {};
     try {
       errorData = await response.json();
     } catch {
@@ -83,24 +83,28 @@ async function apiRequest<T>(
     // Handle FastAPI validation errors
     if (errorData.detail) {
       if (Array.isArray(errorData.detail)) {
-        const firstError = errorData.detail[0];
+        const firstError = errorData.detail[0] as { msg?: string; message?: string };
         throw new Error(
           firstError.msg || firstError.message || "Validation error"
         );
       } else if (typeof errorData.detail === "string") {
         throw new Error(errorData.detail);
-      } else if (errorData.detail.message) {
+      } else if (typeof errorData.detail === "object" && errorData.detail !== null && "message" in errorData.detail) {
         // Handle custom exception format
-        throw new Error(errorData.detail.message);
+        throw new Error((errorData.detail as { message: string }).message);
       }
     }
 
     // Check for error message in various formats
+    const detailMessage = typeof errorData.detail === "object" && errorData.detail !== null && "message" in errorData.detail
+      ? (errorData.detail as { message: string }).message
+      : undefined;
+    
     const errorMessage =
       errorData.message ||
       errorData.error_message ||
-      errorData.detail?.message ||
-      errorData.detail ||
+      detailMessage ||
+      (typeof errorData.detail === "string" ? errorData.detail : undefined) ||
       `HTTP ${response.status}: ${response.statusText}`;
 
     throw new Error(errorMessage);
@@ -175,10 +179,12 @@ export const shipmentApi = {
 
   // Create shipment
   async create(data: CreateShipmentPayload): Promise<Shipment> {
+    const normalizedOrigin = normalizeLocation(data.origin) ?? data.origin;
+    const normalizedDestination = normalizeLocation(data.destination) ?? data.destination;
     const normalizedData: CreateShipmentPayload = {
       ...data,
-      origin: normalizeLocation(data.origin),
-      destination: normalizeLocation(data.destination),
+      origin: normalizedOrigin as CreateShipmentPayload["origin"],
+      destination: normalizedDestination as CreateShipmentPayload["destination"],
     };
   
     const response = await apiRequest<ShipmentCreateResponse>(`${API_PATH}/`, {

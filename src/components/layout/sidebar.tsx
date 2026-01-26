@@ -4,12 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  PlusCircle,
   Package,
   Clock,
   MapPin,
   Boxes,
-  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +44,7 @@ export function Sidebar({
         collapsed && "px-4 justify-center"
       )}>
         <div className="flex items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://www.wetruck.ai/images/logo.png"
             alt="WeTruck"
