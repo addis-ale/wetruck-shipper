@@ -44,7 +44,7 @@ export const shipmentDetailsSchema = z.object({
 });
 
 // Base shipment schema (without refinement)
-const baseShipmentSchema = z.object({
+export const baseShipmentSchema = z.object({
   origin: originDestinationEnum,
   destination: originDestinationEnum,
   pickup_date: z.string().min(1, "Pickup date is required"),

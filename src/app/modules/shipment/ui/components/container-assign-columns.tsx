@@ -16,6 +16,88 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Component for action cell to allow useState hook
+function ActionCell({
+  container,
+  isAssigned,
+  activeShipmentId,
+  onAssign,
+  onRemove,
+}: {
+  container: Container;
+  isAssigned: boolean;
+  activeShipmentId: number | null;
+  onAssign: (id: number) => void;
+  onRemove: (id: number) => void;
+}) {
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+
+  if (!activeShipmentId) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        Select a shipment
+      </span>
+    );
+  }
+
+  if (isAssigned) {
+    return (
+      <>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowRemoveDialog(true)}
+          className="h-8"
+        >
+          <Minus className="h-3 w-3 mr-1" />
+          Remove
+        </Button>
+
+        <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remove Container</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove container{" "}
+                <strong>{container.container_number}</strong> from this
+                shipment?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowRemoveDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onRemove(container.id);
+                  setShowRemoveDialog(false);
+                }}
+              >
+                Remove
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      onClick={() => onAssign(container.id)}
+      className="h-8"
+    >
+      <Plus className="h-3 w-3 mr-1" />
+      Assign
+    </Button>
+  );
+}
+
 interface ContainerColumnsProps {
   activeShipmentId: number | null;
   assignedContainers: number[];
@@ -33,7 +115,6 @@ export function useContainerAssignColumns({
   onRemove,
   selectedContainers = [],
   onSelectionChange,
-  data = [],
 }: ContainerColumnsProps): ColumnDef<Container>[] {
   return [
     {
@@ -146,71 +227,14 @@ export function useContainerAssignColumns({
       header: "Actions",
       cell: ({ row }) => {
         const isAssigned = assignedContainers.includes(row.original.id);
-        const [showRemoveDialog, setShowRemoveDialog] = useState(false);
-
-        if (!activeShipmentId) {
-          return (
-            <span className="text-xs text-muted-foreground">
-              Select a shipment
-            </span>
-          );
-        }
-
-        if (isAssigned) {
-          return (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowRemoveDialog(true)}
-                className="h-8"
-              >
-                <Minus className="h-3 w-3 mr-1" />
-                Remove
-              </Button>
-
-              <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Remove Container</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to remove container{" "}
-                      <strong>{row.original.container_number}</strong> from this
-                      shipment?
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowRemoveDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        onRemove(row.original.id);
-                        setShowRemoveDialog(false);
-                      }}
-                    >
-                      Remove
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </>
-          );
-        }
-
         return (
-          <Button
-            size="sm"
-            onClick={() => onAssign(row.original.id)}
-            className="h-8"
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Assign
-          </Button>
+          <ActionCell
+            container={row.original}
+            isAssigned={isAssigned}
+            activeShipmentId={activeShipmentId}
+            onAssign={onAssign}
+            onRemove={onRemove}
+          />
         );
       },
     },

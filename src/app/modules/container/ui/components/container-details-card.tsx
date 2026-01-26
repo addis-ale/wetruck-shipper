@@ -72,7 +72,7 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
             />
             <MetricCard
               label="Tare Weight"
-              value={container.tare_weight}
+              value={container.tare_weight ?? 0}
               unit={container.gross_weight_unit}
             />
           </div>
@@ -82,7 +82,7 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         {(details?.commodity?.length || details?.instruction) && (
           <Section title="Cargo Information" icon={<Package className="h-4 w-4" />}>
             <div className="space-y-4">
-              {details?.commodity?.length > 0 && (
+              {details?.commodity && details.commodity.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
                     Commodity

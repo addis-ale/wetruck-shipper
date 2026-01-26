@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -94,6 +94,25 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
     value: c.code,
     label: c.name,
   }));
+
+  // Auto-set region to "Djibouti" when Djibouti country is selected
+  useEffect(() => {
+    if (pickupCountry === "dj") {
+      const djiboutiRegions = getRegionsByCountryCode("dj");
+      if (djiboutiRegions.length > 0) {
+        setValue("pickup_facility.region", djiboutiRegions[0].code);
+      }
+    }
+  }, [pickupCountry, setValue]);
+
+  useEffect(() => {
+    if (deliveryCountry === "dj") {
+      const djiboutiRegions = getRegionsByCountryCode("dj");
+      if (djiboutiRegions.length > 0) {
+        setValue("delivery_facility.region", djiboutiRegions[0].code);
+      }
+    }
+  }, [deliveryCountry, setValue]);
 
   // Reset form when shipment changes
   useEffect(() => {
@@ -235,8 +254,15 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Reset region when country changes
-                          setValue("pickup_facility.region", "");
+                          // Auto-set region for Djibouti, otherwise reset
+                          if (value === "dj") {
+                            const djiboutiRegions = getRegionsByCountryCode("dj");
+                            if (djiboutiRegions.length > 0) {
+                              setValue("pickup_facility.region", djiboutiRegions[0].code);
+                            }
+                          } else {
+                            setValue("pickup_facility.region", "");
+                          }
                         }}
                         value={field.value}
                       >
@@ -372,8 +398,15 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Reset region when country changes
-                          setValue("delivery_facility.region", "");
+                          // Auto-set region for Djibouti, otherwise reset
+                          if (value === "dj") {
+                            const djiboutiRegions = getRegionsByCountryCode("dj");
+                            if (djiboutiRegions.length > 0) {
+                              setValue("delivery_facility.region", djiboutiRegions[0].code);
+                            }
+                          } else {
+                            setValue("delivery_facility.region", "");
+                          }
                         }}
                         value={field.value}
                       >

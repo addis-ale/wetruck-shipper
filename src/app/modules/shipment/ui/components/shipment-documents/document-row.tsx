@@ -40,13 +40,13 @@ export function DocumentRow({
   const [shouldFetchPreview, setShouldFetchPreview] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
 
-  const { mutate: deleteDoc, isPending: isDeleting } =
+  const { mutate: deleteDoc } =
     useDeleteShipItemDocument(shipItemId);
 
   const { mutate: updateDoc, isPending: isUpdating } =
     useUpdateShipItemDocument(shipItemId, doc.id);
 
-  const { data, isLoading, isError } = useShipItemDocumentPreview(
+  const { data, isLoading } = useShipItemDocumentPreview(
     shipItemId,
     doc.id,
     shouldFetchPreview
@@ -161,7 +161,7 @@ export function DocumentRow({
                   deleteDoc(doc.id, {
                     onSuccess: () =>
                       toast.success("Document deleted successfully"),
-                    onError: (e: any) =>
+                    onError: (e: Error) =>
                       toast.error(e.message || "Delete failed"),
                   })
                 }
@@ -186,7 +186,7 @@ export function DocumentRow({
                 {
                   onSuccess: () =>
                     toast.success("Document updated successfully"),
-                  onError: (e: any) =>
+                  onError: (e: Error) =>
                     toast.error(e.message || "Update failed"),
                 }
               );
@@ -237,6 +237,7 @@ export function DocumentRow({
                 </div>
               ) : isImage ? (
                 <div className="flex items-center justify-center h-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={data.presigned_url}
                     alt={docType.replace(/_/g, " ")}

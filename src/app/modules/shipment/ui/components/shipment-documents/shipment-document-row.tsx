@@ -63,15 +63,10 @@ export function ShipmentDocumentRow({
     setShouldFetchPreview(true);
   };
 
-  useEffect(() => {
-    if (data?.presigned_url && shouldFetchPreview) {
-      setIsViewing(true);
-   
-      if (isImage) {
-        fetchImageForNewTab(data.presigned_url);
-      }
-    }
-  }, [data, shouldFetchPreview]);
+  const fileName = doc.file_path.split("/").pop() || "";
+  const extension = fileName.split(".").pop()?.toLowerCase();
+
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(extension || "");
 
   const fetchImageForNewTab = async (url: string) => {
     try {
@@ -84,6 +79,16 @@ export function ShipmentDocumentRow({
       setImageUrl(url);
     }
   };
+
+  useEffect(() => {
+    if (data?.presigned_url && shouldFetchPreview) {
+      setIsViewing(true);
+   
+      if (isImage) {
+        fetchImageForNewTab(data.presigned_url);
+      }
+    }
+  }, [data, shouldFetchPreview, isImage]);
 
   const closeViewer = () => {
     setIsViewing(false);
@@ -103,12 +108,6 @@ export function ShipmentDocumentRow({
     link.rel = "noopener noreferrer";
     link.click();
   };
-  
-  const fileName = doc.file_path.split("/").pop() || "";
-  const extension = fileName.split(".").pop()?.toLowerCase();
-
-  const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(extension || "");
-  const isPdf = extension === "pdf";
 
   const label =
     DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type;
@@ -174,7 +173,7 @@ export function ShipmentDocumentRow({
               toast.success("Document deleted successfully");
               setConfirmOpen(false);
             },
-            onError: (e: any) => {
+            onError: (e: Error) => {
               toast.error(e.message || "Delete failed");
               setConfirmOpen(false);
             },
@@ -223,6 +222,7 @@ export function ShipmentDocumentRow({
                 </div>
               ) : isImage ? (
                 <div className="flex items-center justify-center h-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={data.presigned_url}
                     alt={label}

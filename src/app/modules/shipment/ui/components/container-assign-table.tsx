@@ -39,7 +39,6 @@ import {
 import { Search, Loader2 } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import type { Container } from "@/app/modules/container/server/types/container.types";
-import { Badge } from "@/components/ui/badge";
 
 // Extended container type
 type ContainerWithShipId = Container & { ship_id?: number | null };

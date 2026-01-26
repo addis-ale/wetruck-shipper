@@ -18,12 +18,17 @@ export type ListContainersParams = {
   axle_type?: string;
 };
 
-function buildQuery(params: Record<string, any>) {
-  return new URLSearchParams(
-    Object.entries(params).filter(
-      ([, value]) => value !== undefined && value !== ""
-    )
-  ).toString();
+function buildQuery(params: Record<string, string | number | undefined>) {
+  const filtered = Object.entries(params).filter(
+    ([, value]) => value !== undefined && value !== ""
+  );
+  const searchParams = new URLSearchParams();
+  filtered.forEach(([key, value]) => {
+    if (value !== undefined) {
+      searchParams.append(key, String(value));
+    }
+  });
+  return searchParams.toString();
 }
 
 export const containerApi = {

@@ -188,7 +188,7 @@ export function UploadShipmentDocumentDialog({
                       setFile(null);
                       onOpenChange(false);
                     },
-                    onError: (err: any) =>
+                    onError: (err: Error) =>
                       toast.error(
                         err.message || "Upload failed"
                       ),

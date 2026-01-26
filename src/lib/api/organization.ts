@@ -44,7 +44,7 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 // Helper to parse response text and handle HTML errors
-function parseResponse(text: string, endpoint: string): any {
+function parseResponse(text: string, endpoint: string): unknown {
   // Check if response is HTML (404 page) instead of JSON
   if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
     throw new Error(`API endpoint not found. Check if backend is running and URL is correct: ${API_URL}${endpoint}`);
@@ -54,10 +54,18 @@ function parseResponse(text: string, endpoint: string): any {
   
   try {
     return JSON.parse(text);
-  } catch (parseError) {
+  } catch {
     throw new Error(`Invalid JSON response from ${endpoint}: ${text.substring(0, 100)}...`);
   }
 }
+
+type ApiErrorResponse = {
+  detail?: string | { message?: string } | Array<{ msg?: string; message?: string }>;
+  message?: string;
+  error_message?: string;
+};
+
+type ApiSuccessResponse<T> = T | { items: T[] } | T[];
 
 export interface OrganizationDocument {
   id: number;
@@ -112,8 +120,11 @@ export const organizationApi = {
     const result = parseResponse(text, '/organization/documents');
 
     if (!response.ok) {
+      const errorResult = result as ApiErrorResponse;
       return {
-        error: result?.detail || result?.message || "Failed to upload document",
+        error: typeof errorResult?.detail === "string" 
+          ? errorResult.detail 
+          : errorResult?.message || "Failed to upload document",
         status,
       };
     }
@@ -137,14 +148,22 @@ export const organizationApi = {
     const result = parseResponse(text, '/organization/documents/list');
 
     if (!response.ok) {
+      const errorResult = result as ApiErrorResponse;
       return {
-        error: result?.detail || result?.message || "Failed to get documents",
+        error: typeof errorResult?.detail === "string" 
+          ? errorResult.detail 
+          : errorResult?.message || "Failed to get documents",
         status,
       };
     }
 
     // API might return array directly or wrapped in object
-    const items = Array.isArray(result) ? result : result?.items || [];
+    const successResult = result as ApiSuccessResponse<OrganizationDocument>;
+    const items = Array.isArray(successResult) 
+      ? successResult 
+      : (successResult && typeof successResult === "object" && "items" in successResult)
+        ? (successResult as { items: OrganizationDocument[] }).items
+        : [];
     return { data: items as OrganizationDocument[], status };
   },
 
@@ -167,8 +186,11 @@ export const organizationApi = {
     const result = parseResponse(text, `/organization/documents/${documentId}/get`);
 
     if (!response.ok) {
+      const errorResult = result as ApiErrorResponse;
       return {
-        error: result?.detail || result?.message || "Failed to get document",
+        error: typeof errorResult?.detail === "string" 
+          ? errorResult.detail 
+          : errorResult?.message || "Failed to get document",
         status,
       };
     }
@@ -209,8 +231,11 @@ export const organizationApi = {
     const result = parseResponse(text, `/organization/documents/${documentId}/update`);
 
     if (!response.ok) {
+      const errorResult = result as ApiErrorResponse;
       return {
-        error: result?.detail || result?.message || "Failed to update document",
+        error: typeof errorResult?.detail === "string" 
+          ? errorResult.detail 
+          : errorResult?.message || "Failed to update document",
         status,
       };
     }
@@ -237,8 +262,11 @@ export const organizationApi = {
     if (!response.ok) {
       const text = await response.text();
       const result = parseResponse(text, `/organization/documents/${documentId}/delete`);
+      const errorResult = result as ApiErrorResponse;
       return {
-        error: result?.detail || result?.message || "Failed to delete document",
+        error: typeof errorResult?.detail === "string" 
+          ? errorResult.detail 
+          : errorResult?.message || "Failed to delete document",
         status,
       };
     }

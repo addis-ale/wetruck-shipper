@@ -51,7 +51,7 @@ const formatPrice = (value: number): string => {
 export function AcceptedShipItemsTable({ activeShipmentId }: AcceptedShipItemsTableProps) {
   const { data: acceptedShipItems, isLoading, error } = useAcceptedShipItems(activeShipmentId);
   const [containersModalOpen, setContainersModalOpen] = useState(false);
-  const [selectedShipItem, setSelectedShipItem] = useState<any>(null);
+  const [selectedShipItem, setSelectedShipItem] = useState<typeof transporterGroups[0] | null>(null);
 
   // Group ship items by transporter
   const transporterGroups = React.useMemo(() => {
@@ -59,8 +59,8 @@ export function AcceptedShipItemsTable({ activeShipmentId }: AcceptedShipItemsTa
     
     const groups = new Map<number, {
       transporter_id: number;
-      transporter: any;
-      ship_items: any[];
+      transporter: { id: number; name?: string } | null;
+      ship_items: Array<{ id: number; transporter_id: number; containers?: Array<{ id: number; is_returning?: boolean }> }>;
       total_price: number;
       total_containers: number;
       currency: string;
@@ -72,7 +72,7 @@ export function AcceptedShipItemsTable({ activeShipmentId }: AcceptedShipItemsTa
       if (!groups.has(transporterId)) {
         groups.set(transporterId, {
           transporter_id: transporterId,
-          transporter: item.transporter,
+          transporter: (item.transporter as { id: number; name?: string } | null) ?? null,
           ship_items: [],
           total_price: 0,
           total_containers: 0,
@@ -92,7 +92,7 @@ export function AcceptedShipItemsTable({ activeShipmentId }: AcceptedShipItemsTa
   // Helper function to check if transporter has any returning containers
   const hasReturningContainers = (group: typeof transporterGroups[0]): boolean => {
     return group.ship_items.some((shipItem) => 
-      shipItem.containers?.some((container: any) => container.is_returning === true)
+      shipItem.containers?.some((container) => container.is_returning === true)
     );
   };
 
@@ -104,7 +104,7 @@ export function AcceptedShipItemsTable({ activeShipmentId }: AcceptedShipItemsTa
 
   // Get all containers from a transporter group
   const getAllContainersFromGroup = (group: typeof transporterGroups[0]) => {
-    const containers: any[] = [];
+    const containers: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string; is_returning?: boolean; status?: string }> = [];
     group.ship_items.forEach((shipItem) => {
       if (shipItem.containers && Array.isArray(shipItem.containers)) {
         containers.push(...shipItem.containers);
@@ -227,13 +227,6 @@ export function AcceptedShipItemsTable({ activeShipmentId }: AcceptedShipItemsTa
                 {transporterGroups.map((group) => {
                   const rowKey = `transporter-${group.transporter_id}`;
                   const hasReturning = hasReturningContainers(group);
-                  
-                  // Calculate returning containers count and return fee
-                  const RETURN_FEE_ETB = 10000;
-                  const returningContainers = group.ship_items.reduce((count, shipItem) => {
-                    return count + (shipItem.containers?.filter((c: any) => c.is_returning === true).length || 0);
-                  }, 0);
-                  const returnFeeETB = returningContainers > 0 ? RETURN_FEE_ETB : 0;
                   
                   // Ensure total_price is a number
                   const totalPrice = group.total_price || 0;

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 
 type DataTableProps<TData> = {
-  columns: ColumnDef<TData, any>[];
+  columns: ColumnDef<TData, unknown>[];
   data: TData[];
   isLoading?: boolean;
 };

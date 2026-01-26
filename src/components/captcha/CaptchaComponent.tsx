@@ -132,7 +132,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
     if (captchaData) {
       setUserInput("");
     }
-  }, [captchaData?.captchaId]);
+  }, [captchaData]);
 
   const handleVerify = async () => {
     if (!userInput.trim()) {
@@ -203,6 +203,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
       <div className="flex items-center gap-2">
         <div className="flex-1 relative border border-gray-200 rounded-md overflow-hidden bg-gray-50 flex items-center justify-center min-h-[60px]">
           {captchaData?.imageUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={captchaData.imageUrl}
               alt="CAPTCHA"

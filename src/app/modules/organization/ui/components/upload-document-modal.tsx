@@ -154,8 +154,7 @@ export function UploadDocumentModal({
     return (bytes / (1024 * 1024)).toFixed(2) + " MB";
   };
 
-  const getFileIcon = (fileName: string) => {
-    const ext = fileName.split(".").pop()?.toLowerCase();
+  const getFileIcon = () => {
     return <FileText className="h-5 w-5 text-muted-foreground" />;
   };
 
@@ -253,7 +252,7 @@ export function UploadDocumentModal({
               <div className="border rounded-lg p-4 bg-muted/50">
                 <div className="flex items-center gap-3">
                   <div className="shrink-0">
-                    {getFileIcon(selectedFile.name)}
+                    {getFileIcon()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">

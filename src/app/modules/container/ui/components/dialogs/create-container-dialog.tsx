@@ -87,7 +87,8 @@ export function CreateContainerDialog() {
   }));
 
   const commodities = useFieldArray({
-    control: control as any,
+    control,
+    // @ts-expect-error - react-hook-form has issues with nested paths in TypeScript
     name: "container_details.commodity",
   });
   
@@ -108,12 +109,14 @@ export function CreateContainerDialog() {
   
     const payload: CreateContainerInput = {
       ...parsed,
-      container_details: {
+      container_details: parsed.container_details ? {
         ...parsed.container_details,
         commodity: parsed.container_details.commodity
-          .map((c) => c.trim())
-          .filter(Boolean),
-      },
+          ? parsed.container_details.commodity
+              .map((c) => c.trim())
+              .filter(Boolean)
+          : [],
+      } : undefined,
       return_location_info: parsed.is_returning
         ? parsed.return_location_info
         : undefined,

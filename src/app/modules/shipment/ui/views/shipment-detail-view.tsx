@@ -43,7 +43,6 @@ import { useContainers } from "@/app/modules/container/server/hooks/use-containe
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { ShipmentDocuments } from "../components/shipment-documents/shipment-documents";
 import { DollarSign } from "lucide-react";
 
@@ -154,7 +153,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               Failed to load shipment details
             </p>
             <p className="text-muted-foreground mb-4">
-              The shipment you're looking for doesn't exist or an error occurred.
+              The shipment you&apos;re looking for doesn&apos;t exist or an error occurred.
             </p>
             <Button
               variant="outline"
