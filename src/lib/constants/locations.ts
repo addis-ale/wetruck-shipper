@@ -35,12 +35,7 @@ export const ETHIOPIAN_REGIONS: Region[] = [
 
 // Djibouti administrative regions
 export const DJIBOUTI_REGIONS: Region[] = [
-  { code: "ali_sabieh", name: "Ali Sabieh" },
-  { code: "arta", name: "Arta" },
-  { code: "dikhil", name: "Dikhil" },
   { code: "djibouti", name: "Djibouti" },
-  { code: "obock", name: "Obock" },
-  { code: "tadjourah", name: "Tadjourah" },
 ];
 
 // Countries list - only Ethiopia and Djibouti

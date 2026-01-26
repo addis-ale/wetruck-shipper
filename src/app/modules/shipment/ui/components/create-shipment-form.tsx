@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -30,7 +30,6 @@ interface CreateShipmentFormProps {
 }
 
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
-
   const defaultValues = useMemo<CreateShipmentInput>(
     () => ({
       origin: "addis_ababa",
@@ -57,8 +56,6 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       },
       shipment_details: {
         bill_of_lading_number: "",
-        pickup_number: "",
-        delivery_number: "",
       },
       status: "created",
     }),
@@ -106,6 +103,25 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
     label: c.name,
   }));
 
+  // Auto-set region to "Djibouti" when Djibouti country is selected
+  useEffect(() => {
+    if (pickupCountry === "dj") {
+      const djiboutiRegions = getRegionsByCountryCode("dj");
+      if (djiboutiRegions.length > 0) {
+        setValue("pickup_facility.region", djiboutiRegions[0].code);
+      }
+    }
+  }, [pickupCountry, setValue]);
+
+  useEffect(() => {
+    if (deliveryCountry === "dj") {
+      const djiboutiRegions = getRegionsByCountryCode("dj");
+      if (djiboutiRegions.length > 0) {
+        setValue("delivery_facility.region", djiboutiRegions[0].code);
+      }
+    }
+  }, [deliveryCountry, setValue]);
+
   const { mutate, isPending } = useCreateShipment({
     onSuccess: (shipmentId) => {
       reset(defaultValues);
@@ -133,8 +149,8 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Basic Info and Shipment Details in one row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="origin">Origin</Label>
               <Controller
@@ -212,49 +228,18 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 <p className="text-sm text-destructive">{errors.delivery_date.message}</p>
               )}
             </div>
-          </div>
 
-          <Separator />
-
-          {/* Shipment Details */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Shipment Details</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="bill_of_lading_number">Bill of Lading Number</Label>
-                <Input
-                  id="bill_of_lading_number"
-                  {...register("shipment_details.bill_of_lading_number")}
-                />
-                {errors.shipment_details?.bill_of_lading_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.bill_of_lading_number.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pickup_number">Pickup Number</Label>
-                <Input id="pickup_number" {...register("shipment_details.pickup_number")} />
-                {errors.shipment_details?.pickup_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.pickup_number.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="delivery_number">Delivery Number</Label>
-                <Input
-                  id="delivery_number"
-                  {...register("shipment_details.delivery_number")}
-                />
-                {errors.shipment_details?.delivery_number && (
-                  <p className="text-sm text-destructive">
-                    {errors.shipment_details.delivery_number.message}
-                  </p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="bill_of_lading_number">Bill of Lading Number</Label>
+              <Input
+                id="bill_of_lading_number"
+                {...register("shipment_details.bill_of_lading_number")}
+              />
+              {errors.shipment_details?.bill_of_lading_number && (
+                <p className="text-sm text-destructive">
+                  {errors.shipment_details.bill_of_lading_number.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -275,8 +260,15 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value);
-                            // Reset region when country changes
-                            setValue("pickup_facility.region", "");
+                            // Auto-set region for Djibouti, otherwise reset
+                            if (value === "dj") {
+                              const djiboutiRegions = getRegionsByCountryCode("dj");
+                              if (djiboutiRegions.length > 0) {
+                                setValue("pickup_facility.region", djiboutiRegions[0].code);
+                              }
+                            } else {
+                              setValue("pickup_facility.region", "");
+                            }
                           }}
                           value={field.value}
                         >
@@ -403,8 +395,15 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value);
-                            // Reset region when country changes
-                            setValue("delivery_facility.region", "");
+                            // Auto-set region for Djibouti, otherwise reset
+                            if (value === "dj") {
+                              const djiboutiRegions = getRegionsByCountryCode("dj");
+                              if (djiboutiRegions.length > 0) {
+                                setValue("delivery_facility.region", djiboutiRegions[0].code);
+                              }
+                            } else {
+                              setValue("delivery_facility.region", "");
+                            }
                           }}
                           value={field.value}
                         >
