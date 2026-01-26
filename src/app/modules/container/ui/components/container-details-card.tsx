@@ -72,17 +72,17 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
             />
             <MetricCard
               label="Tare Weight"
-              value={container.tare_weight}
+              value={container.tare_weight ?? 0}
               unit={container.gross_weight_unit}
             />
           </div>
         </Section>
 
         {/* Cargo */}
-        {(details?.commodity?.length || details?.instruction) && (
+        {((details?.commodity && details.commodity.length > 0) || details?.instruction) && (
           <Section title="Cargo Information" icon={<Package className="h-4 w-4" />}>
             <div className="space-y-4">
-              {details?.commodity?.length > 0 && (
+              {details?.commodity && details.commodity.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
                     Commodity
@@ -128,19 +128,19 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         {/* Recommendations */}
         {(container.recommended_truck_type ||
           container.recommended_axle_type) && (
-          <Section title="System Recommendations" icon={<Truck className="h-4 w-4" />}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InfoCard
-                label="Recommended Truck Type"
-                value={container.recommended_truck_type ?? "—"}
-              />
-              <InfoCard
-                label="Recommended Axle Type"
-                value={container.recommended_axle_type ?? "—"}
-              />
-            </div>
-          </Section>
-        )}
+            <Section title="System Recommendations" icon={<Truck className="h-4 w-4" />}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InfoCard
+                  label="Recommended Truck Type"
+                  value={container.recommended_truck_type ?? "—"}
+                />
+                <InfoCard
+                  label="Recommended Axle Type"
+                  value={container.recommended_axle_type ?? "—"}
+                />
+              </div>
+            </Section>
+          )}
       </div>
     </div>
   );

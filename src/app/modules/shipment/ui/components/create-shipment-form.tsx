@@ -81,22 +81,22 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   // Watch country values to update region options
   const pickupCountry = watch("pickup_facility.country");
   const deliveryCountry = watch("delivery_facility.country");
-  
+
   // Get region options based on selected country
-  const pickupRegions = pickupCountry 
+  const pickupRegions = pickupCountry
     ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
-  
+
   const deliveryRegions = deliveryCountry
     ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
-  
+
   // Country options
   const countryOptions = COUNTRIES.map((c) => ({
     value: c.code,
@@ -378,8 +378,8 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
                 </div>
+              </div>
             </div>
-          </div>
 
             {/* Delivery Facility */}
             <div className="rounded-md border p-4 space-y-4">
@@ -516,9 +516,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
                 </div>
+              </div>
             </div>
           </div>
-        </div>
 
           {/* Actions */}
           <div className="flex gap-2 justify-end">
@@ -539,4 +539,3 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
     </Card>
   );
 }
-

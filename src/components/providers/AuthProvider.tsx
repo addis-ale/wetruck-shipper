@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       body: JSON.stringify({
         email,
         password,
-        role: "shipper", // Required by your backend
+      role: "shipper",
         captcha_id: captchaId,
         captcha_solution: captchaSolution,
       }),
