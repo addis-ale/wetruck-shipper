@@ -86,7 +86,6 @@ export function CreateContainerDialog() {
     label: c.name,
   }));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commodities = useFieldArray({
     control,
     // @ts-expect-error - react-hook-form has issues with nested paths in TypeScript
