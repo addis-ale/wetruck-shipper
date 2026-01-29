@@ -369,6 +369,8 @@ export function CreateContainerDialog() {
                       <SelectContent>
                         <SelectItem value="dry">Dry</SelectItem>
                         <SelectItem value="reefer">Reefer</SelectItem>
+                        <SelectItem value="open_top">Open Top</SelectItem>
+                        <SelectItem value="tank">Tank</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -447,7 +449,7 @@ export function CreateContainerDialog() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="kg">kg</SelectItem>
-                        <SelectItem value="ton">ton</SelectItem>
+                   
                       </SelectContent>
                     </Select>
                   )}

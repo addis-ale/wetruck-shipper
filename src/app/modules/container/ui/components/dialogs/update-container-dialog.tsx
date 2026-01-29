@@ -64,12 +64,15 @@ export function UpdateContainerDialog({
           : [""],
         instruction: container.container_details?.instruction ?? "",
       },
-      return_location_info: container.return_location_info ?? {
-        country: "",
-        city: "",
-        port: "",
-        address: "",
-      },
+      return_location_info: container.return_location_info
+      ? {
+          country: container.return_location_info.country ?? "",
+          city: container.return_location_info.city ?? "",
+          address: container.return_location_info.address ?? "",
+          port: container.return_location_info.port ?? undefined, // 🔑 fix
+        }
+      : undefined,
+    
     },
   });
   
@@ -91,12 +94,15 @@ export function UpdateContainerDialog({
             : [""],
           instruction: container.container_details?.instruction ?? "",
         },
-        return_location_info: container.return_location_info ?? {
-          country: "",
-          city: "",
-          port: "",
-          address: "",
-        },
+        return_location_info: container.return_location_info
+        ? {
+            country: container.return_location_info.country ?? "",
+            city: container.return_location_info.city ?? "",
+            address: container.return_location_info.address ?? "",
+            port: container.return_location_info.port ?? undefined, // 🔑 fix
+          }
+        : undefined,
+      
       });
     }
   }, [container, open, form]);
@@ -112,23 +118,30 @@ export function UpdateContainerDialog({
 
   // Country options
   const countryOptions = COUNTRIES.map((c) => ({
-    value: c.code,
+    value: c.name,
     label: c.name,
   }));
+  
 
   const onSubmit = (values: UpdateContainerFormValues) => {
     const parsed = updateContainerSchema.parse(values);
   
     const payload: UpdateContainerInput = {
       ...parsed,
-      container_details: {
-        ...parsed.container_details,
-        commodity: parsed.container_details.commodity.filter(Boolean),
-      },
+    
+      container_details: parsed.container_details
+        ? {
+            ...parsed.container_details,
+            commodity: parsed.container_details.commodity.filter(Boolean),
+            instruction: parsed.container_details.instruction ?? "", // 🔑 FIX
+          }
+        : undefined,
+    
       return_location_info: parsed.is_returning
         ? parsed.return_location_info
         : undefined,
     };
+    
   
     mutate({ id: container.id, data: payload });
   };
@@ -185,6 +198,8 @@ export function UpdateContainerDialog({
                   <SelectContent>
                     <SelectItem value="dry">Dry</SelectItem>
                     <SelectItem value="reefer">Reefer</SelectItem>
+                    <SelectItem value="open_top">Open Top</SelectItem>
+                    <SelectItem value="tank">Tank</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -213,7 +228,7 @@ export function UpdateContainerDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="kg">KG</SelectItem>
-                    <SelectItem value="ton">Ton</SelectItem>
+      
                   </SelectContent>
                 </Select>
               )}

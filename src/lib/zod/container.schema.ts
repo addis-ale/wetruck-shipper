@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { COUNTRIES } from "@/lib/constants/locations";
 
+/* ================= ENUMS ================= */
+
 export const containerSizeEnum = z.enum([
   "twenty_feet",
   "forty_feet",
@@ -9,11 +11,12 @@ export const containerSizeEnum = z.enum([
 export const containerTypeEnum = z.enum([
   "dry",
   "reefer",
+  "open_top",
+  "tank",
 ]);
 
 export const weightUnitEnum = z.enum([
   "kg",
-  "ton",
 ]);
 
 export const containerStatusEnum = z.enum([
@@ -27,8 +30,6 @@ export const containerStatusEnum = z.enum([
   "in_transit",
   "delivered",
   "completed",
-  "cancelled",
-  "assigned",
 ]);
 
 export const truckTypeEnum = z.enum([
@@ -39,6 +40,8 @@ export const truckTypeEnum = z.enum([
 export const countryEnum = z.enum(
   COUNTRIES.map((c) => c.name) as [string, ...string[]]
 );
+
+/* ============== SCHEMAS ================= */
 
 export const containerDetailsSchema = z
   .object({
@@ -90,6 +93,7 @@ const containerBaseSchema = z.object({
   is_returning: z.boolean(),
 });
 
+/* ============== CREATE ================= */
 
 export const createContainerSchema = containerBaseSchema
   .superRefine((val, ctx) => {
@@ -114,6 +118,8 @@ export const createContainerSchema = containerBaseSchema
   })
   .passthrough();
 
+/* ============== UPDATE ================= */
+
 export const updateContainerSchema = containerBaseSchema
   .partial()
   .superRefine((val, ctx) => {
@@ -131,6 +137,7 @@ export const updateContainerSchema = containerBaseSchema
   })
   .passthrough();
 
+/* ============== RESPONSE ================= */
 
 export const returnLocationResponseSchema = z.object({
   country: z.string(),
@@ -142,11 +149,13 @@ export const returnLocationResponseSchema = z.object({
 export const containerSchema = containerBaseSchema.extend({
   id: z.number(),
   status: containerStatusEnum.optional(),
-  recommended_truck_type: z.string().nullable().optional(),
+  recommended_truck_type: truckTypeEnum.nullable().optional(),
   recommended_axle_type: z.string().nullable().optional(),
   return_location_info: returnLocationResponseSchema.nullable().optional(),
   ship_id: z.number().nullable().optional(),
 }).passthrough();
+
+/* ============== LIST ================= */
 
 export const containerListSchema = z.object({
   items: z.array(containerSchema),
@@ -157,6 +166,8 @@ export const containerListSchema = z.object({
   status: z.boolean().optional(),
   message: z.string().optional(),
 });
+
+/* ============== TYPES ================= */
 
 export type CreateContainerInput = z.infer<typeof createContainerSchema>;
 export type UpdateContainerInput = z.infer<typeof updateContainerSchema>;
