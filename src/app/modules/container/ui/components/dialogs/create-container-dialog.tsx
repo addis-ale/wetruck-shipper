@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm, Controller } from "react-hook-form";
+import {
+  useFieldArray,
+  useForm,
+  Controller,
+  type Path,
+  type FieldArrayPath,
+} from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -47,6 +53,19 @@ type BackendErrorShape =
     }
   | unknown;
 
+type BackendErrorWithFields = {
+  fields?: Record<string, unknown>;
+  errors?: Record<string, unknown | unknown[]>;
+  detail?: unknown[] | unknown;
+  message?: unknown;
+  error?: unknown;
+};
+
+type FastAPIErrorDetail = {
+  loc?: unknown[];
+  msg?: unknown;
+};
+
 /* -------------------------------------------------------------------------- */
 /*                           Backend Error Helpers                             */
 /* -------------------------------------------------------------------------- */
@@ -61,7 +80,7 @@ function safeString(val: unknown): string | null {
 function extractFieldErrors(
   responseData: BackendErrorShape,
 ): Record<string, string> | null {
-  const data = responseData as any;
+  const data = responseData as BackendErrorWithFields;
 
   // { fields: { "a.b": "msg" } }
   if (data?.fields && typeof data.fields === "object") {
@@ -88,14 +107,15 @@ function extractFieldErrors(
   // FastAPI / Pydantic style
   if (Array.isArray(data?.detail)) {
     const out: Record<string, string> = {};
-    data.detail.forEach((item: any) => {
-      if (!Array.isArray(item?.loc)) return;
-      const path = item.loc
+    data.detail.forEach((item: unknown) => {
+      const errorItem = item as FastAPIErrorDetail;
+      if (!Array.isArray(errorItem?.loc)) return;
+      const path = errorItem.loc
         .filter((p: unknown) => p !== "body")
         .map((p: unknown) => safeString(p))
         .filter(Boolean)
         .join(".");
-      if (path) out[path] = safeString(item?.msg) ?? "Invalid value";
+      if (path) out[path] = safeString(errorItem?.msg) ?? "Invalid value";
     });
     return Object.keys(out).length ? out : null;
   }
@@ -104,10 +124,11 @@ function extractFieldErrors(
 }
 
 function extractFormMessage(data: BackendErrorShape, fallback: string) {
+  const errorData = data as BackendErrorWithFields;
   const msg =
-    safeString((data as any)?.message) ||
-    safeString((data as any)?.detail) ||
-    safeString((data as any)?.error);
+    safeString(errorData?.message) ||
+    safeString(errorData?.detail) ||
+    safeString(errorData?.error);
   return msg ?? fallback;
 }
 
@@ -162,14 +183,18 @@ export function CreateContainerDialog() {
     control,
     setValue,
     setError,
+    clearErrors,
     formState: { errors, isSubmitting, isValid },
   } = form;
 
   const isReturning = watch("is_returning");
 
-  const commodities = useFieldArray({
-    control: control as any,
-    name: "container_details.commodity",
+  const commodities = useFieldArray<
+    CreateContainerFormValues,
+    FieldArrayPath<CreateContainerFormValues>
+  >({
+    control,
+    name: "container_details.commodity" as FieldArrayPath<CreateContainerFormValues>,
   });
 
   const countryOptions = COUNTRIES.map((c) => ({
@@ -189,10 +214,7 @@ export function CreateContainerDialog() {
 
   async function onSubmit(values: CreateContainerFormValues) {
     setFormError(null);
-
-    Object.keys(errors).forEach((field) => {
-      setError(field as any, undefined as any);
-    });
+    clearErrors();
 
     try {
       const parsed = createContainerSchema.parse(values);
@@ -216,13 +238,17 @@ export function CreateContainerDialog() {
       };
 
       await mutateAsync(payload);
-    } catch (err: any) {
-      const responseData = err?.response?.data ?? err;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: BackendErrorShape } };
+      const responseData = error?.response?.data ?? error;
 
       const fieldErrors = extractFieldErrors(responseData);
       if (fieldErrors) {
         Object.entries(fieldErrors).forEach(([path, message]) => {
-          setError(path as any, { type: "server", message });
+          setError(path as Path<CreateContainerFormValues>, {
+            type: "server",
+            message,
+          });
         });
         return;
       }
