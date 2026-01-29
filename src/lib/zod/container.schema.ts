@@ -29,6 +29,10 @@ export const containerStatusEnum = z.enum([
   "cancelled",
   "assigned",
 ]);
+export const truckTypeEnum = z.enum([
+  "flatbed",
+  "trailer",
+]);
 
 export const containerDetailsSchema = z.object({
   commodity: z
@@ -50,17 +54,23 @@ export const createContainerSchema = z.object({
 
   container_size: containerSizeEnum,
   container_type: containerTypeEnum,
+
   gross_weight: z.coerce.number().min(0),
-  gross_weight_unit: weightUnitEnum.optional(), // Make optional for read operations
-  tare_weight: z.coerce.number().min(0).optional(), // Make optional for read operations
+  gross_weight_unit: weightUnitEnum.optional(),
+  tare_weight: z.coerce.number().min(0).optional(),
 
-  container_details: containerDetailsSchema.nullable().optional(), // Make optional and nullable for read operations
-
+  container_details: containerDetailsSchema.nullable().optional(),
   return_location_info: returnLocationSchema.optional(),
-  sequencing_priority: z.union([z.coerce.number().int().min(0), z.null()]).optional(), // Make optional and nullable for read operations, allow 0 and null
 
-  is_returning: z.boolean().optional(), // Make optional for read operations
-}).passthrough(); // Allow extra fields from backend
+  sequencing_priority: z
+    .union([z.coerce.number().int().min(0), z.null()])
+    .optional(),
+
+  is_returning: z.boolean().optional(),
+
+  // ✅ REQUIRED FOR UI SELECTION
+  recommended_truck_type: truckTypeEnum,
+}).passthrough();
 
 
 export const updateContainerSchema = createContainerSchema;

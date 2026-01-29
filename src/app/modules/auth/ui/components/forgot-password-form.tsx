@@ -51,13 +51,23 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div className="relative">
-        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-        <Input
-          placeholder="Enter your registered email"
-          {...form.register("email")}
-          className="pl-9"
-        />
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          Email Address <span className="text-destructive">*</span>
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <Input
+            placeholder="Enter your registered email"
+            {...form.register("email")}
+            className="pl-9"
+          />
+        </div>
+        {form.formState.errors.email && (
+          <p className="text-sm text-destructive">
+            {form.formState.errors.email.message}
+          </p>
+        )}
       </div>
 
       {mutation.error && (

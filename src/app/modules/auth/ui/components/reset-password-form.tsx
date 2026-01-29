@@ -96,7 +96,7 @@ export function ResetPasswordForm() {
         <>
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Reset Code (OTP)
+              Reset Code (OTP) <span className="text-destructive">*</span>
             </label>
             <Input
               placeholder="Enter the code sent to your email"
@@ -127,8 +127,10 @@ export function ResetPasswordForm() {
 
       {step === "password" && (
         <>
-   
-          <div className="relative">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              New Password <span className="text-destructive">*</span>
+            </label>
             <Input
               type={showNew ? "text" : "password"}
               placeholder="New password"
@@ -151,31 +153,36 @@ export function ResetPasswordForm() {
           )}
 
           {/* Confirm password */}
-          <div className="relative">
-            <Input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Confirm password"
-              {...form.register("confirm_password")}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              tabIndex={-1}
-            >
-              {showConfirm ? (
-                <EyeOff size={16} />
-              ) : (
-                <Eye size={16} />
-              )}
-            </button>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Confirm Password <span className="text-destructive">*</span>
+            </label>
+            <div className="relative">
+              <Input
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm password"
+                {...form.register("confirm_password")}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                tabIndex={-1}
+              >
+                {showConfirm ? (
+                  <EyeOff size={16} />
+                ) : (
+                  <Eye size={16} />
+                )}
+              </button>
+            </div>
+            {errors.confirm_password && (
+              <p className="text-xs text-red-600">
+                {errors.confirm_password.message}
+              </p>
+            )}
           </div>
-          {errors.confirm_password && (
-            <p className="text-xs text-red-600">
-              {errors.confirm_password.message}
-            </p>
-          )}
 
           {apiError && (
             <Alert variant="destructive">

@@ -1,15 +1,22 @@
-// Support both NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_BASE_URL for compatibility
-const envApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-// If the env var includes /api/v1, use it as-is, otherwise add /api/v1
-const baseUrl = envApiUrl || 'http://localhost:8000';
-const apiBaseUrl = baseUrl.includes('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
 
-const API_URL = apiBaseUrl;
+const rawEnvApiUrl =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8000";
 
-// Debug: Log the API URL in development
+// Normalize: remove trailing slash
+const normalizedBase = rawEnvApiUrl.replace(/\/$/, "");
+
+// Ensure `/api/v1` exists exactly once
+export const API_URL = normalizedBase.endsWith("/api/v1")
+  ? normalizedBase
+  : `${normalizedBase}/api/v1`;
+
+// Debug log (browser only)
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-  console.log("🔗 API URL:", API_URL);
+  console.log("🔗 API BASE URL:", API_URL);
 }
+
 
 export type ApiResponse<T> = {
   data?: T;
@@ -17,102 +24,66 @@ export type ApiResponse<T> = {
   status: number;
 };
 
-/**
- * Gets auth token from localStorage or cookies
- */
+
 function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
-  
-  // First try localStorage (most reliable for cross-origin requests)
-  const localStorageToken = localStorage.getItem("wetruck_access_token");
-  if (localStorageToken) {
-    return localStorageToken;
-  }
-  
-  // Fallback to cookie
-  if (typeof document !== "undefined") {
-    const cookies = document.cookie.split(";");
-    const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
-    if (tokenCookie) {
-      return tokenCookie.split("=")[1];
-    }
-  }
-  
-  return null;
+
+  // Prefer localStorage (explicit)
+  const token = localStorage.getItem("wetruck_access_token");
+  if (token) return token;
+
+  // Fallback to cookie (optional)
+  const match = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("access_token="));
+
+  return match ? match.split("=")[1] : null;
 }
 
-/**
- * Logs out the user by clearing local data and redirecting
- */
 async function logout() {
-  if (typeof window !== "undefined") {
-    // Clear local user data and tokens
-    localStorage.removeItem("wetruck_user");
-    localStorage.removeItem("wetruck_access_token");
-    localStorage.removeItem("wetruck_refresh_token");
+  if (typeof window === "undefined") return;
 
-    // Only redirect if not already on sign-in page (prevent infinite loop)
-    if (!window.location.pathname.includes("/sign-in")) {
-      window.location.href = "/sign-in";
-    }
+  localStorage.removeItem("wettruck_user");
+  localStorage.removeItem("wettruck_access_token");
+  localStorage.removeItem("wettruck_refresh_token");
+
+  if (!window.location.pathname.includes("/sign-in")) {
+    window.location.href = "/sign-in";
   }
 }
 
-/**
- * Attempts to refresh the access token using the refresh_token
- * @returns true if refresh successful, false otherwise
- */
+
 async function tryRefreshToken(): Promise<boolean> {
   try {
-    console.log("🔄 Attempting to refresh access token...");
-    
-    // Get refresh token from localStorage
-    const refreshToken = typeof window !== "undefined" 
-      ? localStorage.getItem("wetruck_refresh_token") 
-      : null;
-    
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    
-    // Add refresh token to Authorization header if available
-    if (refreshToken) {
-      headers["Authorization"] = `Bearer ${refreshToken}`;
-    }
-    
+    console.log("🔄 Refreshing access token (cookie-based)…");
+
     const response = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
-      credentials: "include", 
-      headers,
+      credentials: "include",
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      
-      // Save new tokens to localStorage if provided
-      if (data.access_token && typeof window !== "undefined") {
-        localStorage.setItem("wetruck_access_token", data.access_token);
-      }
-      if (data.refresh_token && typeof window !== "undefined") {
-        localStorage.setItem("wetruck_refresh_token", data.refresh_token);
-      }
-      
-      console.log("✅ Token refreshed successfully");
-      return true;
-    } else {
-      console.warn("❌ Token refresh failed:", response.status);
+    if (!response.ok) {
+      console.warn(" Refresh failed:", response.status);
       return false;
     }
-  } catch (error) {
-    console.error("❌ Token refresh error:", error);
+
+    const data = await response.json();
+
+    if (data.access_token) {
+      localStorage.setItem("wettruck_access_token", data.access_token);
+    }
+    if (data.refresh_token) {
+      localStorage.setItem("wettruck_refresh_token", data.refresh_token);
+    }
+
+    console.log(" Token refreshed");
+    return true;
+  } catch (err) {
+    console.error(" Refresh error:", err);
     return false;
   }
 }
 
-/**
- * Makes an authenticated API request with automatic token refresh
- * Uses both Authorization header and cookies for authentication
- */
 export async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -123,74 +94,56 @@ export async function request<T>(
     ...(options.headers as Record<string, string>),
   };
 
-  // Add Authorization header if token is available
   const token = getAuthToken();
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const url = `${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("➡️ API Request:", options.method || "GET", url);
   }
 
   try {
-    const url = `${API_URL}${endpoint}`;
-
-    // Debug logging in development
-    if (process.env.NODE_ENV === "development") {
-      console.log(" Request:", options.method || "GET", url);
-    }
-
     const response = await fetch(url, {
       ...options,
       headers,
       credentials: "include", 
     });
 
-    const status = response.status;
-
-    // Handle 401 Unauthorized - Try to refresh token first
-    if (status === 401 && !isRetry) {
-      console.warn(" Received 401 - Access token expired or invalid");
-
-      // Don't try refresh on login/refresh endpoints (that's just invalid credentials)
-      const isAuthEndpoint = endpoint === "/auth/login" || endpoint === "/auth/refresh";
+    // Handle expired access token
+    if (response.status === 401 && !isRetry) {
+      const isAuthEndpoint =
+        endpoint === "/auth/login" || endpoint === "/auth/refresh";
 
       if (!isAuthEndpoint) {
-        // Try to refresh the token
         const refreshed = await tryRefreshToken();
-
         if (refreshed) {
-          // Token refreshed! Retry the original request
-          console.log(" Retrying original request with new token...");
-          return request<T>(endpoint, options, true); 
-        } else {
-          // Refresh failed - logout
-          console.log(" Refresh failed - logging out...");
-          await logout();
+          return request<T>(endpoint, options, true);
         }
+        await logout();
       }
     }
 
-    const result = await response.json();
+    const result = await response.json().catch(() => null);
 
     if (!response.ok) {
       return {
-        error: result.detail || result.message || "Something went wrong",
-        status,
+        error: result?.detail || result?.message || "Request failed",
+        status: response.status,
       };
     }
 
-    return { data: result as T, status };
-  } catch (error) {
-    console.error(" API Request Failed:", error);
-
-    let errorMessage = "Network error - Unable to connect to server";
-
-    if (error instanceof TypeError) {
-      errorMessage = "Cannot connect to backend. Is the server running?";
-    } else if (error instanceof Error) {
-      errorMessage = error.message;
-    }
+    return {
+      data: result as T,
+      status: response.status,
+    };
+  } catch (err) {
+    console.error("API fetch failed:", err);
 
     return {
-      error: errorMessage,
+      error: "Cannot connect to backend. Is the server running?",
       status: 500,
     };
   }
