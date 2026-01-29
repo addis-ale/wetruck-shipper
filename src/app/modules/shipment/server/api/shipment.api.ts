@@ -73,20 +73,184 @@ async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    let errorData: { detail?: unknown; message?: string; error_message?: string } = {};
+    let errorData: { 
+      detail?: unknown; 
+      errors?: Array<{ type?: string; loc?: (string | number)[]; msg?: string; input?: unknown; ctx?: Record<string, unknown> }>;
+      message?: string; 
+      error_message?: string;
+      error?: string;
+      code?: string;
+      status_code?: number;
+    } = {};
+    
+    let responseText = "";
     try {
-      errorData = await response.json();
+      responseText = await response.text();
+      // Debug logging in development
+      if (process.env.NODE_ENV === "development") {
+        console.error("❌ API Error Response:", {
+          status: response.status,
+          statusText: response.statusText,
+          body: responseText,
+        });
+      }
+      // Try to parse as JSON
+      if (responseText) {
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          // If not JSON, we'll use the text as fallback below
+        }
+      }
     } catch {
-      // If response is not JSON, use status text
+      // If we couldn't read the response, use status text
+      responseText = `${response.status}: ${response.statusText}`;
     }
 
-    // Handle FastAPI validation errors
+    // Handle custom error format with 'error' and 'code' fields (e.g., MISSING_DOCUMENTS)
+    if (errorData.error) {
+      let errorMessage = errorData.error;
+      
+      // Handle specific error codes with user-friendly messages
+      if (errorData.code === "MISSING_DOCUMENTS") {
+        // Extract document names from the error message
+        // Format: "One or more required documents (Trade License, Authorized Contact Person Company ID) are missing or not approved."
+        const docMatch = errorMessage.match(/\(([^)]+)\)/);
+        if (docMatch && docMatch[1]) {
+          const documents = docMatch[1].split(",").map(doc => doc.trim());
+          if (documents.length === 1) {
+            errorMessage = `Please upload the required document: ${documents[0]}`;
+          } else {
+            const lastDoc = documents.pop();
+            const docList = documents.join(", ") + ", and " + lastDoc;
+            errorMessage = `Please upload the following required documents: ${docList}`;
+          }
+        } else {
+          // Fallback if we can't parse the document names
+          errorMessage = "Please upload all required documents. Some documents are missing or not approved.";
+        }
+      } else if (errorData.code === "DOCUMENT_NOT_APPROVED") {
+        errorMessage = "One or more documents are pending approval. Please wait for approval or upload new documents.";
+      } else if (errorData.code === "INVALID_DOCUMENT") {
+        errorMessage = "One or more documents are invalid. Please check and upload valid documents.";
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    // Handle FastAPI validation errors with errors array format
+    if (errorData.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+      const formattedErrors = errorData.errors.map((err) => {
+        let field = "field";
+        if (err.loc && Array.isArray(err.loc)) {
+          // Filter out "body" and numeric indices, keep only meaningful field names
+          const meaningfulFields = err.loc.filter(
+            (item) => typeof item === "string" && item !== "body"
+          );
+          if (meaningfulFields.length > 0) {
+            field = meaningfulFields.join(".");
+          } else if (err.loc.length > 0) {
+            // Fallback to last element if no meaningful fields found
+            const lastItem = err.loc[err.loc.length - 1];
+            field = typeof lastItem === "string" ? lastItem : String(lastItem);
+          }
+        }
+        
+        // Format field name to be more readable
+        const readableField = String(field)
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+        
+        // Use the error message if available, otherwise create a generic one
+        if (err.msg) {
+          // Make error messages more user-friendly
+          let message = err.msg;
+          
+          // Handle enum errors with better formatting
+          if (err.type === "enum" && err.ctx?.expected) {
+            const expected = String(err.ctx.expected);
+            // Clean up the expected values - remove quotes and format nicely
+            const cleanExpected = expected
+              .replace(/'/g, "")
+              .replace(/"/g, "")
+              .split(" or ")
+              .join(", ");
+            message = `${readableField} must be one of: ${cleanExpected}`;
+          } else if (err.type === "missing" || err.type === "value_error.missing") {
+            message = `${readableField} is required`;
+          } else if (err.type === "type_error" || err.type?.includes("type")) {
+            message = `${readableField} has an invalid format`;
+          } else {
+            // Use the original message but prefix with field name
+            message = `${readableField}: ${err.msg}`;
+          }
+          
+          return message;
+        }
+        
+        return `${readableField} has an error`;
+      });
+      
+      // Join multiple errors with newlines for better readability
+      const errorMessage = formattedErrors.length === 1 
+        ? formattedErrors[0]
+        : formattedErrors.join("\n");
+      
+      throw new Error(errorMessage);
+    }
+
+    // Handle FastAPI validation errors with detail array format
     if (errorData.detail) {
       if (Array.isArray(errorData.detail)) {
-        const firstError = errorData.detail[0] as { msg?: string; message?: string };
-        throw new Error(
-          firstError.msg || firstError.message || "Validation error"
-        );
+        const formattedErrors = errorData.detail.map((err: { loc?: (string | number)[]; msg?: string; type?: string; ctx?: Record<string, unknown> }) => {
+          let field = "field";
+          if (err.loc && Array.isArray(err.loc)) {
+            // Filter out "body" and numeric indices, keep only meaningful field names
+            const meaningfulFields = err.loc.filter(
+              (item) => typeof item === "string" && item !== "body"
+            );
+            if (meaningfulFields.length > 0) {
+              field = meaningfulFields.join(".");
+            } else if (err.loc.length > 0) {
+              // Fallback to last element if no meaningful fields found
+              const lastItem = err.loc[err.loc.length - 1];
+              field = typeof lastItem === "string" ? lastItem : String(lastItem);
+            }
+          }
+          
+          const readableField = String(field)
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase());
+          
+          if (err.msg) {
+            let message = err.msg;
+            
+            if (err.type === "enum" && err.ctx?.expected) {
+              const expected = String(err.ctx.expected);
+              // Clean up the expected values - remove quotes and format nicely
+              const cleanExpected = expected
+                .replace(/'/g, "")
+                .replace(/"/g, "")
+                .split(" or ")
+                .join(", ");
+              message = `${readableField} must be one of: ${cleanExpected}`;
+            } else if (err.type === "missing" || err.type === "value_error.missing") {
+              message = `${readableField} is required`;
+            } else {
+              message = `${readableField}: ${err.msg}`;
+            }
+            
+            return message;
+          }
+          
+          return `${readableField} has an error`;
+        });
+        
+        const errorMessage = formattedErrors.length === 1
+          ? formattedErrors[0]
+          : formattedErrors.join("\n");
+        
+        throw new Error(errorMessage);
       } else if (typeof errorData.detail === "string") {
         throw new Error(errorData.detail);
       } else if (typeof errorData.detail === "object" && errorData.detail !== null && "message" in errorData.detail) {
@@ -100,12 +264,41 @@ async function apiRequest<T>(
       ? (errorData.detail as { message: string }).message
       : undefined;
     
-    const errorMessage =
+    // If we have any error data but couldn't parse it properly, log it for debugging
+    if (process.env.NODE_ENV === "development" && Object.keys(errorData).length > 0) {
+      console.error("⚠️ Unhandled error format:", errorData);
+    }
+    
+    // Try to extract a meaningful error message
+    let errorMessage = 
       errorData.message ||
       errorData.error_message ||
       detailMessage ||
-      (typeof errorData.detail === "string" ? errorData.detail : undefined) ||
-      `HTTP ${response.status}: ${response.statusText}`;
+      (typeof errorData.detail === "string" ? errorData.detail : undefined);
+    
+    // If we still don't have a message, use the response text (might be plain text error)
+    if (!errorMessage && responseText) {
+      errorMessage = responseText.trim();
+    }
+    
+    // Final fallback - avoid showing generic "Bad Request" messages
+    if (!errorMessage) {
+      if (response.status === 400) {
+        errorMessage = "Invalid request. Please check your input and try again.";
+      } else if (response.status === 422) {
+        errorMessage = "Validation error. Please check your input.";
+      } else if (response.status === 401) {
+        errorMessage = "Authentication required. Please log in again.";
+      } else if (response.status === 403) {
+        errorMessage = "You don't have permission to perform this action.";
+      } else if (response.status === 404) {
+        errorMessage = "The requested resource was not found.";
+      } else if (response.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else {
+        errorMessage = `Request failed with status ${response.status}`;
+      }
+    }
 
     throw new Error(errorMessage);
   }
@@ -126,6 +319,10 @@ const LOCATION_ENUM_MAP: Record<string, string> = {
   "hawassa": "Hawassa",
   "shashemene": "Shashemene",
   "djibouti": "Djibouti",
+  "djibouti port": "Djibouti Port",
+  "djibouti_port": "Djibouti Port",
+  "debre zeit": "debre_zeit",
+  "debre_zeit": "debre_zeit",
 };
 
 
@@ -198,11 +395,19 @@ export const shipmentApi = {
 
   // Update shipment (PATCH)
   async update(id: number, data: UpdateShipmentPayload): Promise<Shipment> {
+    const normalizedOrigin = data.origin ? normalizeLocation(data.origin) ?? data.origin : data.origin;
+    const normalizedDestination = data.destination ? normalizeLocation(data.destination) ?? data.destination : data.destination;
+    const normalizedData: UpdateShipmentPayload = {
+      ...data,
+      origin: normalizedOrigin as UpdateShipmentPayload["origin"],
+      destination: normalizedDestination as UpdateShipmentPayload["destination"],
+    };
+    
     const response = await apiRequest<ShipmentCreateResponse>(
       `${API_PATH}/${id}`,
       {
         method: "PATCH",
-        body: JSON.stringify(data),
+        body: JSON.stringify(normalizedData),
       }
     );
 

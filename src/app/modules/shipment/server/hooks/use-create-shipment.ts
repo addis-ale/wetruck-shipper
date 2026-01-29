@@ -22,7 +22,11 @@ export function useCreateShipment(options?: UseCreateShipmentOptions) {
       options?.onSuccess?.(data.id);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to create shipment");
+      // Display error message - toast supports multi-line messages
+      const errorMessage = error.message || "Failed to create shipment";
+      toast.error(errorMessage, {
+        duration: 5000, // Show for 5 seconds to allow reading
+      });
     },
   });
 }

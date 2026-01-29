@@ -188,15 +188,15 @@ export function ContainerAssignTable<TData, TValue>({
               onOpenAutoFocus={(e) => e.preventDefault()}
               sideOffset={5}
             >
-              <div className="max-h-[300px] overflow-y-auto">
+              <div className="max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {isSearching ? (
-                  <div className="flex items-center justify-center p-4">
+                  <div className="flex items-center justify-center p-3">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 ) : availableContainers.length > 0 ? (
                   <div className="divide-y">
                     {!debouncedSearch && (
-                      <div className="px-3 py-2 text-xs text-muted-foreground bg-muted/50">
+                      <div className="px-3 py-1.5 text-xs text-muted-foreground bg-muted/50">
                         Showing {availableContainers.length} available containers • Type to search
                       </div>
                     )}
@@ -204,14 +204,14 @@ export function ContainerAssignTable<TData, TValue>({
                       <button
                         key={container.id}
                         onClick={() => handleContainerSelect(container)}
-                        className="w-full p-3 text-left hover:bg-accent transition-colors"
+                        className="w-full p-2 text-left hover:bg-accent transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium">
+                            <div className="font-medium text-sm">
                               {container.container_number}
                             </div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               {container.container_size === "twenty_feet"
                                 ? "20ft"
                                 : "40ft"}{" "}
@@ -223,7 +223,7 @@ export function ContainerAssignTable<TData, TValue>({
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-sm text-muted-foreground text-center">
+                  <div className="p-3 text-sm text-muted-foreground text-center">
                     {debouncedSearch ? "No containers found" : "No available containers"}
                   </div>
                 )}
@@ -233,7 +233,7 @@ export function ContainerAssignTable<TData, TValue>({
         </div>
 
         {/* Table */}
-        <div className="rounded-md border w-full overflow-x-auto">
+        <div className="rounded-md border w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <Table className="w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

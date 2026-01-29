@@ -43,7 +43,7 @@ import { useContainers } from "@/app/modules/container/server/hooks/use-containe
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShipmentDocuments } from "../components/shipment-documents/shipment-documents";
+import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
 import { DollarSign } from "lucide-react";
 
 interface ShipmentDetailViewProps {
@@ -474,7 +474,20 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               </Card>
             </div>
             {/* Shipment Documents */}
-            <ShipmentDocuments shipItemId={shipment.id} />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Shipment Documents
+                </CardTitle>
+                <CardDescription>
+                  Upload and manage required documents for this shipment
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShipmentDocumentsCard shipId={shipment.id} />
+              </CardContent>
+            </Card>
 
           </div>
 
