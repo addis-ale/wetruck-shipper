@@ -25,7 +25,6 @@ export const shipmentStatusEnum = z.enum([
   "completed",
 ]);
 
-// Facility schema
 export const facilitySchema = z.object({
   country: z.string().min(1, "Country is required"),
   region: z.string().min(1, "Region is required"),
@@ -67,7 +66,6 @@ export const createShipmentSchema = baseShipmentSchema.refine(
 // Update shipment schema
 export const updateShipmentSchema = baseShipmentSchema.partial();
 
-// Full shipment schema (with ID and assigned containers)
 export const shipmentSchema = baseShipmentSchema.extend({
   id: z.number(),
   shipper_id: z.number().optional(),
@@ -93,23 +91,20 @@ export const shipmentCreateResponseSchema = z.object({
   result: shipmentSchema,
 });
 
-// Ship item schema (for priced items from /api/v1/ship-item/)
-// Containers are full container objects with all fields
 export const shipItemSchema = z.object({
   id: z.number(),
   ship_id: z.number(),
   truck_id: z.number().optional().nullable(),
   driver_id: z.number().optional().nullable(),
   transporter_id: z.number(),
-  containers: z.array(containerSchema).default([]), // Array of full container objects
+  containers: z.array(containerSchema).default([]), 
   computed_price: z.number(),
   currency: z.string(),
   deleted: z.boolean().optional(),
   created_at: z.string(),
   updated_at: z.string(),
-}).passthrough(); // Allow extra fields from backend
+}).passthrough(); 
 
-// Ship items list response schema
 export const shipItemsListResponseSchema = z.object({
   status: z.boolean(),
   message: z.string().optional(),
@@ -120,14 +115,11 @@ export const shipItemsListResponseSchema = z.object({
   items: z.array(shipItemSchema),
 });
 
-// Transporter shipment schema (includes ship_items and containers)
 export const transporterShipmentSchema = shipmentSchema.extend({
   ship_items: z.array(shipItemSchema).default([]),
-  containers: z.array(z.any()).default([]), // Array of container objects
-}).passthrough(); // Allow extra fields from backend
+  containers: z.array(z.any()).default([]), 
+}).passthrough(); 
 
-// Shipper ship items response schema (grouped by transporter)
-// Response from /api/v1/ship-item/shipper
 export const shipperShipItemsItemSchema = z.object({
   transporter_id: z.number(),
   ship_items: z.array(shipItemSchema).default([]),

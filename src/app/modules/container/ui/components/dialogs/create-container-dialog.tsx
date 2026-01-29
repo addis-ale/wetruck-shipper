@@ -32,9 +32,6 @@ import {
 import { COUNTRIES } from "@/lib/constants/locations";
 import { useCreateContainer } from "../../../server/hooks/use-create-container";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
@@ -47,9 +44,6 @@ type BackendErrorShape =
     }
   | unknown;
 
-/* -------------------------------------------------------------------------- */
-/*                           Backend Error Helpers                             */
-/* -------------------------------------------------------------------------- */
 
 function safeString(val: unknown): string | null {
   if (val === null || val === undefined) return null;
@@ -111,43 +105,42 @@ function extractFormMessage(data: BackendErrorShape, fallback: string) {
   return msg ?? fallback;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Component                                   */
-/* -------------------------------------------------------------------------- */
 
 export function CreateContainerDialog() {
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-const defaultValues = useMemo<CreateContainerFormValues>(
-  () => ({
-    container_number: "",
-    container_size: "twenty_feet",
-    container_type: "dry",
+  const defaultValues = useMemo<CreateContainerFormValues>(
+    () => ({
+      container_number: "",
+      container_size: "twenty_feet",
+      container_type: "dry",
 
-    gross_weight: 0,
-    gross_weight_unit: "kg",
-    tare_weight: 0,
+      gross_weight: 1, 
+      gross_weight_unit: "kg",
+      tare_weight: undefined,
 
-    container_details: {
-      commodity: [""],
-      instruction: "",
-    },
 
-    return_location_info: {
-      country: "",
-      city: "",
-      port: "",
-      address: "",
-    },
+      container_details: {
+        commodity: [""],
+        instruction: "",
+      },
 
-    sequencing_priority: 1,
-    is_returning: true,
-    recommended_truck_type: "flatbed",
-  }),
-  []
-);
+      return_location_info: {
+        country: undefined as any, // must be chosen
+        city: "",
+        port: "",
+        address: "",
+      },
 
+      sequencing_priority: 1,
+      is_returning: true,
+
+      // backend allows optional, but UI wants selection; keep default
+      recommended_truck_type: "flatbed",
+    }),
+    []
+  );
 
   const form = useForm<CreateContainerFormValues>({
     resolver: zodResolver(createContainerSchema),
@@ -168,10 +161,10 @@ const defaultValues = useMemo<CreateContainerFormValues>(
 
   const isReturning = watch("is_returning");
 
-const commodities = useFieldArray({
-  control: control as any,
-  name: "container_details.commodity",
-});
+  const commodities = useFieldArray({
+    control: control as any,
+    name: "container_details.commodity",
+  });
 
   const countryOptions = COUNTRIES.map((c) => ({
     value: c.code,
@@ -198,24 +191,24 @@ const commodities = useFieldArray({
     try {
       const parsed = createContainerSchema.parse(values);
 
-   const payload: CreateContainerInput = {
-  ...parsed,
+      const payload: CreateContainerInput = {
+        ...parsed,
 
-  container_details: parsed.container_details
-    ? {
-        ...parsed.container_details,
-        commodity:
-          parsed.container_details.commodity
-            ?.map((c) => c.trim())
-            .filter(Boolean) || [],
-      }
-    : undefined,
+        container_details: parsed.container_details
+          ? {
+              ...parsed.container_details,
+              commodity:
+                parsed.container_details.commodity
+                  ?.map((c) => c.trim())
+                  .filter(Boolean) || [],
+              instruction: parsed.container_details.instruction?.trim() ?? "",
+            }
+          : undefined,
 
-  return_location_info: parsed.is_returning
-    ? parsed.return_location_info
-    : undefined,
-};
-
+        return_location_info: parsed.is_returning
+          ? parsed.return_location_info
+          : undefined,
+      };
 
       await mutateAsync(payload);
     } catch (err: any) {
@@ -323,34 +316,58 @@ const commodities = useFieldArray({
                   </p>
                 )}
               </div>
-
-              {/* Container Type */}
               <div className="space-y-2">
                 <Label htmlFor="container_type">Container Type</Label>
-<Controller<CreateContainerFormValues, "recommended_truck_type">
-  name="recommended_truck_type"
-  control={control}
-  render={({ field }) => (
-    <Select
-      onValueChange={field.onChange}
-      value={field.value ?? undefined}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select truck type" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="flatbed">Flatbed</SelectItem>
-        <SelectItem value="trailer">Trailer</SelectItem>
-      </SelectContent>
-    </Select>
-  )}
-/>
-
-
-
+                <Controller
+                  name="container_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="container_type">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dry">Dry</SelectItem>
+                        <SelectItem value="reefer">Reefer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.container_type && (
                   <p className="text-sm text-destructive">
                     {errors.container_type.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Recommended Truck Type (kept as you had) */}
+              <div className="space-y-2">
+                <Label htmlFor="recommended_truck_type">
+                  Recommended Truck Type
+                </Label>
+
+                <Controller<CreateContainerFormValues, "recommended_truck_type">
+                  name="recommended_truck_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? undefined}
+                    >
+                      <SelectTrigger className="w-full" id="recommended_truck_type">
+                        <SelectValue placeholder="Select truck type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="flatbed">Flatbed</SelectItem>
+                        <SelectItem value="trailer">Trailer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+
+                {errors.recommended_truck_type && (
+                  <p className="text-sm text-destructive">
+                    {errors.recommended_truck_type.message as any}
                   </p>
                 )}
               </div>
@@ -421,13 +438,24 @@ const commodities = useFieldArray({
               <div className="space-y-2">
                 <Label htmlFor="is_returning">Is Returning?</Label>
                 <Select
-                  value={isReturning ? "yes" : "no"}
-                  onValueChange={(v) =>
-                    setValue("is_returning", v === "yes", {
-                      shouldValidate: true,
-                    })
-                  }
-                >
+  value={isReturning ? "yes" : "no"}
+  onValueChange={(v) => {
+    const returning = v === "yes";
+
+    setValue("is_returning", returning, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    if (!returning) {
+      setValue("return_location_info", undefined, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }}
+>
+
                   <SelectTrigger id="is_returning">
                     <SelectValue placeholder="Select option" />
                   </SelectTrigger>
@@ -439,7 +467,6 @@ const commodities = useFieldArray({
               </div>
             </div>
 
-            {/* ================= CONTAINER DETAILS ================= */}
             <div className="rounded-md border p-4 space-y-4">
               <div className="font-medium">Container Details</div>
 
@@ -449,6 +476,11 @@ const commodities = useFieldArray({
                   id="instruction"
                   {...register("container_details.instruction")}
                 />
+                {errors.container_details?.instruction && (
+                  <p className="text-sm text-destructive">
+                    {errors.container_details.instruction.message as any}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -482,10 +514,15 @@ const commodities = useFieldArray({
                 >
                   Add Commodity
                 </Button>
+
+                {errors.container_details?.commodity && (
+                  <p className="text-sm text-destructive">
+                    {errors.container_details.commodity.message as any}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* ================= RETURN LOCATION ================= */}
             {isReturning && (
               <div className="rounded-md border p-4 space-y-4">
                 <div className="font-medium">Return Location</div>
@@ -514,6 +551,11 @@ const commodities = useFieldArray({
                         </Select>
                       )}
                     />
+                    {errors.return_location_info?.country && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.country.message as any}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -522,6 +564,11 @@ const commodities = useFieldArray({
                       id="city"
                       {...register("return_location_info.city")}
                     />
+                    {errors.return_location_info?.city && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.city.message as any}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -530,6 +577,11 @@ const commodities = useFieldArray({
                       id="port"
                       {...register("return_location_info.port")}
                     />
+                    {errors.return_location_info?.port && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.port.message as any}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -538,12 +590,22 @@ const commodities = useFieldArray({
                       id="address"
                       {...register("return_location_info.address")}
                     />
+                    {errors.return_location_info?.address && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.address.message as any}
+                      </p>
+                    )}
                   </div>
                 </div>
+
+                {errors.return_location_info && typeof errors.return_location_info.message === "string" && (
+                  <p className="text-sm text-destructive">
+                    {errors.return_location_info.message}
+                  </p>
+                )}
               </div>
             )}
 
-            {/* ================= FORM ERROR ================= */}
             {formError && (
               <Alert variant="destructive">
                 <AlertDescription>{formError}</AlertDescription>
