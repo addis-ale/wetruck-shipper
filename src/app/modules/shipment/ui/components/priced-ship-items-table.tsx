@@ -46,6 +46,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { ShipperShipItemsItem, ShipItem } from "@/lib/zod/shipment.schema";
+import type { Container } from "@/lib/zod/container.schema";
 
 interface PricedShipItemsTableProps {
   activeShipmentId: number | null;
@@ -104,17 +106,23 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
   const transporterGroups = data?.items || [];
   
   // Filter transporter groups by activeShipmentId (already filtered by API, but double-check)
-  const filteredTransporterGroups = transporterGroups.filter((group) => {
-    if (!activeShipmentId) return true;
-    return group.ship_items.some((item) => item.ship_id === activeShipmentId);
-  });
+  const filteredTransporterGroups = transporterGroups.filter(
+    (group: ShipperShipItemsItem) => {
+      if (!activeShipmentId) return true;
+      return group.ship_items.some(
+        (item: ShipItem) => item.ship_id === activeShipmentId
+      );
+    }
+  );
+  
 
   // Helper function to check if transporter has any returning containers
-  const hasReturningContainers = (group: typeof filteredTransporterGroups[0]): boolean => {
-    return group.ship_items.some((shipItem) => 
-      shipItem.containers?.some((container) => container.is_returning === true)
+  const hasReturningContainers = (group: ShipperShipItemsItem): boolean => {
+    return group.ship_items.some((shipItem: ShipItem) =>
+      shipItem.containers?.some((container: Container) => container.is_returning === true)
     );
   };
+  
 
   // Handle opening containers modal
   const handleOpenContainersModal = (group: typeof filteredTransporterGroups[0]) => {
@@ -125,24 +133,35 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
   // Get all containers from a transporter group
   const getAllContainersFromGroup = (group: typeof filteredTransporterGroups[0]) => {
     const containers: any[] = [];
-    group.ship_items.forEach((shipItem) => {
-      if (shipItem.containers && Array.isArray(shipItem.containers)) {
+    group.ship_items.forEach((shipItem: ShipItem) => {
+      if (Array.isArray(shipItem.containers)) {
         containers.push(...shipItem.containers);
       }
     });
+    
     return containers;
   };
 
   const handleSelectAll = () => {
     // Only select transporters that are not already accepted
     const selectableTransporters = filteredTransporterGroups.filter(
-      (group) => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
+      (group: ShipperShipItemsItem) =>
+        !acceptedShipIds.has(activeShipmentId ?? 0) &&
+        !acceptedShipmentIds.has(activeShipmentId ?? 0)
     );
+    
     
     if (selectedTransporterIds.size === selectableTransporters.length) {
       setSelectedTransporterIds(new Set());
     } else {
-      setSelectedTransporterIds(new Set(selectableTransporters.map((group) => group.transporter_id)));
+      setSelectedTransporterIds(
+        new Set(
+          selectableTransporters.map(
+            (group: ShipperShipItemsItem) => group.transporter_id
+          )
+        )
+      );
+      
     }
   };
 
@@ -156,13 +175,14 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
     if (selectedTransporterIds.size > 0 && activeShipmentId) {
       // Get all ship_item_ids from selected transporters
       const shipItemIds: number[] = [];
-      filteredTransporterGroups.forEach((group) => {
+      filteredTransporterGroups.forEach((group: ShipperShipItemsItem) => {
         if (selectedTransporterIds.has(group.transporter_id)) {
-          group.ship_items.forEach((item) => {
+          group.ship_items.forEach((item: ShipItem) => {
             shipItemIds.push(item.id);
           });
         }
       });
+      
       
       // Close dialog optimistically
       setAcceptDialogOpen(false);
@@ -244,13 +264,17 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
   // Calculate totals
   const totalTransporters = filteredTransporterGroups.length;
   const totalContainers = filteredTransporterGroups.reduce(
-    (sum, group) => sum + (group.total_containers || 0),
+    (sum: number, group: ShipperShipItemsItem) =>
+      sum + (group.total_containers ?? 0),
     0
   );
+  
   const totalPrice = filteredTransporterGroups.reduce(
-    (sum, group) => sum + (Number(group.total_price) || 0),
+    (sum: number, group: ShipperShipItemsItem) =>
+      sum + Number(group.total_price ?? 0),
     0
   );
+  
   const primaryCurrency = filteredTransporterGroups[0]?.currency || "ETB";
 
   if (filteredTransporterGroups.length === 0) {
@@ -292,12 +316,19 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">
-                    <Checkbox
-                      checked={selectedTransporterIds.size > 0 && selectedTransporterIds.size === filteredTransporterGroups.filter(
-                        (group) => !acceptedShipIds.has(activeShipmentId || 0) && !acceptedShipmentIds.has(activeShipmentId || 0)
-                      ).length}
-                      onCheckedChange={handleSelectAll}
-                    />
+                  <Checkbox
+  checked={
+    selectedTransporterIds.size > 0 &&
+    selectedTransporterIds.size ===
+      filteredTransporterGroups.filter(
+        (group: ShipperShipItemsItem) =>
+          !acceptedShipIds.has(activeShipmentId ?? 0) &&
+          !acceptedShipmentIds.has(activeShipmentId ?? 0)
+      ).length
+  }
+  onCheckedChange={handleSelectAll}
+/>
+
                   </TableHead>
                   <TableHead>Number of Containers</TableHead>
                   <TableHead>Return Status</TableHead>
@@ -307,106 +338,130 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransporterGroups.length > 0 ? (
-                  filteredTransporterGroups.map((group) => {
-                    const rowKey = `transporter-${group.transporter_id}`;
-                    const isAccepted = acceptedShipIds.has(activeShipmentId || 0) || acceptedShipmentIds.has(activeShipmentId || 0);
-                    const isSelected = selectedTransporterIds.has(group.transporter_id);
-                    const hasReturning = hasReturningContainers(group);
-                    
-                    // Calculate returning containers count and return fee
-                    // Flat fee of 10,000 ETB if at least 1 container is returning
-                    const RETURN_FEE_ETB = 10000;
-                    const returningContainers = group.ship_items.reduce((count, shipItem) => {
-                      return count + (shipItem.containers?.filter((c) => c.is_returning === true).length || 0);
-                    }, 0);
-                    const returnFeeETB = returningContainers > 0 ? RETURN_FEE_ETB : 0;
-                    
-                    // Ensure total_price is a number (API might return string)
-                    const totalPrice = group.total_price !== undefined && group.total_price !== null 
-                      ? Number(group.total_price) 
-                      : 0;
-                    const currency = group.currency || "ETB";
-                    const containerCount = group.total_containers || 0;
+  {filteredTransporterGroups.length > 0 ? (
+    filteredTransporterGroups.map((group: ShipperShipItemsItem) => {
+      const rowKey = `transporter-${group.transporter_id}`;
 
-                    return (
-                      <TableRow key={rowKey}>
-                        {/* Checkbox */}
-                        <TableCell>
-                          {isAccepted ? (
-                            <Checkbox checked={false} disabled />
-                          ) : (
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => handleSelectTransporter(group.transporter_id)}
-                            />
-                          )}
-                        </TableCell>
-                        {/* Number of Containers */}
-                        <TableCell>
-                          <button
-                            onClick={() => handleOpenContainersModal(group)}
-                            className="text-sm font-medium text-primary hover:underline cursor-pointer"
-                          >
-                            {containerCount} container{containerCount !== 1 ? "s" : ""}
-                          </button>
-                        </TableCell>
-                        {/* Return Status */}
-                        <TableCell>
-                          {hasReturning ? (
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="secondary" className="w-fit text-xs">
-                                Returning
-                              </Badge>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="max-w-xs">
-                                    <p className="text-sm">
-                                      A flat fee of 10,000 ETB is added when at least 1 container is returning. This fee is included in the total price.
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          ) : (
-                            <Badge variant="outline" className="w-fit text-xs">
-                              One-way
-                            </Badge>
-                          )}
-                        </TableCell>
-                        {/* Total Price */}
-                        <TableCell className="text-right">
-                          <span className="font-semibold">
-                            {formatPrice(totalPrice)}
-                          </span>
-                        </TableCell>
-                        {/* Currency */}
-                        <TableCell>{currency}</TableCell>
-                        {/* Status */}
-                        <TableCell className="text-right">
-                          {isAccepted ? (
-                            <Badge variant="secondary" className="gap-1">
-                              <CheckCircle2 className="h-3 w-3" />
-                              Accepted
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">Pending</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                      No quotes found for this shipment.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
+      const isAccepted =
+        acceptedShipIds.has(activeShipmentId ?? 0) ||
+        acceptedShipmentIds.has(activeShipmentId ?? 0);
+
+      const isSelected = selectedTransporterIds.has(group.transporter_id);
+      const hasReturning = hasReturningContainers(group);
+
+      // Flat fee of 10,000 ETB if at least 1 container is returning
+      const RETURN_FEE_ETB = 10000;
+
+      const returningContainers = group.ship_items.reduce(
+        (count: number, shipItem: ShipItem) =>
+          count +
+          (shipItem.containers?.filter(
+            (c: Container) => c.is_returning === true
+          ).length || 0),
+        0
+      );
+
+      const returnFeeETB = returningContainers > 0 ? RETURN_FEE_ETB : 0;
+
+      const totalPrice =
+        group.total_price !== undefined && group.total_price !== null
+          ? Number(group.total_price)
+          : 0;
+
+      const currency = group.currency ?? "ETB";
+      const containerCount = group.total_containers ?? 0;
+
+      return (
+        <TableRow key={rowKey}>
+          {/* Checkbox */}
+          <TableCell>
+            {isAccepted ? (
+              <Checkbox checked={false} disabled />
+            ) : (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() =>
+                  handleSelectTransporter(group.transporter_id)
+                }
+              />
+            )}
+          </TableCell>
+
+          {/* Number of Containers */}
+          <TableCell>
+            <button
+              onClick={() => handleOpenContainersModal(group)}
+              className="text-sm font-medium text-primary hover:underline cursor-pointer"
+            >
+              {containerCount} container{containerCount !== 1 ? "s" : ""}
+            </button>
+          </TableCell>
+
+          {/* Return Status */}
+          <TableCell>
+            {hasReturning ? (
+              <div className="flex items-center gap-1.5">
+                <Badge variant="secondary" className="w-fit text-xs">
+                  Returning
+                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-xs">
+                      <p className="text-sm">
+                        A flat fee of 10,000 ETB is added when at least 1
+                        container is returning. This fee is included in the
+                        total price.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <Badge variant="outline" className="w-fit text-xs">
+                One-way
+              </Badge>
+            )}
+          </TableCell>
+
+          {/* Total Price */}
+          <TableCell className="text-right">
+            <span className="font-semibold">
+              {formatPrice(totalPrice)}
+            </span>
+          </TableCell>
+
+          {/* Currency */}
+          <TableCell>{currency}</TableCell>
+
+          {/* Status */}
+          <TableCell className="text-right">
+            {isAccepted ? (
+              <Badge variant="secondary" className="gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Accepted
+              </Badge>
+            ) : (
+              <Badge variant="outline">Pending</Badge>
+            )}
+          </TableCell>
+        </TableRow>
+      );
+    })
+  ) : (
+    <TableRow>
+      <TableCell
+        colSpan={6}
+        className="h-24 text-center text-muted-foreground"
+      >
+        No quotes found for this shipment.
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
+
             </Table>
           </div>
 

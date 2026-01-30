@@ -107,6 +107,18 @@ export const shipItemSchema = z.object({
   updated_at: z.string(),
 }).passthrough();
 
+export const shipperShipItemsItemSchema = z.object({
+  transporter_id: z.number(),
+  ship_items: z.array(shipItemSchema),
+  total_price: z.number(),
+  total_containers: z.number(),
+  currency: z.string(),
+});
+
+export type ShipperShipItemsItem = z.infer<
+  typeof shipperShipItemsItemSchema
+>;
+
 export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 export type UpdateShipmentInput = z.infer<typeof updateShipmentSchema>;
 export type Shipment = z.infer<typeof shipmentSchema>;
