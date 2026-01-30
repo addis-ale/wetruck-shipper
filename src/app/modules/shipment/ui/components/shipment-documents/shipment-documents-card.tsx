@@ -5,7 +5,7 @@ import { ShipmentDocumentRow } from "./shipment-document-row";
 import { UploadShipmentDocumentCard } from "./upload-shipment-document-card";
 
 export function ShipmentDocumentsCard({ shipId }: { shipId: number | null }) {
-  const { data, isLoading } = useShipmentDocuments(shipId as number); // useShipmentDocuments already handles enabled: !!shipId
+  const { data, isLoading } = useShipmentDocuments(shipId as number); 
 
   const documents = data ?? [];
 

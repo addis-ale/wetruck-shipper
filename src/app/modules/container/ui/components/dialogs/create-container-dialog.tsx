@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -31,10 +31,7 @@ import {
 } from "@/lib/zod/container.schema";
 import { COUNTRIES } from "@/lib/constants/locations";
 import { useCreateContainer } from "../../../server/hooks/use-create-container";
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
+import { toast } from "sonner";
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
@@ -46,10 +43,6 @@ type BackendErrorShape =
       errors?: unknown;
     }
   | unknown;
-
-/* -------------------------------------------------------------------------- */
-/*                           Backend Error Helpers                             */
-/* -------------------------------------------------------------------------- */
 
 function safeString(val: unknown): string | null {
   if (val === null || val === undefined) return null;
@@ -63,7 +56,6 @@ function extractFieldErrors(
 ): Record<string, string> | null {
   const data = responseData as any;
 
-  // { fields: { "a.b": "msg" } }
   if (data?.fields && typeof data.fields === "object") {
     const out: Record<string, string> = {};
     Object.entries(data.fields).forEach(([k, v]) => {
@@ -72,7 +64,6 @@ function extractFieldErrors(
     return Object.keys(out).length ? out : null;
   }
 
-  // { errors: { "a.b": ["msg"] } }
   if (data?.errors && typeof data.errors === "object") {
     const out: Record<string, string> = {};
     Object.entries(data.errors).forEach(([k, v]) => {
@@ -85,7 +76,6 @@ function extractFieldErrors(
     return Object.keys(out).length ? out : null;
   }
 
-  // FastAPI / Pydantic style
   if (Array.isArray(data?.detail)) {
     const out: Record<string, string> = {};
     data.detail.forEach((item: any) => {
@@ -111,43 +101,39 @@ function extractFormMessage(data: BackendErrorShape, fallback: string) {
   return msg ?? fallback;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Component                                   */
-/* -------------------------------------------------------------------------- */
-
 export function CreateContainerDialog() {
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-const defaultValues = useMemo<CreateContainerFormValues>(
-  () => ({
-    container_number: "",
-    container_size: "twenty_feet",
-    container_type: "dry",
+  const defaultValues = useMemo<CreateContainerFormValues>(
+    () => ({
+      container_number: "",
+      container_size: "twenty_feet",
+      container_type: "dry",
 
-    gross_weight: 0,
-    gross_weight_unit: "kg",
-    tare_weight: 0,
+      gross_weight: 1,
+      gross_weight_unit: "kg",
+      tare_weight: undefined,
 
-    container_details: {
-      commodity: [""],
-      instruction: "",
-    },
+      container_details: {
+        commodity: [""],
+        instruction: "",
+      },
 
-    return_location_info: {
-      country: "",
-      city: "",
-      port: "",
-      address: "",
-    },
+      return_location_info: {
+        country: undefined as any,
+        city: "",
+        port: undefined,
+        address: "",
+      },
+      
 
-    sequencing_priority: 1,
-    is_returning: true,
-    recommended_truck_type: "flatbed",
-  }),
-  []
-);
-
+      sequencing_priority: 1,
+      is_returning: true,
+      recommended_truck_type: "flatbed",
+    }),
+    []
+  );
 
   const form = useForm<CreateContainerFormValues>({
     resolver: zodResolver(createContainerSchema),
@@ -167,19 +153,35 @@ const defaultValues = useMemo<CreateContainerFormValues>(
   } = form;
 
   const isReturning = watch("is_returning");
+  const returnCountry = watch("return_location_info.country");
 
-const commodities = useFieldArray({
-  control: control as any,
-  name: "container_details.commodity",
-});
+  useEffect(() => {
+    if (returnCountry && returnCountry !== "Djibouti") {
+      setValue("return_location_info.port", undefined, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      
+      
+    }
+  }, [returnCountry, setValue]);
 
-  const countryOptions = COUNTRIES.map((c) => ({
-    value: c.code,
+  const commodities = useFieldArray({
+    control: control as any,
+    name: "container_details.commodity",
+  });
+
+  const countryOptions = COUNTRIES.filter(
+    (c) => c.name === "Djibouti" || c.name === "Ethiopia"
+  ).map((c) => ({
+    value: c.name, 
     label: c.name,
   }));
 
   const { mutateAsync, isPending } = useCreateContainer({
     onSuccess: () => {
+      toast.success("Container created successfully");
+
       setFormError(null);
       setOpen(false);
       reset(defaultValues);
@@ -198,24 +200,52 @@ const commodities = useFieldArray({
     try {
       const parsed = createContainerSchema.parse(values);
 
-   const payload: CreateContainerInput = {
-  ...parsed,
-
-  container_details: parsed.container_details
-    ? {
-        ...parsed.container_details,
-        commodity:
-          parsed.container_details.commodity
-            ?.map((c) => c.trim())
-            .filter(Boolean) || [],
+      // Prepare the payload based on country
+      let returnLocationInfo = undefined;
+      
+      if (parsed.is_returning && parsed.return_location_info) {
+        const { country, city, port, address } = parsed.return_location_info;
+        
+        if (country === "Djibouti") {
+          returnLocationInfo = {
+            country,
+            city: city?.trim() || "",
+            port: port?.trim() || "",
+            address: address?.trim() || "",
+          };
+        } else if (country === "Ethiopia") {
+          returnLocationInfo = {
+            country,
+            city: city?.trim() || "",
+            address: address?.trim() || "",
+          };
+        }
       }
-    : undefined,
 
-  return_location_info: parsed.is_returning
-    ? parsed.return_location_info
-    : undefined,
-};
+      const payload: CreateContainerInput = {
+        container_number: parsed.container_number,
+        container_size: parsed.container_size,
+        container_type: parsed.container_type,
+        gross_weight: parsed.gross_weight,
+        gross_weight_unit: parsed.gross_weight_unit,
+        tare_weight: parsed.tare_weight,
+        sequencing_priority: parsed.sequencing_priority,
+        recommended_truck_type: parsed.recommended_truck_type,
+        is_returning: parsed.is_returning,
+        
+        container_details: parsed.container_details
+          ? {
+              ...parsed.container_details,
+              commodity:
+                parsed.container_details.commodity
+                  ?.map((c) => c.trim())
+                  .filter(Boolean) || [],
+              instruction: parsed.container_details.instruction?.trim() ?? "",
+            }
+          : undefined,
 
+        return_location_info: returnLocationInfo,
+      };
 
       await mutateAsync(payload);
     } catch (err: any) {
@@ -273,7 +303,10 @@ const commodities = useFieldArray({
                 <Label htmlFor="container_number" required>
                   Container Number
                 </Label>
-                <Input id="container_number" {...register("container_number")} />
+                <Input
+                  id="container_number"
+                  {...register("container_number")}
+                />
                 {errors.container_number && (
                   <p className="text-sm text-destructive">
                     {errors.container_number.message}
@@ -323,34 +356,63 @@ const commodities = useFieldArray({
                   </p>
                 )}
               </div>
-
-              {/* Container Type */}
               <div className="space-y-2">
                 <Label htmlFor="container_type">Container Type</Label>
-<Controller<CreateContainerFormValues, "recommended_truck_type">
-  name="recommended_truck_type"
-  control={control}
-  render={({ field }) => (
-    <Select
-      onValueChange={field.onChange}
-      value={field.value ?? undefined}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select truck type" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="flatbed">Flatbed</SelectItem>
-        <SelectItem value="trailer">Trailer</SelectItem>
-      </SelectContent>
-    </Select>
-  )}
-/>
-
-
-
+                <Controller
+                  name="container_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="container_type">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dry">Dry</SelectItem>
+                        <SelectItem value="reefer">Reefer</SelectItem>
+                        <SelectItem value="open_top">Open Top</SelectItem>
+                        <SelectItem value="tank">Tank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.container_type && (
                   <p className="text-sm text-destructive">
                     {errors.container_type.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Recommended Truck Type (kept as you had) */}
+              <div className="space-y-2">
+                <Label htmlFor="recommended_truck_type">
+                  Recommended Truck Type
+                </Label>
+
+                <Controller<CreateContainerFormValues, "recommended_truck_type">
+                  name="recommended_truck_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? undefined}
+                    >
+                      <SelectTrigger
+                        className="w-full"
+                        id="recommended_truck_type"
+                      >
+                        <SelectValue placeholder="Select truck type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="flatbed">Flatbed</SelectItem>
+                        <SelectItem value="trailer">Trailer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+
+                {errors.recommended_truck_type && (
+                  <p className="text-sm text-destructive">
+                    {errors.recommended_truck_type.message as any}
                   </p>
                 )}
               </div>
@@ -373,9 +435,7 @@ const commodities = useFieldArray({
 
               {/* Gross Weight Unit */}
               <div className="space-y-2">
-                <Label htmlFor="gross_weight_unit">
-                  Gross Weight Unit
-                </Label>
+                <Label htmlFor="gross_weight_unit">Gross Weight Unit</Label>
                 <Controller
                   name="gross_weight_unit"
                   control={control}
@@ -389,7 +449,7 @@ const commodities = useFieldArray({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="kg">kg</SelectItem>
-                        <SelectItem value="ton">ton</SelectItem>
+                   
                       </SelectContent>
                     </Select>
                   )}
@@ -422,11 +482,21 @@ const commodities = useFieldArray({
                 <Label htmlFor="is_returning">Is Returning?</Label>
                 <Select
                   value={isReturning ? "yes" : "no"}
-                  onValueChange={(v) =>
-                    setValue("is_returning", v === "yes", {
+                  onValueChange={(v) => {
+                    const returning = v === "yes";
+
+                    setValue("is_returning", returning, {
                       shouldValidate: true,
-                    })
-                  }
+                      shouldDirty: true,
+                    });
+
+                    if (!returning) {
+                      setValue("return_location_info", undefined, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      });
+                    }
+                  }}
                 >
                   <SelectTrigger id="is_returning">
                     <SelectValue placeholder="Select option" />
@@ -439,7 +509,6 @@ const commodities = useFieldArray({
               </div>
             </div>
 
-            {/* ================= CONTAINER DETAILS ================= */}
             <div className="rounded-md border p-4 space-y-4">
               <div className="font-medium">Container Details</div>
 
@@ -449,6 +518,11 @@ const commodities = useFieldArray({
                   id="instruction"
                   {...register("container_details.instruction")}
                 />
+                {errors.container_details?.instruction && (
+                  <p className="text-sm text-destructive">
+                    {errors.container_details.instruction.message as any}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -482,10 +556,15 @@ const commodities = useFieldArray({
                 >
                   Add Commodity
                 </Button>
+
+                {errors.container_details?.commodity && (
+                  <p className="text-sm text-destructive">
+                    {errors.container_details.commodity.message as any}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* ================= RETURN LOCATION ================= */}
             {isReturning && (
               <div className="rounded-md border p-4 space-y-4">
                 <div className="font-medium">Return Location</div>
@@ -514,6 +593,11 @@ const commodities = useFieldArray({
                         </Select>
                       )}
                     />
+                    {errors.return_location_info?.country && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.country.message as any}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -522,15 +606,29 @@ const commodities = useFieldArray({
                       id="city"
                       {...register("return_location_info.city")}
                     />
+                    {errors.return_location_info?.city && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.city.message as any}
+                      </p>
+                    )}
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="port">Port</Label>
-                    <Input
-                      id="port"
-                      {...register("return_location_info.port")}
-                    />
-                  </div>
+                  {returnCountry === "Djibouti" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="port" required={returnCountry === "Djibouti"}>
+                        Port
+                      </Label>
+                      <Input
+                        id="port"
+                        {...register("return_location_info.port")}
+                        required={returnCountry === "Djibouti"}
+                      />
+                      {errors.return_location_info?.port && (
+                        <p className="text-sm text-destructive">
+                          {errors.return_location_info.port.message as any}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="address">Address</Label>
@@ -538,12 +636,23 @@ const commodities = useFieldArray({
                       id="address"
                       {...register("return_location_info.address")}
                     />
+                    {errors.return_location_info?.address && (
+                      <p className="text-sm text-destructive">
+                        {errors.return_location_info.address.message as any}
+                      </p>
+                    )}
                   </div>
                 </div>
+
+                {errors.return_location_info &&
+                  typeof errors.return_location_info.message === "string" && (
+                    <p className="text-sm text-destructive">
+                      {errors.return_location_info.message}
+                    </p>
+                  )}
               </div>
             )}
 
-            {/* ================= FORM ERROR ================= */}
             {formError && (
               <Alert variant="destructive">
                 <AlertDescription>{formError}</AlertDescription>
