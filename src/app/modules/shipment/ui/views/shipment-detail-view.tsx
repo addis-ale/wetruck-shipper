@@ -44,7 +44,7 @@ import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { ShipmentDocuments } from "../components/shipment-documents/shipment-documents";
+import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
 import { DollarSign } from "lucide-react";
 
 interface ShipmentDetailViewProps {
@@ -186,12 +186,19 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-3xl font-bold">Shipment #{shipment.id}</h1>
-            <Badge variant={getStatusVariant(shipment.status)} className="text-xs">
-              {shipment.status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-            </Badge>
-          </div>
+        <div className="flex items-center gap-3 mb-1">
+  <h1 className="text-3xl font-bold">Shipment #{shipment.id}</h1>
+
+  <Badge
+    variant={getStatusVariant(shipment.status ?? "created")}
+    className="text-xs"
+  >
+    {(shipment.status ?? "created")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase())}
+  </Badge>
+</div>
+
           <p className="text-sm text-muted-foreground">
             Created on {formatDate(shipment.pickup_date)}
           </p>
@@ -372,29 +379,35 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium mb-1">{shipment.pickup_facility.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {shipment.pickup_facility.address}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {shipment.pickup_facility.region}, {shipment.pickup_facility.country}
-                    </p>
-                  </div>
+                <p className="text-sm font-medium mb-1">
+  {shipment.pickup_facility?.name ?? "—"}
+</p>
+
+<p className="text-xs text-muted-foreground">
+  {shipment.pickup_facility?.address ?? "—"}
+</p>
+
+<p className="text-xs text-muted-foreground">
+  {shipment.pickup_facility?.region ?? "—"}, {shipment.pickup_facility?.country ?? "—"}
+</p>
+
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">Contact Person</p>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{shipment.pickup_facility.contact_name}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        <span>{shipment.pickup_facility.contact_phone_number}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Mail className="h-3 w-3" />
-                        <span>{shipment.pickup_facility.contact_email}</span>
-                      </div>
-                    </div>
+                    <p className="text-sm font-medium">
+  {shipment.pickup_facility?.contact_name ?? "—"}
+</p>
+
+<div className="flex items-center gap-2 text-xs text-muted-foreground">
+  <Phone className="h-3 w-3" />
+  <span>{shipment.pickup_facility?.contact_phone_number ?? "—"}</span>
+</div>
+
+<div className="flex items-center gap-2 text-xs text-muted-foreground">
+  <Mail className="h-3 w-3" />
+  <span>{shipment.pickup_facility?.contact_email ?? "—"}</span>
+</div>
+
                   </div>
                 </CardContent>
               </Card>
@@ -408,31 +421,37 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium mb-1">{shipment.delivery_facility.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {shipment.delivery_facility.address}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {shipment.delivery_facility.region}, {shipment.delivery_facility.country}
-                    </p>
-                  </div>
+                <div>
+  <p className="text-sm font-medium mb-1">
+    {shipment.delivery_facility?.name ?? "—"}
+  </p>
+  <p className="text-xs text-muted-foreground">
+    {shipment.delivery_facility?.address ?? "—"}
+  </p>
+  <p className="text-xs text-muted-foreground">
+    {shipment.delivery_facility?.region ?? "—"}, {shipment.delivery_facility?.country ?? "—"}
+  </p>
+</div>
+
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">Contact Person</p>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">
-                        {shipment.delivery_facility.contact_name}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        <span>{shipment.delivery_facility.contact_phone_number}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Mail className="h-3 w-3" />
-                        <span>{shipment.delivery_facility.contact_email}</span>
-                      </div>
-                    </div>
+  <p className="text-sm font-medium">
+    {shipment.delivery_facility?.contact_name ?? "—"}
+  </p>
+
+  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <Phone className="h-3 w-3" />
+    <span>{shipment.delivery_facility?.contact_phone_number ?? "—"}</span>
+  </div>
+
+  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <Mail className="h-3 w-3" />
+    <span>{shipment.delivery_facility?.contact_email ?? "—"}</span>
+  </div>
+</div>
+
                   </div>
                 </CardContent>
               </Card>
@@ -454,28 +473,33 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       Bill of Lading Number
                     </p>
                     <p className="text-sm font-mono">
-                      {shipment.shipment_details.bill_of_lading_number || "N/A"}
+                    <p className="text-sm font-mono">
+  {shipment.shipment_details?.bill_of_lading_number ?? "N/A"}
+</p>
+
                     </p>
                   </div>
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">Pickup Number</p>
                     <p className="text-sm font-mono">
-                      {shipment.shipment_details.pickup_number || "N/A"}
-                    </p>
+  {shipment.shipment_details?.pickup_number ?? "N/A"}
+</p>
+
                   </div>
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">Delivery Number</p>
                     <p className="text-sm font-mono">
-                      {shipment.shipment_details.delivery_number || "N/A"}
-                    </p>
+  {shipment.shipment_details?.delivery_number ?? "N/A"}
+</p>
+
                   </div>
                 </CardContent>
               </Card>
             </div>
             {/* Shipment Documents */}
-            <ShipmentDocuments shipItemId={shipment.id} />
+            <ShipmentDocumentsCard shipId={shipment.id} />
 
           </div>
 
@@ -497,11 +521,19 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
-                  <Badge variant={getStatusVariant(shipment.status)} className="mt-1">
-                    {shipment.status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </Badge>
-                </div>
+  <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
+
+  {shipment.status ? (
+    <Badge variant={getStatusVariant(shipment.status)} className="mt-1">
+      {shipment.status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+    </Badge>
+  ) : (
+    <Badge variant="secondary" className="mt-1">
+      N/A
+    </Badge>
+  )}
+</div>
+
               </CardContent>
             </Card>
           </div>
