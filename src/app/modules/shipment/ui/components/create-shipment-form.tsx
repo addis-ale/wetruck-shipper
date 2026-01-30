@@ -36,31 +36,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       destination: "addis_ababa",
       pickup_date: "",
       delivery_date: "",
-      pickup_facility: {
-        country: "",
-        region: "",
-        name: "",
-        address: "",
-        contact_name: "",
-        contact_phone_number: "",
-        contact_email: "",
-      },
-      delivery_facility: {
-        country: "",
-        region: "",
-        name: "",
-        address: "",
-        contact_name: "",
-        contact_phone_number: "",
-        contact_email: "",
-      },
-      shipment_details: {
-        bill_of_lading_number: "",
-      },
       status: "created",
     }),
     []
   );
+  
 
   const form = useForm<CreateShipmentFormValues>({
     resolver: zodResolver(createShipmentSchema),
@@ -132,9 +112,15 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   const submitting = isPending || isSubmitting;
 
   function onSubmit(values: CreateShipmentFormValues) {
-    const parsed = createShipmentSchema.parse(values);
+    const parsed = createShipmentSchema.parse({
+      ...values,
+      pickup_date: new Date(values.pickup_date).toISOString(),
+      delivery_date: new Date(values.delivery_date).toISOString(),
+    });
+  
     mutate(parsed);
   }
+  
 
   return (
     <Card className="w-full">
@@ -168,7 +154,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                       <SelectItem value="debre_zeit">Debre Zeit</SelectItem>
                       <SelectItem value="hawassa">Hawassa</SelectItem>
                       <SelectItem value="shashemene">Shashemene</SelectItem>
-                      <SelectItem value="djibouti_port">Djibouti Port</SelectItem>
+                      <SelectItem value="djibouti">Djibouti</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
