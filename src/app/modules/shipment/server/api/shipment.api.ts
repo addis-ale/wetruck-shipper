@@ -30,7 +30,7 @@ function getAuthToken(): string | null {
   if (typeof document !== "undefined") {
     const cookies = document.cookie.split(";");
     const tokenCookie = cookies.find((c) =>
-      c.trim().startsWith("access_token=")
+      c.trim().startsWith("access_token="),
     );
     if (tokenCookie) {
       return tokenCookie.split("=")[1];
@@ -42,7 +42,7 @@ function getAuthToken(): string | null {
 
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const token = getAuthToken();
 
@@ -85,7 +85,7 @@ async function apiRequest<T>(
       if (Array.isArray(errorData.detail)) {
         const firstError = errorData.detail[0];
         throw new Error(
-          firstError.msg || firstError.message || "Validation error"
+          firstError.msg || firstError.message || "Validation error",
         );
       } else if (typeof errorData.detail === "string") {
         throw new Error(errorData.detail);
@@ -95,12 +95,13 @@ async function apiRequest<T>(
       }
     }
 
-    // Check for error message in various formats
+    // Check for error message in various formats (e.g. backend "error" field for 400)
     const errorMessage =
+      errorData.error ||
       errorData.message ||
       errorData.error_message ||
       errorData.detail?.message ||
-      errorData.detail ||
+      (typeof errorData.detail === "string" ? errorData.detail : null) ||
       `HTTP ${response.status}: ${response.statusText}`;
 
     throw new Error(errorMessage);
@@ -115,27 +116,22 @@ async function apiRequest<T>(
 }
 const LOCATION_ENUM_MAP: Record<string, string> = {
   "addis ababa": "Addis Ababa",
-  "addis_ababa": "Addis Ababa",
-  "adama": "Adama",
-  "dukem": "Dukem",
-  "bishoftu": "Bishoftu",
-  "hawassa": "Hawassa",
-  "shashemene": "Shashemene",
-  "djibouti": "Djibouti",
+  addis_ababa: "Addis Ababa",
+  adama: "Adama",
+  dukem: "Dukem",
+  bishoftu: "Bishoftu",
+  hawassa: "Hawassa",
+  shashemene: "Shashemene",
+  djibouti: "Djibouti",
 };
-
 
 function normalizeLocation(value?: string): string | undefined {
   if (!value) return undefined;
 
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, " ");
+  const normalized = value.trim().toLowerCase().replace(/_/g, " ");
 
   return LOCATION_ENUM_MAP[normalized];
 }
-
 
 export const shipmentApi = {
   // Get all shipments with pagination and filters
@@ -152,14 +148,17 @@ export const shipmentApi = {
     if (params?.per_page)
       searchParams.append("per_page", params.per_page.toString());
     if (params?.origin)
-      searchParams.append("origin", normalizeLocation(params.origin) ?? params.origin);
-    
+      searchParams.append(
+        "origin",
+        normalizeLocation(params.origin) ?? params.origin,
+      );
+
     if (params?.destination)
       searchParams.append(
         "destination",
-        normalizeLocation(params.destination) ?? params.destination
+        normalizeLocation(params.destination) ?? params.destination,
       );
-    
+
     if (params?.status) searchParams.append("status", params.status);
 
     const query = searchParams.toString();
@@ -180,15 +179,14 @@ export const shipmentApi = {
       origin: normalizeLocation(data.origin),
       destination: normalizeLocation(data.destination),
     };
-  
+
     const response = await apiRequest<ShipmentCreateResponse>(`${API_PATH}/`, {
       method: "POST",
       body: JSON.stringify(normalizedData),
     });
-  
+
     return response.result;
   },
-  
 
   // Update shipment (PATCH)
   async update(id: number, data: UpdateShipmentPayload): Promise<Shipment> {
@@ -197,7 +195,7 @@ export const shipmentApi = {
       {
         method: "PATCH",
         body: JSON.stringify(data),
-      }
+      },
     );
 
     return response.result;
@@ -213,7 +211,7 @@ export const shipmentApi = {
   // Assign containers to shipment (bulk)
   async assignContainers(
     shipmentId: number,
-    containerIds: number[]
+    containerIds: number[],
   ): Promise<void> {
     if (!containerIds || containerIds.length === 0) {
       throw new Error("At least one container ID is required");
@@ -224,27 +222,27 @@ export const shipmentApi = {
       {
         method: "POST",
         body: JSON.stringify({ container_ids: containerIds }),
-      }
+      },
     );
   },
 
   // Remove container from shipment
   async removeContainer(
     shipmentId: number,
-    containerId: number
+    containerId: number,
   ): Promise<void> {
     await apiRequest<void>(
       `${API_PATH}/${shipmentId}/containers/${containerId}`,
       {
         method: "DELETE",
-      }
+      },
     );
   },
 
   // Get price for selected containers
   async getPrice(
     shipmentId: number,
-    containerIds: number[]
+    containerIds: number[],
   ): Promise<{ price: number; currency?: string }> {
     // TODO: Replace with actual API endpoint when available
     // Example: POST /api/v1/ship/{shipmentId}/price
@@ -255,7 +253,7 @@ export const shipmentApi = {
       {
         method: "POST",
         body: JSON.stringify({ container_ids: containerIds }),
-      }
+      },
     );
   },
 
@@ -274,7 +272,7 @@ export const shipmentApi = {
       const baseUrl = BASE_URL.replace(/\/api\/v1\/?$/, "");
       console.log(
         "🔗 Request Price Endpoint:",
-        `${baseUrl}${API_PREFIX}${endpoint}`
+        `${baseUrl}${API_PREFIX}${endpoint}`,
       );
     }
 
@@ -326,17 +324,23 @@ export const shipmentApi = {
   }): Promise<ShipperShipItemsListResponse> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append("page", params.page.toString());
-    if (params?.per_page) searchParams.append("per_page", params.per_page.toString());
-    if (params?.ship_id) searchParams.append("ship_id", params.ship_id.toString());
-    
+    if (params?.per_page)
+      searchParams.append("per_page", params.per_page.toString());
+    if (params?.ship_id)
+      searchParams.append("ship_id", params.ship_id.toString());
+
     const query = searchParams.toString();
-    const endpoint = query ? `/ship-item/shipper?${query}` : "/ship-item/shipper";
+    const endpoint = query
+      ? `/ship-item/shipper?${query}`
+      : "/ship-item/shipper";
     return apiRequest<ShipperShipItemsListResponse>(endpoint);
   },
 
   // Get accepted ship items for a specific shipment
   async getAcceptedShipItems(shipId: number): Promise<ShipItem[]> {
-    return apiRequest<ShipItem[]>(`${API_PATH}/${shipId}/list-accepted-ship-items`);
+    return apiRequest<ShipItem[]>(
+      `${API_PATH}/${shipId}/list-accepted-ship-items`,
+    );
   },
 
   // Get single ship item by ID for shipper (with full container details)
@@ -358,7 +362,10 @@ export const shipmentApi = {
   },
 
   // Accept a shipment by selecting ship items
-  async acceptShip(shipId: number, shipItemIds: number[]): Promise<{
+  async acceptShip(
+    shipId: number,
+    shipItemIds: number[],
+  ): Promise<{
     status: boolean;
     error_message: string | null;
     success_message: string | null;
@@ -372,6 +379,13 @@ export const shipmentApi = {
     }>(`/ship/ship/${shipId}/accept-ship`, {
       method: "POST",
       body: JSON.stringify({ ship_item_ids: shipItemIds }),
+    });
+  },
+
+  // Mark ship item as completed (PATCH /api/v1/ship-item/{id}/complete)
+  async completeShipItem(shipItemId: number): Promise<string> {
+    return apiRequest<string>(`/ship-item/${shipItemId}/complete`, {
+      method: "PATCH",
     });
   },
 };
