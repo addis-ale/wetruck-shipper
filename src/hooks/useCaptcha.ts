@@ -38,15 +38,16 @@ export const useCaptcha = (): UseCaptchaReturn => {
             });
             setCaptchaData(data);
             setIsVerified(false);
-        } catch (err: any) {
-            console.error('❌ useCaptcha: Error fetching CAPTCHA:', err);
+        } catch (err: unknown) {
+            const error = err as Error;
+            console.error('❌ useCaptcha: Error fetching CAPTCHA:', error);
             console.error('❌ useCaptcha: Error details:', {
-                name: err.name,
-                message: err.message,
-                stack: err.stack,
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
             });
-            if (err.name !== 'AbortError') {
-                setError(err.message || 'Failed to load CAPTCHA');
+            if (error.name !== 'AbortError') {
+                setError(error.message || 'Failed to load CAPTCHA');
             }
         } finally {
             setIsLoading(false);
@@ -66,8 +67,9 @@ export const useCaptcha = (): UseCaptchaReturn => {
             await captchaService.verifyCaptcha(captchaData.captchaId, solution);
             setIsVerified(true);
             return true;
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const error = err as Error;
+            setError(error.message);
             // Auto-refresh CAPTCHA on failure
             setTimeout(fetchCaptcha, 1500);
             return false;

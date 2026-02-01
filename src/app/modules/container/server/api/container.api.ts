@@ -18,42 +18,45 @@ export type ListContainersParams = {
   axle_type?: string;
 };
 
-function buildQuery(params: Record<string, any>) {
-  return new URLSearchParams(
-    Object.entries(params).filter(
-      ([, value]) => value !== undefined && value !== ""
-    )
-  ).toString();
+function buildQuery(params: Record<string, string | number | undefined>) {
+  const filtered = Object.entries(params).filter(
+    ([, value]) => value !== undefined && value !== "",
+  );
+  const searchParams = new URLSearchParams();
+  filtered.forEach(([key, value]) => {
+    if (value !== undefined) {
+      searchParams.append(key, String(value));
+    }
+  });
+  return searchParams.toString();
 }
 
 export const containerApi = {
-//  list
-async list(params: ListContainersParams) {
-  const res = await request<ContainerListResponse>(
-    `/container/?${buildQuery(params)}`
-  );
-
-  if (res.error) {
-    throw new Error(res.error);
-  }
-
-  if (process.env.NODE_ENV === "development") {
-    console.log("📦 Container API Response:", res.data);
-    console.log(
-      "📦 Container Items Count:",
-      Array.isArray(res.data?.items) ? res.data.items.length : "Not an array"
+  //  list
+  async list(params: ListContainersParams) {
+    const res = await request<ContainerListResponse>(
+      `/container/?${buildQuery(params)}`,
     );
-  }
 
-  const parsed = containerListSchema.parse(res.data);
-  return parsed;
-},
+    if (res.error) {
+      throw new Error(res.error);
+    }
 
-// get by id 
+    if (process.env.NODE_ENV === "development") {
+      console.log("📦 Container API Response:", res.data);
+      console.log(
+        "📦 Container Items Count:",
+        Array.isArray(res.data?.items) ? res.data.items.length : "Not an array",
+      );
+    }
+
+    const parsed = containerListSchema.parse(res.data);
+    return parsed;
+  },
+
+  // get by id
   async get(id: number): Promise<Container> {
-    const res = await request<unknown>(
-      `/container/${id}`
-    );
+    const res = await request<unknown>(`/container/${id}`);
 
     if (res.error) {
       throw new Error(res.error);
@@ -62,40 +65,36 @@ async list(params: ListContainersParams) {
     return containerSchema.parse(res.data);
   },
 
-// create
-async create(payload: CreateContainerInput): Promise<Container> {
-  const res = await request<unknown>("/container/", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  // create
+  async create(payload: CreateContainerInput): Promise<Container> {
+    const res = await request<unknown>("/container/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
 
-  if (res.error) {
-    throw new Error(res.error);
-  }
+    if (res.error) {
+      throw new Error(res.error);
+    }
 
-  return containerSchema.parse((res.data as any).result);
-},
+    return containerSchema.parse((res.data as { result: unknown }).result);
+  },
 
-
-// update
+  // update
   async update(id: number, payload: UpdateContainerInput): Promise<Container> {
     const res = await request<unknown>(`/container/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
-  
+
     if (res.error) {
       throw new Error(res.error);
     }
-  
+
     return { ...payload, id } as Container;
   },
-// delete
+  // delete
   async delete(id: number): Promise<void> {
-    const res = await request(
-      `/container/${id}`,
-      { method: "DELETE" }
-    );
+    const res = await request(`/container/${id}`, { method: "DELETE" });
 
     if (res.error) {
       throw new Error(res.error);

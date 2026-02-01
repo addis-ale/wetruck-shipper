@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { useFieldArray, useForm, Controller, type Path } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -35,14 +35,27 @@ import { toast } from "sonner";
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
-type BackendErrorShape =
-  | {
-      message?: string;
-      detail?: unknown;
-      fields?: Record<string, unknown>;
-      errors?: unknown;
-    }
-  | unknown;
+type BackendErrorShape = {
+  message?: string;
+  detail?: unknown;
+  fields?: Record<string, unknown>;
+  errors?: unknown;
+  response?: {
+    data?: BackendErrorShape;
+  };
+};
+
+interface BackendErrorWithFields {
+  fields?: Record<string, unknown>;
+  errors?: Record<string, unknown>;
+  detail?: Array<{
+    loc?: unknown[];
+    msg?: string;
+    type?: string;
+  }>;
+  message?: string;
+  error?: string;
+}
 
 function safeString(val: unknown): string | null {
   if (val === null || val === undefined) return null;
@@ -52,9 +65,9 @@ function safeString(val: unknown): string | null {
 }
 
 function extractFieldErrors(
-  responseData: BackendErrorShape
+  responseData: BackendErrorShape,
 ): Record<string, string> | null {
-  const data = responseData as any;
+  const data = responseData as BackendErrorWithFields;
 
   if (data?.fields && typeof data.fields === "object") {
     const out: Record<string, string> = {};
@@ -78,14 +91,19 @@ function extractFieldErrors(
 
   if (Array.isArray(data?.detail)) {
     const out: Record<string, string> = {};
-    data.detail.forEach((item: any) => {
-      if (!Array.isArray(item?.loc)) return;
-      const path = item.loc
+    data.detail.forEach((item: unknown) => {
+      const errorItem = item as {
+        loc?: unknown[];
+        msg?: string;
+        type?: string;
+      };
+      if (!Array.isArray(errorItem?.loc)) return;
+      const path = errorItem.loc
         .filter((p: unknown) => p !== "body")
         .map((p: unknown) => safeString(p))
         .filter(Boolean)
         .join(".");
-      if (path) out[path] = safeString(item?.msg) ?? "Invalid value";
+      if (path) out[path] = safeString(errorItem?.msg) ?? "Invalid value";
     });
     return Object.keys(out).length ? out : null;
   }
@@ -94,10 +112,11 @@ function extractFieldErrors(
 }
 
 function extractFormMessage(data: BackendErrorShape, fallback: string) {
+  const errorData = data as BackendErrorWithFields;
   const msg =
-    safeString((data as any)?.message) ||
-    safeString((data as any)?.detail) ||
-    safeString((data as any)?.error);
+    safeString(errorData?.message) ||
+    safeString(errorData?.detail) ||
+    safeString(errorData?.error);
   return msg ?? fallback;
 }
 
@@ -121,18 +140,17 @@ export function CreateContainerDialog() {
       },
 
       return_location_info: {
-        country: undefined as any,
+        country: "",
         city: "",
-        port: undefined,
+        port: "",
         address: "",
       },
-      
 
       sequencing_priority: 1,
       is_returning: true,
       recommended_truck_type: "flatbed",
     }),
-    []
+    [],
   );
 
   const form = useForm<CreateContainerFormValues>({
@@ -149,6 +167,7 @@ export function CreateContainerDialog() {
     control,
     setValue,
     setError,
+    clearErrors,
     formState: { errors, isSubmitting, isValid },
   } = form;
 
@@ -161,20 +180,19 @@ export function CreateContainerDialog() {
         shouldValidate: true,
         shouldDirty: true,
       });
-      
-      
     }
   }, [returnCountry, setValue]);
 
   const commodities = useFieldArray({
-    control: control as any,
+    control,
+    // @ts-expect-error - React Hook Form type inference issue with nested arrays
     name: "container_details.commodity",
   });
 
   const countryOptions = COUNTRIES.filter(
-    (c) => c.name === "Djibouti" || c.name === "Ethiopia"
+    (c) => c.name === "Djibouti" || c.name === "Ethiopia",
   ).map((c) => ({
-    value: c.name, 
+    value: c.name,
     label: c.name,
   }));
 
@@ -192,20 +210,17 @@ export function CreateContainerDialog() {
 
   async function onSubmit(values: CreateContainerFormValues) {
     setFormError(null);
-
-    Object.keys(errors).forEach((field) => {
-      setError(field as any, undefined as any);
-    });
+    clearErrors();
 
     try {
       const parsed = createContainerSchema.parse(values);
 
       // Prepare the payload based on country
       let returnLocationInfo = undefined;
-      
+
       if (parsed.is_returning && parsed.return_location_info) {
         const { country, city, port, address } = parsed.return_location_info;
-        
+
         if (country === "Djibouti") {
           returnLocationInfo = {
             country,
@@ -232,7 +247,7 @@ export function CreateContainerDialog() {
         sequencing_priority: parsed.sequencing_priority,
         recommended_truck_type: parsed.recommended_truck_type,
         is_returning: parsed.is_returning,
-        
+
         container_details: parsed.container_details
           ? {
               ...parsed.container_details,
@@ -248,13 +263,17 @@ export function CreateContainerDialog() {
       };
 
       await mutateAsync(payload);
-    } catch (err: any) {
-      const responseData = err?.response?.data ?? err;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: BackendErrorShape } };
+      const responseData = error?.response?.data ?? error;
 
       const fieldErrors = extractFieldErrors(responseData);
       if (fieldErrors) {
         Object.entries(fieldErrors).forEach(([path, message]) => {
-          setError(path as any, { type: "server", message });
+          setError(path as Path<CreateContainerFormValues>, {
+            type: "server",
+            message,
+          });
         });
         return;
       }
@@ -262,8 +281,8 @@ export function CreateContainerDialog() {
       setFormError(
         extractFormMessage(
           responseData,
-          "Failed to create container. Please review your inputs and try again."
-        )
+          "Failed to create container. Please review your inputs and try again.",
+        ),
       );
     }
   }
@@ -316,9 +335,7 @@ export function CreateContainerDialog() {
 
               {/* Sequencing Priority */}
               <div className="space-y-2">
-                <Label htmlFor="sequencing_priority">
-                  Sequencing Priority
-                </Label>
+                <Label htmlFor="sequencing_priority">Sequencing Priority</Label>
                 <Input
                   id="sequencing_priority"
                   type="number"
@@ -412,7 +429,7 @@ export function CreateContainerDialog() {
 
                 {errors.recommended_truck_type && (
                   <p className="text-sm text-destructive">
-                    {errors.recommended_truck_type.message as any}
+                    {errors.recommended_truck_type.message}
                   </p>
                 )}
               </div>
@@ -449,7 +466,6 @@ export function CreateContainerDialog() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="kg">kg</SelectItem>
-                   
                       </SelectContent>
                     </Select>
                   )}
@@ -520,7 +536,7 @@ export function CreateContainerDialog() {
                 />
                 {errors.container_details?.instruction && (
                   <p className="text-sm text-destructive">
-                    {errors.container_details.instruction.message as any}
+                    {errors.container_details.instruction.message}
                   </p>
                 )}
               </div>
@@ -533,7 +549,7 @@ export function CreateContainerDialog() {
                       <Input
                         placeholder={`Commodity ${idx + 1}`}
                         {...register(
-                          `container_details.commodity.${idx}` as const
+                          `container_details.commodity.${idx}` as const,
                         )}
                       />
                       <Button
@@ -559,7 +575,7 @@ export function CreateContainerDialog() {
 
                 {errors.container_details?.commodity && (
                   <p className="text-sm text-destructive">
-                    {errors.container_details.commodity.message as any}
+                    {errors.container_details.commodity.message}
                   </p>
                 )}
               </div>
@@ -595,7 +611,7 @@ export function CreateContainerDialog() {
                     />
                     {errors.return_location_info?.country && (
                       <p className="text-sm text-destructive">
-                        {errors.return_location_info.country.message as any}
+                        {errors.return_location_info.country.message}
                       </p>
                     )}
                   </div>
@@ -608,13 +624,16 @@ export function CreateContainerDialog() {
                     />
                     {errors.return_location_info?.city && (
                       <p className="text-sm text-destructive">
-                        {errors.return_location_info.city.message as any}
+                        {errors.return_location_info.city.message}
                       </p>
                     )}
                   </div>
                   {returnCountry === "Djibouti" && (
                     <div className="space-y-2">
-                      <Label htmlFor="port" required={returnCountry === "Djibouti"}>
+                      <Label
+                        htmlFor="port"
+                        required={returnCountry === "Djibouti"}
+                      >
                         Port
                       </Label>
                       <Input
@@ -624,7 +643,7 @@ export function CreateContainerDialog() {
                       />
                       {errors.return_location_info?.port && (
                         <p className="text-sm text-destructive">
-                          {errors.return_location_info.port.message as any}
+                          {errors.return_location_info.port.message}
                         </p>
                       )}
                     </div>
@@ -638,7 +657,7 @@ export function CreateContainerDialog() {
                     />
                     {errors.return_location_info?.address && (
                       <p className="text-sm text-destructive">
-                        {errors.return_location_info.address.message as any}
+                        {errors.return_location_info.address.message}
                       </p>
                     )}
                   </div>

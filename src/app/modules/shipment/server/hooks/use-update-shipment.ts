@@ -23,7 +23,11 @@ export function useUpdateShipment(id: number, options?: UseUpdateShipmentOptions
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update shipment");
+      // Display error message - toast supports multi-line messages
+      const errorMessage = error.message || "Failed to update shipment";
+      toast.error(errorMessage, {
+        duration: 5000, // Show for 5 seconds to allow reading
+      });
     },
   });
 }

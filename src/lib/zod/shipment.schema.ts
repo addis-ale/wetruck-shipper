@@ -44,8 +44,8 @@ export const baseShipmentSchema = z.object({
   origin: originDestinationEnum,
   destination: originDestinationEnum,
 
-  pickup_date: z.string(),    
-  delivery_date: z.string(),  
+  pickup_date: z.string(),
+  delivery_date: z.string(),
 
   pickup_facility: facilitySchema.optional(),
   delivery_facility: facilitySchema.optional(),
@@ -54,7 +54,6 @@ export const baseShipmentSchema = z.object({
   status: shipmentStatusEnum.optional(),
 });
 
-
 export const createShipmentSchema = baseShipmentSchema.refine(
   (data) =>
     new Date(data.delivery_date).getTime() >
@@ -62,11 +61,10 @@ export const createShipmentSchema = baseShipmentSchema.refine(
   {
     message: "Delivery date must be after pickup date",
     path: ["delivery_date"],
-  }
+  },
 );
 
 export const updateShipmentSchema = baseShipmentSchema.partial();
-
 
 export const shipmentSchema = baseShipmentSchema.extend({
   id: z.number(),
@@ -74,7 +72,6 @@ export const shipmentSchema = baseShipmentSchema.extend({
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
-
 
 export const shipmentCreateResponseSchema = z.object({
   status: z.boolean(),
@@ -93,19 +90,21 @@ export const shipmentListResponseSchema = z.object({
   items: z.array(shipmentSchema),
 });
 
-export const shipItemSchema = z.object({
-  id: z.number(),
-  ship_id: z.number(),
-  transporter_id: z.number(),
-  truck_id: z.number().nullable().optional(),
-  driver_id: z.number().nullable().optional(),
-  computed_price: z.number(),
-  currency: z.string(),
-  containers: z.array(containerSchema).default([]),
-  deleted: z.boolean().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
-}).passthrough();
+export const shipItemSchema = z
+  .object({
+    id: z.number(),
+    ship_id: z.number(),
+    transporter_id: z.number(),
+    truck_id: z.number().nullable().optional(),
+    driver_id: z.number().nullable().optional(),
+    computed_price: z.number(),
+    currency: z.string(),
+    containers: z.array(containerSchema).default([]),
+    deleted: z.boolean().optional(),
+    created_at: z.string(),
+    updated_at: z.string(),
+  })
+  .passthrough();
 
 export const shipperShipItemsItemSchema = z.object({
   transporter_id: z.number(),
@@ -115,14 +114,14 @@ export const shipperShipItemsItemSchema = z.object({
   currency: z.string(),
 });
 
-export type ShipperShipItemsItem = z.infer<
-  typeof shipperShipItemsItemSchema
->;
+export type ShipperShipItemsItem = z.infer<typeof shipperShipItemsItemSchema>;
 
 export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 export type UpdateShipmentInput = z.infer<typeof updateShipmentSchema>;
 export type Shipment = z.infer<typeof shipmentSchema>;
-export type ShipmentCreateResponse = z.infer<typeof shipmentCreateResponseSchema>;
+export type ShipmentCreateResponse = z.infer<
+  typeof shipmentCreateResponseSchema
+>;
 export type ShipmentListResponse = z.infer<typeof shipmentListResponseSchema>;
 export type Facility = z.infer<typeof facilitySchema>;
 export type ShipmentDetails = z.infer<typeof shipmentDetailsSchema>;

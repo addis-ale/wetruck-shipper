@@ -6,7 +6,7 @@ export function AcceptedShipmentsView() {
   return (
     <div className="space-y-6">
       {/* Priced Shipments Information Table */}
-      <PricedShipItemsTable />
+      <PricedShipItemsTable activeShipmentId={null} />
     </div>
   );
 }

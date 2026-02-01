@@ -32,7 +32,7 @@ export function ShipmentsView() {
   // Fetch data
   const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
   
-  const allShipments = shipmentsResponse?.items || [];
+  const allShipments = useMemo(() => shipmentsResponse?.items || [], [shipmentsResponse?.items]);
 
   // Filter shipments by status based on active tab
   const filteredShipments = useMemo(() => 
@@ -54,7 +54,7 @@ export function ShipmentsView() {
   }, [filteredShipments, activeShipmentId]);
   
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
-  const { data: assignedContainersData, isLoading: assignedContainersLoading } = useContainers(
+  const { data: assignedContainersData } = useContainers(
     activeShipmentId ? { ship_id: activeShipmentId } : undefined,
     { enabled: !!activeShipmentId }
   );
@@ -82,7 +82,7 @@ export function ShipmentsView() {
   // Mutations
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
-  const { mutate: getPrice, isPending: isGettingPrice } = useGetPrice();
+  const { mutate: getPrice } = useGetPrice();
   const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
   
   // Get active shipment status

@@ -2,7 +2,33 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { shipmentApi } from "@/app/modules/shipment/server/api/shipment.api";
-import type { ShipItemsListResponse, ShipperShipItemsListResponse } from "@/lib/zod/shipment.schema";
+import type { ShipItem } from "@/lib/zod/shipment.schema";
+
+type ShipItemsListResponse = {
+  status: boolean;
+  message?: string;
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+  items: ShipItem[];
+};
+
+type ShipperShipItemsListResponse = {
+  status: boolean;
+  message?: string;
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+  items: Array<{
+    transporter_id: number;
+    ship_items: ShipItem[];
+    total_price: number;
+    total_containers: number;
+    currency: string;
+  }>;
+};
 
 interface UseShipItemsParams {
   page?: number;

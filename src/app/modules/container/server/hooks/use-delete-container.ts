@@ -16,14 +16,14 @@ export const useDeleteContainer = (
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ["containers"] });
 
-      const previous = qc.getQueryData<any>(["containers"]);
+      const previous = qc.getQueryData<{ items: Array<{ id: number }>; total: number }>(["containers"]);
 
-      qc.setQueryData(["containers"], (old: any) => {
+      qc.setQueryData(["containers"], (old: { items: Array<{ id: number }>; total: number } | undefined) => {
         if (!old?.items) return old;
 
         return {
           ...old,
-          items: old.items.filter((c: any) => c.id !== id),
+          items: old.items.filter((c) => c.id !== id),
           total: old.total - 1,
         };
       });

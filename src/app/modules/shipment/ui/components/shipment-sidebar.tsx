@@ -75,9 +75,6 @@ export function ShipmentSidebar({
             ) : (
               shipments.map((shipment) => {
                 const isActive = activeShipmentId === shipment.id;
-                const handleClick = () => {
-                  onSelectShipment?.(shipment.id);
-                };
                 const containerCount = containerCounts?.get(shipment.id) || 0;
                 return (
                   <div

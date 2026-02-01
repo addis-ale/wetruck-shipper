@@ -48,8 +48,8 @@ function QuoteCard({
   isAccepting,
   isAccepted
 }: { 
-  quoteItem: any; 
-  onAccept: (item: any) => void; 
+  quoteItem: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }; 
+  onAccept: (item: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }) => void; 
   isAccepting: boolean;
   isAccepted: boolean;
 }) {
@@ -106,7 +106,7 @@ function QuoteCard({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {displayItem.containers.map((container: any) => (
+                      {displayItem.containers.map((container) => (
                         <TableRow key={container.id}>
                           <TableCell className="font-medium">
                             {container.container_number || "N/A"}
@@ -176,39 +176,39 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
   const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
   const { data: shipment } = useShipment(shipId);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<{ id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number }> } | null>(null);
   
   // Check if shipment is already accepted
   const isShipmentAccepted = shipment?.status === "accepted_by_shipper";
 
   // Find the group for this shipId
   const shipGroup = data?.items
-    .flatMap((item) =>
-      item.ship_items.map((shipItem) => ({
+    .flatMap((item: { transporter_id: number; ship_items: Array<{ ship_id: number; id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }>; currency: string }) =>
+      item.ship_items.map((shipItem: { ship_id: number; id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }) => ({
         ...shipItem,
         transporter_id: item.transporter_id,
         group_currency: item.currency,
       }))
     )
-    .filter((item) => item.ship_id === shipId)
+    .filter((item: { ship_id: number }) => item.ship_id === shipId)
     .reduce(
-      (acc, item) => {
+      (acc: { shipId: number; transporters: number[]; items: Array<{ id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }> }, item: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }) => {
         if (!acc.transporters.includes(item.transporter_id)) {
           acc.transporters.push(item.transporter_id);
         }
         acc.items.push(item);
         return acc;
       },
-      { shipId, transporters: [] as number[], items: [] as any[] }
+      { shipId, transporters: [] as number[], items: [] as Array<{ id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }> }
     );
 
   // Calculate total containers across all quotes
-  const totalContainers = shipGroup?.items.reduce((sum, item) => {
+  const totalContainers = shipGroup?.items.reduce((sum: number, item: { containers?: Array<{ id: number }> }) => {
     const count = Array.isArray(item.containers) ? item.containers.length : 0;
     return sum + count;
   }, 0) || 0;
 
-  const handleAccept = (item: any) => {
+  const handleAccept = (item: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number }> }) => {
     setSelectedItem(item);
     setAcceptDialogOpen(true);
   };
@@ -381,7 +381,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {shipGroup.items.map((quoteItem) => {
+            {shipGroup.items.map((quoteItem: { id: number; transporter_id: number; ship_id: number; computed_price?: number; currency?: string; containers?: Array<{ id: number; container_number?: string; container_size?: string; container_type?: string; gross_weight?: number; gross_weight_unit?: string }> }) => {
               return (
                 <QuoteCard 
                   key={quoteItem.id} 

@@ -31,8 +31,15 @@ import {
 import { useShipperShipItems } from "@/app/modules/shipment/server/hooks/use-transporter-shipments";
 import { useAcceptShip } from "@/app/modules/shipment/server/hooks/use-accept-ship";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
-import { Package, CheckCircle2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info } from "lucide-react";
-import Link from "next/link";
+import {
+  Package,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Info,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -61,28 +68,36 @@ const formatPrice = (value: number): string => {
   });
 };
 
-export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableProps) {
+export function PricedShipItemsTable({
+  activeShipmentId,
+}: PricedShipItemsTableProps) {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
-  const { data, isLoading, error } = useShipperShipItems({ 
-    page, 
+  const { data, isLoading, error } = useShipperShipItems({
+    page,
     per_page: perPage,
     ship_id: activeShipmentId || undefined,
   });
   const { data: shipmentsData } = useShipments();
   const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
-  const [selectedTransporterIds, setSelectedTransporterIds] = useState<Set<number>>(new Set());
+  const [selectedTransporterIds, setSelectedTransporterIds] = useState<
+    Set<number>
+  >(new Set());
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
   const [containersModalOpen, setContainersModalOpen] = useState(false);
-  const [selectedTransporterGroup, setSelectedTransporterGroup] = useState<any>(null);
+  const [selectedTransporterGroup, setSelectedTransporterGroup] = useState<
+    (typeof filteredTransporterGroups)[0] | null
+  >(null);
   // Track accepted shipments (for immediate UI feedback) - must be before early returns
-  const [acceptedShipIds, setAcceptedShipIds] = useState<Set<number>>(new Set());
-  
+  const [acceptedShipIds, setAcceptedShipIds] = useState<Set<number>>(
+    new Set(),
+  );
+
   // Create a map of accepted shipment IDs
   const acceptedShipmentIds = new Set(
     shipmentsData?.items
       .filter((shipment) => shipment.status === "accepted_by_shipper")
-      .map((shipment) => shipment.id) || []
+      .map((shipment) => shipment.id) || [],
   );
 
   // Clear selections when active shipment changes
@@ -104,64 +119,75 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
 
   // Get transporter groups data (defined early for use in handlers)
   const transporterGroups = data?.items || [];
-  
+
   // Filter transporter groups by activeShipmentId (already filtered by API, but double-check)
   const filteredTransporterGroups = transporterGroups.filter(
     (group: ShipperShipItemsItem) => {
       if (!activeShipmentId) return true;
       return group.ship_items.some(
-        (item: ShipItem) => item.ship_id === activeShipmentId
+        (item: ShipItem) => item.ship_id === activeShipmentId,
       );
-    }
+    },
   );
-  
 
   // Helper function to check if transporter has any returning containers
   const hasReturningContainers = (group: ShipperShipItemsItem): boolean => {
     return group.ship_items.some((shipItem: ShipItem) =>
-      shipItem.containers?.some((container: Container) => container.is_returning === true)
+      shipItem.containers?.some(
+        (container: Container) => container.is_returning === true,
+      ),
     );
   };
-  
 
   // Handle opening containers modal
-  const handleOpenContainersModal = (group: typeof filteredTransporterGroups[0]) => {
+  const handleOpenContainersModal = (
+    group: (typeof filteredTransporterGroups)[0],
+  ) => {
     setSelectedTransporterGroup(group);
     setContainersModalOpen(true);
   };
 
   // Get all containers from a transporter group
-  const getAllContainersFromGroup = (group: typeof filteredTransporterGroups[0]) => {
-    const containers: any[] = [];
+  const getAllContainersFromGroup = (
+    group: (typeof filteredTransporterGroups)[0],
+  ) => {
+    const containers: Array<{
+      id: number;
+      container_number?: string;
+      container_size?: string;
+      container_type?: string;
+      gross_weight?: number;
+      gross_weight_unit?: string;
+      is_returning?: boolean;
+      status?: string;
+    }> = [];
     group.ship_items.forEach((shipItem: ShipItem) => {
       if (Array.isArray(shipItem.containers)) {
         containers.push(...shipItem.containers);
       }
     });
-    
+
     return containers;
   };
 
   const handleSelectAll = () => {
     // Only select transporters that are not already accepted
     const selectableTransporters = filteredTransporterGroups.filter(
-      (group: ShipperShipItemsItem) =>
+      () =>
         !acceptedShipIds.has(activeShipmentId ?? 0) &&
-        !acceptedShipmentIds.has(activeShipmentId ?? 0)
+        !acceptedShipmentIds.has(activeShipmentId ?? 0),
     );
-    
-    
+
     if (selectedTransporterIds.size === selectableTransporters.length) {
       setSelectedTransporterIds(new Set());
     } else {
       setSelectedTransporterIds(
         new Set(
           selectableTransporters.map(
-            (group: ShipperShipItemsItem) => group.transporter_id
-          )
-        )
+            (group: ShipperShipItemsItem) => group.transporter_id,
+          ),
+        ),
       );
-      
     }
   };
 
@@ -182,18 +208,17 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
           });
         }
       });
-      
-      
+
       // Close dialog optimistically
       setAcceptDialogOpen(false);
-      
+
       // Mark this shipment as accepted optimistically
       setAcceptedShipIds((prev) => new Set(prev).add(activeShipmentId));
-      
+
       // Clear selections
       const selectedIdsBackup = new Set(selectedTransporterIds);
       setSelectedTransporterIds(new Set());
-      
+
       // Trigger the mutation with error handling
       acceptShip(
         {
@@ -211,7 +236,7 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
               return newSet;
             });
           },
-        }
+        },
       );
     }
   };
@@ -253,29 +278,16 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive">
-            Error loading priced shipments: {error instanceof Error ? error.message : "Unknown error"}
+            Error loading priced shipments:{" "}
+            {error instanceof Error ? error.message : "Unknown error"}
           </p>
         </CardContent>
       </Card>
     );
   }
 
-
   // Calculate totals
   const totalTransporters = filteredTransporterGroups.length;
-  const totalContainers = filteredTransporterGroups.reduce(
-    (sum: number, group: ShipperShipItemsItem) =>
-      sum + (group.total_containers ?? 0),
-    0
-  );
-  
-  const totalPrice = filteredTransporterGroups.reduce(
-    (sum: number, group: ShipperShipItemsItem) =>
-      sum + Number(group.total_price ?? 0),
-    0
-  );
-  
-  const primaryCurrency = filteredTransporterGroups[0]?.currency || "ETB";
 
   if (filteredTransporterGroups.length === 0) {
     return (
@@ -307,7 +319,9 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
             Transporter Quotes
           </CardTitle>
           <CardDescription>
-            {totalTransporters} transporter quote{totalTransporters !== 1 ? "s" : ""} for shipment #{activeShipmentId}
+            {totalTransporters} transporter quote
+            {totalTransporters !== 1 ? "s" : ""} for shipment #
+            {activeShipmentId}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -316,19 +330,18 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">
-                  <Checkbox
-  checked={
-    selectedTransporterIds.size > 0 &&
-    selectedTransporterIds.size ===
-      filteredTransporterGroups.filter(
-        (group: ShipperShipItemsItem) =>
-          !acceptedShipIds.has(activeShipmentId ?? 0) &&
-          !acceptedShipmentIds.has(activeShipmentId ?? 0)
-      ).length
-  }
-  onCheckedChange={handleSelectAll}
-/>
-
+                    <Checkbox
+                      checked={
+                        selectedTransporterIds.size > 0 &&
+                        selectedTransporterIds.size ===
+                          filteredTransporterGroups.filter(
+                            () =>
+                              !acceptedShipIds.has(activeShipmentId ?? 0) &&
+                              !acceptedShipmentIds.has(activeShipmentId ?? 0),
+                          ).length
+                      }
+                      onCheckedChange={handleSelectAll}
+                    />
                   </TableHead>
                   <TableHead>Number of Containers</TableHead>
                   <TableHead>Return Status</TableHead>
@@ -338,130 +351,131 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                 </TableRow>
               </TableHeader>
               <TableBody>
-  {filteredTransporterGroups.length > 0 ? (
-    filteredTransporterGroups.map((group: ShipperShipItemsItem) => {
-      const rowKey = `transporter-${group.transporter_id}`;
+                {filteredTransporterGroups.length > 0 ? (
+                  filteredTransporterGroups.map(
+                    (group: ShipperShipItemsItem) => {
+                      const rowKey = `transporter-${group.transporter_id}`;
 
-      const isAccepted =
-        acceptedShipIds.has(activeShipmentId ?? 0) ||
-        acceptedShipmentIds.has(activeShipmentId ?? 0);
+                      const isAccepted =
+                        acceptedShipIds.has(activeShipmentId ?? 0) ||
+                        acceptedShipmentIds.has(activeShipmentId ?? 0);
 
-      const isSelected = selectedTransporterIds.has(group.transporter_id);
-      const hasReturning = hasReturningContainers(group);
+                      const isSelected = selectedTransporterIds.has(
+                        group.transporter_id,
+                      );
+                      const hasReturning = hasReturningContainers(group);
+                      // Note: Return fee calculation removed as it's not displayed
 
-      // Flat fee of 10,000 ETB if at least 1 container is returning
-      const RETURN_FEE_ETB = 10000;
+                      const totalPrice =
+                        group.total_price !== undefined &&
+                        group.total_price !== null
+                          ? Number(group.total_price)
+                          : 0;
 
-      const returningContainers = group.ship_items.reduce(
-        (count: number, shipItem: ShipItem) =>
-          count +
-          (shipItem.containers?.filter(
-            (c: Container) => c.is_returning === true
-          ).length || 0),
-        0
-      );
+                      const currency = group.currency ?? "ETB";
+                      const containerCount = group.total_containers ?? 0;
 
-      const returnFeeETB = returningContainers > 0 ? RETURN_FEE_ETB : 0;
+                      return (
+                        <TableRow key={rowKey}>
+                          {/* Checkbox */}
+                          <TableCell>
+                            {isAccepted ? (
+                              <Checkbox checked={false} disabled />
+                            ) : (
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() =>
+                                  handleSelectTransporter(group.transporter_id)
+                                }
+                              />
+                            )}
+                          </TableCell>
 
-      const totalPrice =
-        group.total_price !== undefined && group.total_price !== null
-          ? Number(group.total_price)
-          : 0;
+                          {/* Number of Containers */}
+                          <TableCell>
+                            <button
+                              onClick={() => handleOpenContainersModal(group)}
+                              className="text-sm font-medium text-primary hover:underline cursor-pointer"
+                            >
+                              {containerCount} container
+                              {containerCount !== 1 ? "s" : ""}
+                            </button>
+                          </TableCell>
 
-      const currency = group.currency ?? "ETB";
-      const containerCount = group.total_containers ?? 0;
+                          {/* Return Status */}
+                          <TableCell>
+                            {hasReturning ? (
+                              <div className="flex items-center gap-1.5">
+                                <Badge
+                                  variant="secondary"
+                                  className="w-fit text-xs"
+                                >
+                                  Returning
+                                </Badge>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="left"
+                                      className="max-w-xs"
+                                    >
+                                      <p className="text-sm">
+                                        A flat fee of 10,000 ETB is added when
+                                        at least 1 container is returning. This
+                                        fee is included in the total price.
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="w-fit text-xs"
+                              >
+                                One-way
+                              </Badge>
+                            )}
+                          </TableCell>
 
-      return (
-        <TableRow key={rowKey}>
-          {/* Checkbox */}
-          <TableCell>
-            {isAccepted ? (
-              <Checkbox checked={false} disabled />
-            ) : (
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={() =>
-                  handleSelectTransporter(group.transporter_id)
-                }
-              />
-            )}
-          </TableCell>
+                          {/* Total Price */}
+                          <TableCell className="text-right">
+                            <span className="font-semibold">
+                              {formatPrice(totalPrice)}
+                            </span>
+                          </TableCell>
 
-          {/* Number of Containers */}
-          <TableCell>
-            <button
-              onClick={() => handleOpenContainersModal(group)}
-              className="text-sm font-medium text-primary hover:underline cursor-pointer"
-            >
-              {containerCount} container{containerCount !== 1 ? "s" : ""}
-            </button>
-          </TableCell>
+                          {/* Currency */}
+                          <TableCell>{currency}</TableCell>
 
-          {/* Return Status */}
-          <TableCell>
-            {hasReturning ? (
-              <div className="flex items-center gap-1.5">
-                <Badge variant="secondary" className="w-fit text-xs">
-                  Returning
-                </Badge>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="max-w-xs">
-                      <p className="text-sm">
-                        A flat fee of 10,000 ETB is added when at least 1
-                        container is returning. This fee is included in the
-                        total price.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            ) : (
-              <Badge variant="outline" className="w-fit text-xs">
-                One-way
-              </Badge>
-            )}
-          </TableCell>
-
-          {/* Total Price */}
-          <TableCell className="text-right">
-            <span className="font-semibold">
-              {formatPrice(totalPrice)}
-            </span>
-          </TableCell>
-
-          {/* Currency */}
-          <TableCell>{currency}</TableCell>
-
-          {/* Status */}
-          <TableCell className="text-right">
-            {isAccepted ? (
-              <Badge variant="secondary" className="gap-1">
-                <CheckCircle2 className="h-3 w-3" />
-                Accepted
-              </Badge>
-            ) : (
-              <Badge variant="outline">Pending</Badge>
-            )}
-          </TableCell>
-        </TableRow>
-      );
-    })
-  ) : (
-    <TableRow>
-      <TableCell
-        colSpan={6}
-        className="h-24 text-center text-muted-foreground"
-      >
-        No quotes found for this shipment.
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
-
+                          {/* Status */}
+                          <TableCell className="text-right">
+                            {isAccepted ? (
+                              <Badge variant="secondary" className="gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Accepted
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">Pending</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    },
+                  )
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      No quotes found for this shipment.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
             </Table>
           </div>
 
@@ -474,7 +488,8 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                 className="gap-2"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Accept Selected ({selectedTransporterIds.size} transporter{selectedTransporterIds.size !== 1 ? "s" : ""})
+                Accept Selected ({selectedTransporterIds.size} transporter
+                {selectedTransporterIds.size !== 1 ? "s" : ""})
               </Button>
             </div>
           )}
@@ -484,7 +499,8 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
               <div className="flex items-center gap-2">
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, data.total)} of {data.total} results
+                  Showing {(page - 1) * perPage + 1} to{" "}
+                  {Math.min(page * perPage, data.total)} of {data.total} results
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -561,12 +577,16 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
           <DialogHeader>
             <DialogTitle>Accept Selected Quotes</DialogTitle>
             <DialogDescription>
-              Are you sure you want to accept {selectedTransporterIds.size} selected transporter quote{selectedTransporterIds.size !== 1 ? "s" : ""}?
+              Are you sure you want to accept {selectedTransporterIds.size}{" "}
+              selected transporter quote
+              {selectedTransporterIds.size !== 1 ? "s" : ""}?
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
-              This action will accept all ship items from the selected transporter{selectedTransporterIds.size !== 1 ? "s" : ""} for shipment #{activeShipmentId}.
+              This action will accept all ship items from the selected
+              transporter{selectedTransporterIds.size !== 1 ? "s" : ""} for
+              shipment #{activeShipmentId}.
             </p>
           </div>
           <DialogFooter>
@@ -607,7 +627,16 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
             <DialogTitle>Container Details</DialogTitle>
             <DialogDescription>
               {selectedTransporterGroup && (
-                <>Showing {getAllContainersFromGroup(selectedTransporterGroup).length} container{getAllContainersFromGroup(selectedTransporterGroup).length !== 1 ? "s" : ""} for this transporter</>
+                <>
+                  Showing{" "}
+                  {getAllContainersFromGroup(selectedTransporterGroup).length}{" "}
+                  container
+                  {getAllContainersFromGroup(selectedTransporterGroup)
+                    .length !== 1
+                    ? "s"
+                    : ""}{" "}
+                  for this transporter
+                </>
               )}
             </DialogDescription>
           </DialogHeader>
@@ -627,38 +656,60 @@ export function PricedShipItemsTable({ activeShipmentId }: PricedShipItemsTableP
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {getAllContainersFromGroup(selectedTransporterGroup).map((container, index) => (
-                        <TableRow key={container.id || index}>
-                          <TableCell className="font-medium">
-                            {container.container_number || "-"}
-                          </TableCell>
-                          <TableCell>
-                            {container.container_size === "twenty_feet" ? "20ft" : container.container_size === "forty_feet" ? "40ft" : container.container_size || "-"}
-                          </TableCell>
-                          <TableCell>
-                            {container.container_type ? container.container_type.charAt(0).toUpperCase() + container.container_type.slice(1) : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {container.gross_weight ? `${container.gross_weight} ${container.gross_weight_unit || "kg"}` : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {container.is_returning ? (
-                              <Badge variant="secondary" className="w-fit text-xs">
-                                Returning
+                      {getAllContainersFromGroup(selectedTransporterGroup).map(
+                        (container, index) => (
+                          <TableRow key={container.id || index}>
+                            <TableCell className="font-medium">
+                              {container.container_number || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {container.container_size === "twenty_feet"
+                                ? "20ft"
+                                : container.container_size === "forty_feet"
+                                  ? "40ft"
+                                  : container.container_size || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {container.container_type
+                                ? container.container_type
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  container.container_type.slice(1)
+                                : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {container.gross_weight
+                                ? `${container.gross_weight} ${container.gross_weight_unit || "kg"}`
+                                : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {container.is_returning ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="w-fit text-xs"
+                                >
+                                  Returning
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="w-fit text-xs"
+                                >
+                                  One-way
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className="w-fit text-xs"
+                              >
+                                {container.status || "N/A"}
                               </Badge>
-                            ) : (
-                              <Badge variant="outline" className="w-fit text-xs">
-                                One-way
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="w-fit text-xs">
-                              {container.status || "N/A"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                          </TableRow>
+                        ),
+                      )}
                     </TableBody>
                   </Table>
                 </div>
