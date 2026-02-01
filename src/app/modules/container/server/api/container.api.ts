@@ -68,21 +68,19 @@ async list(params: ListContainersParams) {
   },
 
 // create
-  async create(
-    payload: CreateContainerInput
-  ): Promise<Container> {
-    const res = await request<unknown>(
-      "/container/",
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }
-    );
-    if (res.error) {
-      throw new Error(res.error);
-    }
-    return containerSchema.parse(res.data);
-  },
+async create(payload: CreateContainerInput): Promise<Container> {
+  const res = await request<unknown>("/container/", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  if (res.error) {
+    throw new Error(res.error);
+  }
+
+  return containerSchema.parse((res.data as any).result);
+},
+
 
 // update
   async update(id: number, payload: UpdateContainerInput): Promise<Container> {

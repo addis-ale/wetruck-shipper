@@ -33,7 +33,6 @@ import {
 import { useUpdateContainer } from "../../../server/hooks/use-update-container";
 import { z } from "zod";
 
-
 type UpdateContainerFormValues = z.input<typeof updateContainerSchema>;
 
 type Props = {
@@ -64,15 +63,16 @@ export function UpdateContainerDialog({
           : [""],
         instruction: container.container_details?.instruction ?? "",
       },
-      return_location_info: container.return_location_info ?? {
-        country: "",
-        city: "",
-        port: "",
-        address: "",
-      },
+      return_location_info: container.return_location_info
+        ? {
+            country: container.return_location_info.country ?? "",
+            city: container.return_location_info.city ?? "",
+            address: container.return_location_info.address ?? "",
+            port: container.return_location_info.port ?? undefined, // 🔑 fix
+          }
+        : undefined,
     },
   });
-  
 
   useEffect(() => {
     if (open) {
@@ -91,12 +91,14 @@ export function UpdateContainerDialog({
             : [""],
           instruction: container.container_details?.instruction ?? "",
         },
-        return_location_info: container.return_location_info ?? {
-          country: "",
-          city: "",
-          port: "",
-          address: "",
-        },
+        return_location_info: container.return_location_info
+          ? {
+              country: container.return_location_info.country ?? "",
+              city: container.return_location_info.city ?? "",
+              address: container.return_location_info.address ?? "",
+              port: container.return_location_info.port ?? undefined, // 🔑 fix
+            }
+          : undefined,
       });
     }
   }, [container, open, form]);
@@ -112,29 +114,31 @@ export function UpdateContainerDialog({
 
   // Country options
   const countryOptions = COUNTRIES.map((c) => ({
-    value: c.code,
+    value: c.name,
     label: c.name,
   }));
 
   const onSubmit = (values: UpdateContainerFormValues) => {
     const parsed = updateContainerSchema.parse(values);
-  
+
     const payload: UpdateContainerInput = {
       ...parsed,
-      container_details: parsed.container_details ? {
-        ...parsed.container_details,
-        commodity: parsed.container_details.commodity
-          ? parsed.container_details.commodity.filter(Boolean)
-          : [],
-      } : undefined,
+
+      container_details: parsed.container_details
+        ? {
+            ...parsed.container_details,
+            commodity: parsed.container_details.commodity.filter(Boolean),
+            instruction: parsed.container_details.instruction ?? "", // 🔑 FIX
+          }
+        : undefined,
+
       return_location_info: parsed.is_returning
         ? parsed.return_location_info
         : undefined,
     };
-  
+
     mutate({ id: container.id, data: payload });
   };
-  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -187,6 +191,8 @@ export function UpdateContainerDialog({
                   <SelectContent>
                     <SelectItem value="dry">Dry</SelectItem>
                     <SelectItem value="reefer">Reefer</SelectItem>
+                    <SelectItem value="open_top">Open Top</SelectItem>
+                    <SelectItem value="tank">Tank</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -215,7 +221,6 @@ export function UpdateContainerDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="kg">KG</SelectItem>
-                    <SelectItem value="ton">Ton</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -290,7 +295,10 @@ export function UpdateContainerDialog({
                     name="return_location_info.country"
                     control={form.control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select country" />
                         </SelectTrigger>
@@ -306,7 +314,10 @@ export function UpdateContainerDialog({
                   />
                   {form.formState.errors.return_location_info?.country && (
                     <p className="text-sm text-destructive">
-                      {form.formState.errors.return_location_info.country.message}
+                      {
+                        form.formState.errors.return_location_info.country
+                          .message
+                      }
                     </p>
                   )}
                 </div>
@@ -320,9 +331,7 @@ export function UpdateContainerDialog({
                 </div>
                 <div className="space-y-1">
                   <Label>Address *</Label>
-                  <Input
-                    {...form.register("return_location_info.address")}
-                  />
+                  <Input {...form.register("return_location_info.address")} />
                 </div>
               </div>
             </div>

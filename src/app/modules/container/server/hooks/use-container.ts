@@ -5,7 +5,6 @@ import type {
   ContainerListResponse,
 } from "@/lib/zod/container.schema";
 
-/* ================= TYPES ================= */
 
 export type UseContainersParams = {
   page?: number;

@@ -95,9 +95,10 @@ export function ShipmentSidebar({
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <Badge variant={getStatusColor(shipment.status)}>
-                              {shipment.status}
-                            </Badge>
+                          <Badge variant={getStatusColor(shipment.status ?? "created")}>
+  {shipment.status ?? "created"}
+</Badge>
+
                             {containerCount > 0 && (
                               <span className="text-xs text-muted-foreground">
                                 {containerCount} container
@@ -144,8 +145,9 @@ export function ShipmentSidebar({
 
                       {/* BOL Number */}
                       <div className="text-xs text-muted-foreground truncate">
-                        BOL: {shipment.shipment_details.bill_of_lading_number}
-                      </div>
+  BOL: {shipment.shipment_details?.bill_of_lading_number ?? "N/A"}
+</div>
+
                     </div>
                     </div>
                     {/* View Details Link */}

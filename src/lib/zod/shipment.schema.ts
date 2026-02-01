@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { containerSchema } from "./container.schema";
 
-// Enums
 export const originDestinationEnum = z.enum([
   "addis_ababa",
   "adama",
@@ -9,7 +8,7 @@ export const originDestinationEnum = z.enum([
   "debre_zeit",
   "hawassa",
   "shashemene",
-  "djibouti_port",
+  "djibouti",
 ]);
 
 export const shipmentStatusEnum = z.enum([
@@ -25,57 +24,62 @@ export const shipmentStatusEnum = z.enum([
   "completed",
 ]);
 
-// Facility schema
 export const facilitySchema = z.object({
-  country: z.string().min(1, "Country is required"),
-  region: z.string().min(1, "Region is required"),
-  name: z.string().min(1, "Facility name is required"),
-  address: z.string().min(1, "Address is required"),
-  contact_name: z.string().min(1, "Contact name is required"),
-  contact_phone_number: z.string().min(1, "Phone number is required"),
-  contact_email: z.string().email("Invalid email format"),
+  country: z.string(),
+  region: z.string(),
+  name: z.string(),
+  address: z.string(),
+  contact_name: z.string(),
+  contact_phone_number: z.string(),
+  contact_email: z.string().email().optional(),
 });
 
-// Shipment details schema
 export const shipmentDetailsSchema = z.object({
-  bill_of_lading_number: z.string().min(1, "Bill of lading number is required"),
-  pickup_number: z.string().optional(),
-  delivery_number: z.string().optional(),
+  bill_of_lading_number: z.string().max(100),
+  pickup_number: z.string().max(10).optional(),
+  delivery_number: z.string().max(10).optional(),
 });
 
-// Base shipment schema (without refinement)
 export const baseShipmentSchema = z.object({
   origin: originDestinationEnum,
   destination: originDestinationEnum,
-  pickup_date: z.string().min(1, "Pickup date is required"),
-  delivery_date: z.string().min(1, "Delivery date is required"),
-  pickup_facility: facilitySchema,
-  delivery_facility: facilitySchema,
-  shipment_details: shipmentDetailsSchema,
-  status: shipmentStatusEnum.default("created"),
+
+  pickup_date: z.string(),
+  delivery_date: z.string(),
+
+  pickup_facility: facilitySchema.optional(),
+  delivery_facility: facilitySchema.optional(),
+  shipment_details: shipmentDetailsSchema.optional(),
+
+  status: shipmentStatusEnum.optional(),
 });
 
-// Create shipment schema (with date validation)
 export const createShipmentSchema = baseShipmentSchema.refine(
-  (data) => new Date(data.delivery_date) > new Date(data.pickup_date),
+  (data) =>
+    new Date(data.delivery_date).getTime() >
+    new Date(data.pickup_date).getTime(),
   {
     message: "Delivery date must be after pickup date",
     path: ["delivery_date"],
-  }
+  },
 );
 
-// Update shipment schema
 export const updateShipmentSchema = baseShipmentSchema.partial();
 
-// Full shipment schema (with ID and assigned containers)
 export const shipmentSchema = baseShipmentSchema.extend({
   id: z.number(),
-  shipper_id: z.number().optional(),
+  shipper_id: z.number(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
 
-// API Response schemas
+export const shipmentCreateResponseSchema = z.object({
+  status: z.boolean(),
+  error_message: z.string().nullable(),
+  success_message: z.string().nullable(),
+  result: shipmentSchema,
+});
+
 export const shipmentListResponseSchema = z.object({
   status: z.boolean(),
   message: z.string().optional(),
@@ -86,77 +90,39 @@ export const shipmentListResponseSchema = z.object({
   items: z.array(shipmentSchema),
 });
 
-export const shipmentCreateResponseSchema = z.object({
-  status: z.boolean(),
-  error_message: z.string().nullable(),
-  success_message: z.string().nullable(),
-  result: shipmentSchema,
-});
+export const shipItemSchema = z
+  .object({
+    id: z.number(),
+    ship_id: z.number(),
+    transporter_id: z.number(),
+    truck_id: z.number().nullable().optional(),
+    driver_id: z.number().nullable().optional(),
+    computed_price: z.number(),
+    currency: z.string(),
+    containers: z.array(containerSchema).default([]),
+    deleted: z.boolean().optional(),
+    created_at: z.string(),
+    updated_at: z.string(),
+  })
+  .passthrough();
 
-// Ship item schema (for priced items from /api/v1/ship-item/)
-// Containers are full container objects with all fields
-export const shipItemSchema = z.object({
-  id: z.number(),
-  ship_id: z.number(),
-  truck_id: z.number().optional().nullable(),
-  driver_id: z.number().optional().nullable(),
-  transporter_id: z.number(),
-  containers: z.array(containerSchema).default([]), // Array of full container objects
-  computed_price: z.number(),
-  currency: z.string(),
-  deleted: z.boolean().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
-}).passthrough(); // Allow extra fields from backend
-
-// Ship items list response schema
-export const shipItemsListResponseSchema = z.object({
-  status: z.boolean(),
-  message: z.string().optional(),
-  total: z.number(),
-  page: z.number(),
-  per_page: z.number(),
-  pages: z.number(),
-  items: z.array(shipItemSchema),
-});
-
-// Transporter shipment schema (includes ship_items and containers)
-export const transporterShipmentSchema = shipmentSchema.extend({
-  ship_items: z.array(shipItemSchema).default([]),
-  containers: z.array(z.any()).default([]), // Array of container objects
-}).passthrough(); // Allow extra fields from backend
-
-// Shipper ship items response schema (grouped by transporter)
-// Response from /api/v1/ship-item/shipper
 export const shipperShipItemsItemSchema = z.object({
   transporter_id: z.number(),
-  ship_items: z.array(shipItemSchema).default([]),
+  ship_items: z.array(shipItemSchema),
   total_price: z.number(),
   total_containers: z.number(),
   currency: z.string(),
-}).passthrough();
-
-export const shipperShipItemsListResponseSchema = z.object({
-  status: z.boolean(),
-  message: z.string().optional(),
-  total: z.number(),
-  page: z.number(),
-  per_page: z.number(),
-  pages: z.number(),
-  items: z.array(shipperShipItemsItemSchema),
 });
 
-// Types
+export type ShipperShipItemsItem = z.infer<typeof shipperShipItemsItemSchema>;
+
 export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 export type UpdateShipmentInput = z.infer<typeof updateShipmentSchema>;
 export type Shipment = z.infer<typeof shipmentSchema>;
+export type ShipmentCreateResponse = z.infer<
+  typeof shipmentCreateResponseSchema
+>;
 export type ShipmentListResponse = z.infer<typeof shipmentListResponseSchema>;
-export type ShipmentCreateResponse = z.infer<typeof shipmentCreateResponseSchema>;
 export type Facility = z.infer<typeof facilitySchema>;
 export type ShipmentDetails = z.infer<typeof shipmentDetailsSchema>;
 export type ShipItem = z.infer<typeof shipItemSchema>;
-export type ShipItemsListResponse = z.infer<typeof shipItemsListResponseSchema>;
-export type TransporterShipment = z.infer<typeof transporterShipmentSchema>;
-export type ShipperShipItemsItem = z.infer<typeof shipperShipItemsItemSchema>;
-export type ShipperShipItemsListResponse = z.infer<typeof shipperShipItemsListResponseSchema>;
-

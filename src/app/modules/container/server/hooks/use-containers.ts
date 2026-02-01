@@ -22,7 +22,7 @@ export const useContainers = (
     queryKey: ["containers", params],
     queryFn: () => containerApi.list(params || {}),
     placeholderData: keepPreviousData,
-    staleTime: Infinity, // Never auto-refetch
+    staleTime: Infinity, 
     gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
