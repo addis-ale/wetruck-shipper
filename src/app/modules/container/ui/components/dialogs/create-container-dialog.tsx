@@ -92,7 +92,11 @@ function extractFieldErrors(
   if (Array.isArray(data?.detail)) {
     const out: Record<string, string> = {};
     data.detail.forEach((item: unknown) => {
-      const errorItem = item as { loc?: unknown[]; msg?: string; type?: string };
+      const errorItem = item as {
+        loc?: unknown[];
+        msg?: string;
+        type?: string;
+      };
       if (!Array.isArray(errorItem?.loc)) return;
       const path = errorItem.loc
         .filter((p: unknown) => p !== "body")
@@ -181,7 +185,7 @@ export function CreateContainerDialog() {
 
   const commodities = useFieldArray({
     control,
-    // @ts-ignore - React Hook Form type inference issue with nested arrays
+    // @ts-expect-error - React Hook Form type inference issue with nested arrays
     name: "container_details.commodity",
   });
 
