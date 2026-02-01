@@ -151,7 +151,16 @@ export function PricedShipItemsTable({
   const getAllContainersFromGroup = (
     group: (typeof filteredTransporterGroups)[0],
   ) => {
-    const containers: any[] = [];
+    const containers: Array<{
+      id: number;
+      container_number?: string;
+      container_size?: string;
+      container_type?: string;
+      gross_weight?: number;
+      gross_weight_unit?: string;
+      is_returning?: boolean;
+      status?: string;
+    }> = [];
     group.ship_items.forEach((shipItem: ShipItem) => {
       if (Array.isArray(shipItem.containers)) {
         containers.push(...shipItem.containers);
@@ -164,7 +173,7 @@ export function PricedShipItemsTable({
   const handleSelectAll = () => {
     // Only select transporters that are not already accepted
     const selectableTransporters = filteredTransporterGroups.filter(
-      (group: ShipperShipItemsItem) =>
+      () =>
         !acceptedShipIds.has(activeShipmentId ?? 0) &&
         !acceptedShipmentIds.has(activeShipmentId ?? 0),
     );
@@ -279,19 +288,6 @@ export function PricedShipItemsTable({
 
   // Calculate totals
   const totalTransporters = filteredTransporterGroups.length;
-  const totalContainers = filteredTransporterGroups.reduce(
-    (sum: number, group: ShipperShipItemsItem) =>
-      sum + (group.total_containers ?? 0),
-    0,
-  );
-
-  const totalPrice = filteredTransporterGroups.reduce(
-    (sum: number, group: ShipperShipItemsItem) =>
-      sum + Number(group.total_price ?? 0),
-    0,
-  );
-
-  const primaryCurrency = filteredTransporterGroups[0]?.currency || "ETB";
 
   if (filteredTransporterGroups.length === 0) {
     return (
@@ -339,7 +335,7 @@ export function PricedShipItemsTable({
                         selectedTransporterIds.size > 0 &&
                         selectedTransporterIds.size ===
                           filteredTransporterGroups.filter(
-                            (group: ShipperShipItemsItem) =>
+                            () =>
                               !acceptedShipIds.has(activeShipmentId ?? 0) &&
                               !acceptedShipmentIds.has(activeShipmentId ?? 0),
                           ).length
@@ -368,21 +364,7 @@ export function PricedShipItemsTable({
                         group.transporter_id,
                       );
                       const hasReturning = hasReturningContainers(group);
-
-                      // Flat fee of 10,000 ETB if at least 1 container is returning
-                      const RETURN_FEE_ETB = 10000;
-
-                      const returningContainers = group.ship_items.reduce(
-                        (count: number, shipItem: ShipItem) =>
-                          count +
-                          (shipItem.containers?.filter(
-                            (c: Container) => c.is_returning === true,
-                          ).length || 0),
-                        0,
-                      );
-
-                      const returnFeeETB =
-                        returningContainers > 0 ? RETURN_FEE_ETB : 0;
+                      // Note: Return fee calculation removed as it's not displayed
 
                       const totalPrice =
                         group.total_price !== undefined &&

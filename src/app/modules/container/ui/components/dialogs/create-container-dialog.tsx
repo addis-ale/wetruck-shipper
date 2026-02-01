@@ -2,13 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useFieldArray,
-  useForm,
-  Controller,
-  type Path,
-  type FieldArrayPath,
-} from "react-hook-form";
+import { useFieldArray, useForm, Controller, type Path } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -41,14 +35,27 @@ import { toast } from "sonner";
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
-type BackendErrorShape =
-  | {
-      message?: string;
-      detail?: unknown;
-      fields?: Record<string, unknown>;
-      errors?: unknown;
-    }
-  | unknown;
+type BackendErrorShape = {
+  message?: string;
+  detail?: unknown;
+  fields?: Record<string, unknown>;
+  errors?: unknown;
+  response?: {
+    data?: BackendErrorShape;
+  };
+};
+
+interface BackendErrorWithFields {
+  fields?: Record<string, unknown>;
+  errors?: Record<string, unknown>;
+  detail?: Array<{
+    loc?: unknown[];
+    msg?: string;
+    type?: string;
+  }>;
+  message?: string;
+  error?: string;
+}
 
 function safeString(val: unknown): string | null {
   if (val === null || val === undefined) return null;
@@ -85,7 +92,7 @@ function extractFieldErrors(
   if (Array.isArray(data?.detail)) {
     const out: Record<string, string> = {};
     data.detail.forEach((item: unknown) => {
-      const errorItem = item as FastAPIErrorDetail;
+      const errorItem = item as { loc?: unknown[]; msg?: string; type?: string };
       if (!Array.isArray(errorItem?.loc)) return;
       const path = errorItem.loc
         .filter((p: unknown) => p !== "body")
@@ -129,9 +136,9 @@ export function CreateContainerDialog() {
       },
 
       return_location_info: {
-        country: undefined as any,
+        country: "",
         city: "",
-        port: undefined,
+        port: "",
         address: "",
       },
 
@@ -173,7 +180,8 @@ export function CreateContainerDialog() {
   }, [returnCountry, setValue]);
 
   const commodities = useFieldArray({
-    control: control as any,
+    control,
+    // @ts-ignore - React Hook Form type inference issue with nested arrays
     name: "container_details.commodity",
   });
 
@@ -417,7 +425,7 @@ export function CreateContainerDialog() {
 
                 {errors.recommended_truck_type && (
                   <p className="text-sm text-destructive">
-                    {errors.recommended_truck_type.message as any}
+                    {errors.recommended_truck_type.message}
                   </p>
                 )}
               </div>
@@ -524,7 +532,7 @@ export function CreateContainerDialog() {
                 />
                 {errors.container_details?.instruction && (
                   <p className="text-sm text-destructive">
-                    {errors.container_details.instruction.message as any}
+                    {errors.container_details.instruction.message}
                   </p>
                 )}
               </div>
@@ -563,7 +571,7 @@ export function CreateContainerDialog() {
 
                 {errors.container_details?.commodity && (
                   <p className="text-sm text-destructive">
-                    {errors.container_details.commodity.message as any}
+                    {errors.container_details.commodity.message}
                   </p>
                 )}
               </div>
@@ -599,7 +607,7 @@ export function CreateContainerDialog() {
                     />
                     {errors.return_location_info?.country && (
                       <p className="text-sm text-destructive">
-                        {errors.return_location_info.country.message as any}
+                        {errors.return_location_info.country.message}
                       </p>
                     )}
                   </div>
@@ -612,7 +620,7 @@ export function CreateContainerDialog() {
                     />
                     {errors.return_location_info?.city && (
                       <p className="text-sm text-destructive">
-                        {errors.return_location_info.city.message as any}
+                        {errors.return_location_info.city.message}
                       </p>
                     )}
                   </div>
@@ -631,7 +639,7 @@ export function CreateContainerDialog() {
                       />
                       {errors.return_location_info?.port && (
                         <p className="text-sm text-destructive">
-                          {errors.return_location_info.port.message as any}
+                          {errors.return_location_info.port.message}
                         </p>
                       )}
                     </div>
@@ -645,7 +653,7 @@ export function CreateContainerDialog() {
                     />
                     {errors.return_location_info?.address && (
                       <p className="text-sm text-destructive">
-                        {errors.return_location_info.address.message as any}
+                        {errors.return_location_info.address.message}
                       </p>
                     )}
                   </div>

@@ -49,7 +49,6 @@ import { useContainers } from "@/app/modules/container/server/hooks/use-containe
 import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
 import { DollarSign } from "lucide-react";
 

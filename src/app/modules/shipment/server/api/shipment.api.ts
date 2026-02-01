@@ -6,11 +6,35 @@ import type {
 import type {
   ShipmentListResponse,
   ShipmentCreateResponse,
-  ShipItemsListResponse,
-  TransporterShipment,
-  ShipperShipItemsListResponse,
   ShipItem,
+  ShipperShipItemsItem,
 } from "@/lib/zod/shipment.schema";
+
+type ShipItemsListResponse = {
+  status: boolean;
+  message?: string;
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+  items: ShipItem[];
+};
+
+type TransporterShipment = {
+  id: number;
+  ship_items: ShipItem[];
+  [key: string]: unknown;
+};
+
+type ShipperShipItemsListResponse = {
+  status: boolean;
+  message?: string;
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+  items: ShipperShipItemsItem[];
+};
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PREFIX = "/api/v1";
@@ -240,7 +264,7 @@ async function apiRequest<T>(
       errorData.error ||
       errorData.message ||
       errorData.error_message ||
-      errorData.detail?.message ||
+      (typeof errorData.detail === "object" && errorData.detail && "message" in errorData.detail ? (errorData.detail as { message?: string }).message : null) ||
       (typeof errorData.detail === "string" ? errorData.detail : null) ||
       `HTTP ${response.status}: ${response.statusText}`;
 
@@ -334,19 +358,6 @@ export const shipmentApi = {
 
   // Update shipment (PATCH)
   async update(id: number, data: UpdateShipmentPayload): Promise<Shipment> {
-    const normalizedOrigin = data.origin
-      ? (normalizeLocation(data.origin) ?? data.origin)
-      : data.origin;
-    const normalizedDestination = data.destination
-      ? (normalizeLocation(data.destination) ?? data.destination)
-      : data.destination;
-    const normalizedData: UpdateShipmentPayload = {
-      ...data,
-      origin: normalizedOrigin as UpdateShipmentPayload["origin"],
-      destination:
-        normalizedDestination as UpdateShipmentPayload["destination"],
-    };
-
     const response = await apiRequest<ShipmentCreateResponse>(
       `${API_PATH}/${id}`,
       {
