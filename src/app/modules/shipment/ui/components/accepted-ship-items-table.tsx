@@ -74,6 +74,7 @@ export function AcceptedShipItemsTable({
     item.containers?.some((c) => c.is_returning === true) ?? false;
 
   const handleOpenContainersModal = (item: ShipItem) => {
+    console.log(`[AcceptedShipItemsTable] Opening containers modal for shipItem: ${item.id}`);
     setSelectedShipItem(item);
     setContainersModalOpen(true);
   };
@@ -361,6 +362,7 @@ export function AcceptedShipItemsTable({
                         <TableHead>Weight</TableHead>
                         <TableHead>Return Status</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Documents</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -379,9 +381,9 @@ export function AcceptedShipItemsTable({
                           <TableCell>
                             {container.container_type
                               ? container.container_type
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                container.container_type.slice(1)
+                                .charAt(0)
+                                .toUpperCase() +
+                              container.container_type.slice(1)
                               : "-"}
                           </TableCell>
                           <TableCell>
@@ -407,9 +409,22 @@ export function AcceptedShipItemsTable({
                             )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="w-fit text-xs">
-                              {container.status || "N/A"}
-                            </Badge>
+                            {(() => {
+                              console.log(`[AcceptedShipItemsTable] Rendering row for container: ${container.id} (shipItem: ${selectedShipItem.id})`);
+                              return (
+                                <Badge variant="outline" className="w-fit text-xs">
+                                  {container.status || "N/A"}
+                                </Badge>
+                              );
+                            })()}
+                          </TableCell>
+                          <TableCell>
+                            {selectedShipItem && (
+                              <UploadedDocsCell
+                                shipItems={[{ id: selectedShipItem.id }]}
+                                containerId={container.id}
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

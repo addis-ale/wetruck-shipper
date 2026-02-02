@@ -43,6 +43,7 @@ async function apiRequest<T>(
   }
 
   const url = `${BASE_URL.replace(/\/api\/v1\/?$/, "")}${API_PREFIX}${endpoint}`;
+  console.log(`[shipItemDocumentsApi] Requesting: ${options.method || "GET"} ${url}`);
   const response = await fetch(url, {
     ...options,
     headers,
@@ -51,11 +52,14 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    console.error(`[shipItemDocumentsApi] Request failed for ${url}:`, error);
     throw new Error(error?.detail || "Request failed");
   }
 
   if (response.status === 204) return {} as T;
-  return response.json();
+  const data = await response.json();
+  console.log(`[shipItemDocumentsApi] Response for ${url}:`, data);
+  return data;
 }
 
 export const shipItemDocumentsApi = {
@@ -66,9 +70,18 @@ export const shipItemDocumentsApi = {
    * @param containerId - Optional filter by container ID
    */
   list(shipItemId: number, containerId?: number): Promise<ShipItemDocument[]> {
-    const path = `${API_PATH}/${shipItemId}/documents/shipper`;
-    const query = containerId != null ? `?container_id=${containerId}` : "";
-    return apiRequest<ShipItemDocument[]>(path + query);
+    console.log(`[shipItemDocumentsApi.list] shipItemId: ${shipItemId}, containerId: ${containerId}`);
+    const params = new URLSearchParams();
+    if (containerId != null) {
+      params.append("container_id", containerId.toString());
+    }
+
+    const queryString = params.toString();
+    const endpoint = queryString
+      ? `${API_PATH}/${shipItemId}/documents/shipper?${queryString}`
+      : `${API_PATH}/${shipItemId}/documents/shipper`;
+
+    return apiRequest<ShipItemDocument[]>(endpoint);
   },
 
   upload(
@@ -85,15 +98,36 @@ export const shipItemDocumentsApi = {
     });
   },
 
-  get(
+  async get(
     shipItemId: number,
     documentId: number,
+    containerId?: number,
   ): Promise<{
     id: number;
     document_type: string;
     presigned_url: string;
   }> {
-    return apiRequest(`${API_PATH}/${shipItemId}/documents/${documentId}`);
+    // Re-implementing get to use the allowed list/shipper endpoint
+    // to avoid the 403 Forbidden error on the direct direct document ID endpoint.
+    console.log(`[shipItemDocumentsApi.get] shipItemId: ${shipItemId}, documentId: ${documentId}, containerId: ${containerId}`);
+    const documents = await this.list(shipItemId, containerId);
+    const doc = documents.find((d) => d.id === documentId);
+
+    if (!doc) {
+      console.error(`[shipItemDocumentsApi.get] Document ${documentId} not found in shipper list for shipItem ${shipItemId}`);
+      throw new Error("Document not found");
+    }
+
+    if (!doc.presigned_url) {
+      console.error(`[shipItemDocumentsApi.get] Document ${documentId} found but no presigned_url available`);
+      throw new Error("Presigned URL not available for this document");
+    }
+
+    return {
+      id: doc.id,
+      document_type: doc.document_type,
+      presigned_url: doc.presigned_url,
+    };
   },
 
   update(

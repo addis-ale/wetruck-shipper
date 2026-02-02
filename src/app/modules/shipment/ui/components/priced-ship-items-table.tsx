@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { ShipperShipItemsItem, ShipItem } from "@/lib/zod/shipment.schema";
 import type { Container } from "@/lib/zod/container.schema";
+import { UploadedDocsCell } from "./uploaded-docs-cell";
 
 interface PricedShipItemsTableProps {
   activeShipmentId: number | null;
@@ -160,10 +161,16 @@ export function PricedShipItemsTable({
       gross_weight_unit?: string;
       is_returning?: boolean;
       status?: string;
+      ship_item_id: number; // Add this to track which item it belongs to
     }> = [];
     group.ship_items.forEach((shipItem: ShipItem) => {
       if (Array.isArray(shipItem.containers)) {
-        containers.push(...shipItem.containers);
+        shipItem.containers.forEach(container => {
+          containers.push({
+            ...container,
+            ship_item_id: shipItem.id
+          });
+        });
       }
     });
 
@@ -334,11 +341,11 @@ export function PricedShipItemsTable({
                       checked={
                         selectedTransporterIds.size > 0 &&
                         selectedTransporterIds.size ===
-                          filteredTransporterGroups.filter(
-                            () =>
-                              !acceptedShipIds.has(activeShipmentId ?? 0) &&
-                              !acceptedShipmentIds.has(activeShipmentId ?? 0),
-                          ).length
+                        filteredTransporterGroups.filter(
+                          () =>
+                            !acceptedShipIds.has(activeShipmentId ?? 0) &&
+                            !acceptedShipmentIds.has(activeShipmentId ?? 0),
+                        ).length
                       }
                       onCheckedChange={handleSelectAll}
                     />
@@ -368,7 +375,7 @@ export function PricedShipItemsTable({
 
                       const totalPrice =
                         group.total_price !== undefined &&
-                        group.total_price !== null
+                          group.total_price !== null
                           ? Number(group.total_price)
                           : 0;
 
@@ -653,6 +660,7 @@ export function PricedShipItemsTable({
                         <TableHead>Weight</TableHead>
                         <TableHead>Return Status</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Documents</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -672,9 +680,9 @@ export function PricedShipItemsTable({
                             <TableCell>
                               {container.container_type
                                 ? container.container_type
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                  container.container_type.slice(1)
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                container.container_type.slice(1)
                                 : "-"}
                             </TableCell>
                             <TableCell>
@@ -706,6 +714,12 @@ export function PricedShipItemsTable({
                               >
                                 {container.status || "N/A"}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <UploadedDocsCell
+                                shipItems={[{ id: container.ship_item_id }]}
+                                containerId={container.id}
+                              />
                             </TableCell>
                           </TableRow>
                         ),
