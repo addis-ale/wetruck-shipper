@@ -27,14 +27,7 @@ import { useCreateShipmentDocument } from
 ----------------------------------------- */
 const SHIPMENT_DOCUMENT_TYPES = [
   { value: "BILL_OF_LADING", label: "Bill of Lading" },
-  { value: "COMMERCIAL_INVOICE", label: "Commercial Invoice" },
   { value: "PACKING_LIST", label: "Packing List" },
-  { value: "DELIVERY_NOTE", label: "Delivery Note" },
-  { value: "INSURANCE_CERTIFICATE", label: "Insurance Certificate" },
-  { value: "CUSTOMS_DECLARATION", label: "Customs Declaration" },
-  { value: "LICENSE", label: "License" },
-  { value: "PERMIT", label: "Permit" },
-  { value: "OTHER", label: "Other" },
 ] as const;
 
 type ShipmentDocumentType =
@@ -54,6 +47,7 @@ export function UploadShipmentDocumentDialog({
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] =
     useState<ShipmentDocumentType>("BILL_OF_LADING");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { mutate, isPending } = useCreateShipmentDocument(shipId);
@@ -112,9 +106,12 @@ export function UploadShipmentDocumentDialog({
               ref={fileInputRef}
               type="file"
               hidden
-              onChange={(e) =>
-                setFile(e.target.files?.[0] ?? null)
-              }
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                const selectedFile = e.target.files?.[0] ?? null;
+                setFile(selectedFile);
+                setUploadError(null);
+              }}
             />
 
             <Button
@@ -149,12 +146,21 @@ export function UploadShipmentDocumentDialog({
                   variant="ghost"
                   size="icon"
                   className="ml-auto shrink-0"
-                  onClick={() => setFile(null)}
+                  onClick={() => {
+                    setFile(null);
+                    setUploadError(null);
+                  }}
                   disabled={isPending}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+            )}
+
+            {uploadError && (
+              <p className="text-xs font-medium text-destructive mt-1 italic animate-in fade-in slide-in-from-top-1">
+                {uploadError}
+              </p>
             )}
           </div>
 
@@ -165,6 +171,7 @@ export function UploadShipmentDocumentDialog({
               className="w-full h-10"
               onClick={() => {
                 setFile(null);
+                setUploadError(null);
                 onOpenChange(false);
               }}
               disabled={isPending}
@@ -177,6 +184,7 @@ export function UploadShipmentDocumentDialog({
               disabled={!file || isPending}
               onClick={() => {
                 if (!file) return;
+                setUploadError(null);
 
                 mutate(
                   { document_type: type, file },
@@ -186,12 +194,15 @@ export function UploadShipmentDocumentDialog({
                         "Document uploaded successfully"
                       );
                       setFile(null);
+                      setUploadError(null);
                       onOpenChange(false);
                     },
-                    onError: (err: Error) =>
+                    onError: (err: Error) => {
+                      setUploadError(err.message);
                       toast.error(
                         err.message || "Upload failed"
-                      ),
+                      );
+                    },
                   }
                 );
               }}

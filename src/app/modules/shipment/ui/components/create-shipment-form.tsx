@@ -32,15 +32,36 @@ interface CreateShipmentFormProps {
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   const defaultValues = useMemo<CreateShipmentInput>(
     () => ({
-      origin: "addis_ababa",
-      destination: "addis_ababa",
+      origin: "" as unknown as CreateShipmentInput["origin"],
+      destination: "" as unknown as CreateShipmentInput["destination"],
       pickup_date: "",
       delivery_date: "",
       status: "created",
+      pickup_facility: {
+        country: "",
+        region: "",
+        name: "",
+        address: "",
+        contact_name: "",
+        contact_phone_number: "",
+        contact_email: "",
+      },
+      delivery_facility: {
+        country: "",
+        region: "",
+        name: "",
+        address: "",
+        contact_name: "",
+        contact_phone_number: "",
+        contact_email: "",
+      },
+      shipment_details: {
+        bill_of_lading_number: "",
+      },
     }),
     []
   );
-  
+
 
   const form = useForm<CreateShipmentFormValues>({
     resolver: zodResolver(createShipmentSchema),
@@ -117,10 +138,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       pickup_date: new Date(values.pickup_date).toISOString(),
       delivery_date: new Date(values.delivery_date).toISOString(),
     });
-  
+
     mutate(parsed);
   }
-  
+
 
   return (
     <Card className="w-full">
@@ -304,19 +325,19 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
 
-              <div className="space-y-2">
-  <Label htmlFor="pickup_name">Clearance Agent Name</Label>
-  <Input 
-    id="pickup_name" 
-    placeholder="Enter clearance agent name" 
-    {...register("pickup_facility.name")} 
-  />
-  {errors.pickup_facility?.name && (
-    <p className="text-sm text-destructive">
-      {errors.pickup_facility.name.message}
-    </p>
-  )}
-</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pickup_name">Clearance Agent Name</Label>
+                    <Input
+                      id="pickup_name"
+                      placeholder="Enter clearance agent name"
+                      {...register("pickup_facility.name")}
+                    />
+                    {errors.pickup_facility?.name && (
+                      <p className="text-sm text-destructive">
+                        {errors.pickup_facility.name.message}
+                      </p>
+                    )}
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="pickup_address">Address</Label>
@@ -443,19 +464,19 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
 
-        <div className="space-y-2">
-  <Label htmlFor="delivery_name">Clearance Agent Name</Label>
-  <Input 
-    id="delivery_name" 
-    placeholder="Enter clearance agent name "
-    {...register("delivery_facility.name")} 
-  />
-  {errors.delivery_facility?.name && (
-    <p className="text-sm text-destructive">
-      {errors.delivery_facility.name.message}
-    </p>
-  )}
-</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="delivery_name">Clearance Agent Name</Label>
+                    <Input
+                      id="delivery_name"
+                      placeholder="Enter clearance agent name "
+                      {...register("delivery_facility.name")}
+                    />
+                    {errors.delivery_facility?.name && (
+                      <p className="text-sm text-destructive">
+                        {errors.delivery_facility.name.message}
+                      </p>
+                    )}
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="delivery_address">Address</Label>
