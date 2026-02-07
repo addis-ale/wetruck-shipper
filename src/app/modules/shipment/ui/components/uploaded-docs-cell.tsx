@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { shipItemDocumentsApi } from "@/app/modules/shipment/server/api/ship-item-documents.api";
 import type { ShipItemDocument } from "@/app/modules/shipment/server/types/ship-item-document";
-import { FileText, ExternalLink, Download, Loader2 } from "lucide-react";
+import { FileText, ExternalLink, Download, Loader2, Eye } from "lucide-react";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   proof_of_delivery: "Proof of Delivery (POD)",
@@ -36,39 +36,44 @@ interface UploadedDocumentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documents: DocumentWithShipItem[];
+  containerId?: number;
 }
 
 function UploadedDocumentsModal({
   open,
   onOpenChange,
   documents,
+  containerId,
 }: UploadedDocumentsModalProps) {
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
+  const [downloadLoadingId, setDownloadLoadingId] = useState<string | null>(null);
 
   const handlePreview = async (shipItemId: number, doc: ShipItemDocument) => {
     const key = `${shipItemId}-${doc.id}`;
-    setLoadingId(key);
+    setPreviewLoadingId(key);
     try {
       const { presigned_url } = await shipItemDocumentsApi.get(
         shipItemId,
         doc.id,
+        containerId,
       );
       if (presigned_url)
         window.open(presigned_url, "_blank", "noopener,noreferrer");
     } catch {
       // Error already surfaced by API
     } finally {
-      setLoadingId(null);
+      setPreviewLoadingId(null);
     }
   };
 
   const handleDownload = async (shipItemId: number, doc: ShipItemDocument) => {
     const key = `${shipItemId}-${doc.id}`;
-    setLoadingId(key);
+    setDownloadLoadingId(key);
     try {
       const { presigned_url } = await shipItemDocumentsApi.get(
         shipItemId,
         doc.id,
+        containerId,
       );
       if (presigned_url) {
         const link = document.createElement("a");
@@ -83,7 +88,7 @@ function UploadedDocumentsModal({
     } catch {
       // Error already surfaced by API
     } finally {
-      setLoadingId(null);
+      setDownloadLoadingId(null);
     }
   };
 
@@ -105,7 +110,8 @@ function UploadedDocumentsModal({
           ) : (
             documents.map(({ shipItemId, document: doc }) => {
               const key = `${shipItemId}-${doc.id}`;
-              const isLoading = loadingId === key;
+              const isPreviewLoading = previewLoadingId === key;
+              const isDownloadLoading = downloadLoadingId === key;
               return (
                 <div
                   key={key}
@@ -127,9 +133,9 @@ function UploadedDocumentsModal({
                       variant="outline"
                       size="sm"
                       onClick={() => handlePreview(shipItemId, doc)}
-                      disabled={isLoading}
+                      disabled={isPreviewLoading || isDownloadLoading}
                     >
-                      {isLoading ? (
+                      {isPreviewLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <>
@@ -142,10 +148,10 @@ function UploadedDocumentsModal({
                       variant="outline"
                       size="sm"
                       onClick={() => handleDownload(shipItemId, doc)}
-                      disabled={isLoading}
+                      disabled={isPreviewLoading || isDownloadLoading}
                       title="Download document"
                     >
-                      {isLoading ? (
+                      {isDownloadLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <>
@@ -167,15 +173,30 @@ function UploadedDocumentsModal({
 
 interface UploadedDocsCellProps {
   shipItems: Array<{ id: number }>;
+  containerId?: number;
 }
 
-export function UploadedDocsCell({ shipItems }: UploadedDocsCellProps) {
+export function UploadedDocsCell({
+  shipItems,
+  containerId,
+}: UploadedDocsCellProps) {
+  console.log(`[UploadedDocsCell] shipItems: ${JSON.stringify(shipItems)}, containerId: ${containerId}`);
   const [modalOpen, setModalOpen] = useState(false);
 
   const documentQueries = useQueries({
     queries: shipItems.map((si) => ({
-      queryKey: ["ship-item-documents", si.id],
-      queryFn: () => shipItemDocumentsApi.list(si.id),
+      queryKey: ["ship-item-documents", si.id, containerId],
+      queryFn: async () => {
+        console.log(`[UploadedDocsCell] Querying docs for shipItemId: ${si.id}, containerId: ${containerId}`);
+        try {
+          const result = await shipItemDocumentsApi.list(si.id, containerId);
+          console.log(`[UploadedDocsCell] Successfully fetched ${result.length} docs for shipItemId: ${si.id}`);
+          return result;
+        } catch (error) {
+          console.error(`[UploadedDocsCell] Error fetching docs for shipItemId: ${si.id}:`, error);
+          throw error;
+        }
+      },
     })),
   });
 
@@ -204,14 +225,16 @@ export function UploadedDocsCell({ shipItems }: UploadedDocsCellProps) {
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        className="text-sm font-medium text-primary hover:underline cursor-pointer"
+        className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer group"
       >
-        {totalCount}
+        <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        <span>{totalCount}</span>
       </button>
       <UploadedDocumentsModal
         open={modalOpen}
         onOpenChange={setModalOpen}
         documents={flatDocuments}
+        containerId={containerId}
       />
     </>
   );

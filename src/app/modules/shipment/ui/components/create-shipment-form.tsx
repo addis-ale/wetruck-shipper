@@ -304,15 +304,19 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="pickup_name">Facility Name</Label>
-                    <Input id="pickup_name" {...register("pickup_facility.name")} />
-                    {errors.pickup_facility?.name && (
-                      <p className="text-sm text-destructive">
-                        {errors.pickup_facility.name.message}
-                      </p>
-                    )}
-                  </div>
+              <div className="space-y-2">
+  <Label htmlFor="pickup_name">Clearance Agent Name</Label>
+  <Input 
+    id="pickup_name" 
+    placeholder="Enter clearance agent name" 
+    {...register("pickup_facility.name")} 
+  />
+  {errors.pickup_facility?.name && (
+    <p className="text-sm text-destructive">
+      {errors.pickup_facility.name.message}
+    </p>
+  )}
+</div>
 
                   <div className="space-y-2">
                     <Label htmlFor="pickup_address">Address</Label>
@@ -439,15 +443,19 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery_name">Facility Name</Label>
-                    <Input id="delivery_name" {...register("delivery_facility.name")} />
-                    {errors.delivery_facility?.name && (
-                      <p className="text-sm text-destructive">
-                        {errors.delivery_facility.name.message}
-                      </p>
-                    )}
-                  </div>
+        <div className="space-y-2">
+  <Label htmlFor="delivery_name">Clearance Agent Name</Label>
+  <Input 
+    id="delivery_name" 
+    placeholder="Enter clearance agent name "
+    {...register("delivery_facility.name")} 
+  />
+  {errors.delivery_facility?.name && (
+    <p className="text-sm text-destructive">
+      {errors.delivery_facility.name.message}
+    </p>
+  )}
+</div>
 
                   <div className="space-y-2">
                     <Label htmlFor="delivery_address">Address</Label>

@@ -9,13 +9,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "@/components/ui/select";
-  
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { MoreVertical, Trash2, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
@@ -49,7 +49,8 @@ export function DocumentRow({
   const { data, isLoading } = useShipItemDocumentPreview(
     shipItemId,
     doc.id,
-    shouldFetchPreview
+    shouldFetchPreview,
+    doc.container_id
   );
 
   // Handle viewing the document
@@ -100,29 +101,33 @@ export function DocumentRow({
             </p>
 
             <Select value={docType} onValueChange={setDocType}>
-  <SelectTrigger className="h-8 w-[200px] text-xs">
-    <SelectValue />
-  </SelectTrigger>
+              <SelectTrigger className="h-8 w-[200px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
 
-  <SelectContent
-    align="start"
-    side="bottom"
-    sideOffset={4}
-    className="z-50"
-  >
-    <SelectItem value="proof_of_delivery">
-      Proof of Delivery
-    </SelectItem>
+              <SelectContent
+                align="start"
+                side="bottom"
+                sideOffset={4}
+                className="z-50"
+              >
+                <SelectItem value="proof_of_delivery">
+                  Proof of Delivery
+                </SelectItem>
 
-    <SelectItem value="bill_of_lading">
-      Bill of Lading
-    </SelectItem>
+                <SelectItem value="bill_of_lading">
+                  Bill of Lading
+                </SelectItem>
 
-    <SelectItem value="commercial_invoice">
-      Commercial Invoice
-    </SelectItem>
-  </SelectContent>
-</Select>
+                <SelectItem value="commercial_invoice">
+                  Commercial Invoice
+                </SelectItem>
+
+                <SelectItem value="container_return_receipt">
+                  Interchange Document (Return)
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
           </div>
 
@@ -135,7 +140,7 @@ export function DocumentRow({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end">
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleViewDocument}
                 disabled={isLoading}
               >

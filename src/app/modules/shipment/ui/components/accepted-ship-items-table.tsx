@@ -30,6 +30,7 @@ import {
 import { useAcceptedShipItems } from "@/app/modules/shipment/server/hooks/use-accepted-ship-items";
 import { useCompleteShipItem } from "@/app/modules/shipment/server/hooks/use-complete-ship-item";
 import { UploadedDocsCell } from "@/app/modules/shipment/ui/components/uploaded-docs-cell";
+import type { ShipItem } from "@/lib/zod/shipment.schema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Package, Info, CheckCircle2, Loader2 } from "lucide-react";
 import {
@@ -60,93 +61,43 @@ export function AcceptedShipItemsTable({
     error,
   } = useAcceptedShipItems(activeShipmentId);
   const [containersModalOpen, setContainersModalOpen] = useState(false);
-  const [selectedShipItem, setSelectedShipItem] = useState<
-    (typeof transporterGroups)[0] | null
-  >(null);
+  const [selectedShipItem, setSelectedShipItem] = useState<ShipItem | null>(
+    null,
+  );
   const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set());
 
   const completeMutation = useCompleteShipItem(activeShipmentId);
 
-  // Group ship items by transporter
-  const transporterGroups = React.useMemo(() => {
-    if (!acceptedShipItems) return [];
-    const groups = new Map<
-      number,
-      {
-        transporter_id: number;
-        transporter: { id: number; name?: string } | null;
-        ship_items: Array<{
-          id: number;
-          transporter_id: number;
-          containers?: Array<{ id: number; is_returning?: boolean }>;
-          computed_price: number;
-          currency: string;
-        }>;
-        total_price: number;
-        total_containers: number;
-        currency: string;
-      }
-    >();
-    acceptedShipItems.forEach((item) => {
-      const transporterId = item.transporter_id;
-      if (!groups.has(transporterId)) {
-        groups.set(transporterId, {
-          transporter_id: transporterId,
-          transporter:
-            (item.transporter as { id: number; name?: string } | null) ?? null,
-          ship_items: [],
-          total_price: 0,
-          total_containers: 0,
-          currency: item.currency || "ETB",
-        });
-      }
-      const group = groups.get(transporterId)!;
-      group.ship_items.push(item);
-      group.total_price += Number(item.computed_price) || 0;
-      group.total_containers += item.containers?.length || 0;
-    });
-    return Array.from(groups.values());
-  }, [acceptedShipItems]);
+  const shipItemsList = acceptedShipItems ?? [];
 
-  const hasReturningContainers = (
-    group: (typeof transporterGroups)[0],
-  ): boolean =>
-    group.ship_items.some((si) =>
-      si.containers?.some((c) => c.is_returning === true),
-    );
+  const hasReturningContainers = (item: ShipItem): boolean =>
+    item.containers?.some((c) => c.is_returning === true) ?? false;
 
-  const handleOpenContainersModal = (group: (typeof transporterGroups)[0]) => {
-    setSelectedShipItem(group);
+  const handleOpenContainersModal = (item: ShipItem) => {
+    console.log(`[AcceptedShipItemsTable] Opening containers modal for shipItem: ${item.id}`);
+    setSelectedShipItem(item);
     setContainersModalOpen(true);
   };
 
-  const selectedShipItemIds = React.useMemo(
-    () =>
-      transporterGroups
-        .filter((g) => selectedRowIds.has(g.transporter_id))
-        .flatMap((g) => g.ship_items.map((si) => si.id)),
-    [transporterGroups, selectedRowIds],
-  );
+  const selectedShipItemIds = Array.from(selectedRowIds);
 
-  const toggleRow = (transporterId: number) => {
+  const toggleRow = (shipItemId: number) => {
     setSelectedRowIds((prev) => {
       const next = new Set(prev);
-      if (next.has(transporterId)) next.delete(transporterId);
-      else next.add(transporterId);
+      if (next.has(shipItemId)) next.delete(shipItemId);
+      else next.add(shipItemId);
       return next;
     });
   };
 
   const allRowsSelected =
-    transporterGroups.length > 0 &&
-    transporterGroups.every((g) => selectedRowIds.has(g.transporter_id));
+    shipItemsList.length > 0 &&
+    shipItemsList.every((item) => selectedRowIds.has(item.id));
   const toggleSelectAll = () => {
     if (allRowsSelected) {
       setSelectedRowIds(new Set());
     } else {
-      setSelectedRowIds(
-        new Set(transporterGroups.map((g) => g.transporter_id)),
-      );
+      setSelectedRowIds(new Set(shipItemsList.map((item) => item.id)));
     }
   };
 
@@ -158,24 +109,7 @@ export function AcceptedShipItemsTable({
     setSelectedRowIds(new Set());
   };
 
-  const getAllContainersFromGroup = (group: (typeof transporterGroups)[0]) => {
-    const containers: Array<{
-      id: number;
-      container_number?: string;
-      container_size?: string;
-      container_type?: string;
-      gross_weight?: number;
-      gross_weight_unit?: string;
-      is_returning?: boolean;
-      status?: string;
-    }> = [];
-    group.ship_items.forEach((si) => {
-      if (si.containers && Array.isArray(si.containers)) {
-        containers.push(...si.containers);
-      }
-    });
-    return containers;
-  };
+  const selectedContainers = selectedShipItem?.containers ?? [];
 
   if (isLoading) {
     return (
@@ -243,7 +177,7 @@ export function AcceptedShipItemsTable({
     );
   }
 
-  if (transporterGroups.length === 0) {
+  if (shipItemsList.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -275,8 +209,8 @@ export function AcceptedShipItemsTable({
                 Accepted Ship Items
               </CardTitle>
               <CardDescription>
-                {transporterGroups.length} accepted transporter quote
-                {transporterGroups.length !== 1 ? "s" : ""} for shipment #
+                {shipItemsList.length} accepted ship item
+                {shipItemsList.length !== 1 ? "s" : ""} for shipment #
                 {activeShipmentId}
               </CardDescription>
             </div>
@@ -309,36 +243,34 @@ export function AcceptedShipItemsTable({
                       aria-label="Select all rows"
                     />
                   </TableHead>
-                  <TableHead>Number of Containers</TableHead>
+                  <TableHead>Containers</TableHead>
                   <TableHead>Return Status</TableHead>
-                  <TableHead className="text-right">Total Price</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
                   <TableHead>Currency</TableHead>
                   <TableHead>Uploaded docs</TableHead>
                   <TableHead className="text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transporterGroups.map((group) => {
-                  const rowKey = `transporter-${group.transporter_id}`;
-                  const hasReturning = hasReturningContainers(group);
-                  const totalPrice = group.total_price || 0;
-                  const currency = group.currency || "ETB";
-                  const containerCount = group.total_containers || 0;
+                {shipItemsList.map((item) => {
+                  const rowKey = `ship-item-${item.id}`;
+                  const hasReturning = hasReturningContainers(item);
+                  const price = Number(item.computed_price) || 0;
+                  const currency = item.currency || "ETB";
+                  const containerCount = item.containers?.length ?? 0;
 
                   return (
                     <TableRow key={rowKey}>
                       <TableCell className="w-10">
                         <Checkbox
-                          checked={selectedRowIds.has(group.transporter_id)}
-                          onCheckedChange={() =>
-                            toggleRow(group.transporter_id)
-                          }
-                          aria-label={`Select transporter ${group.transporter_id}`}
+                          checked={selectedRowIds.has(item.id)}
+                          onCheckedChange={() => toggleRow(item.id)}
+                          aria-label={`Select ship item ${item.id}`}
                         />
                       </TableCell>
                       <TableCell>
                         <button
-                          onClick={() => handleOpenContainersModal(group)}
+                          onClick={() => handleOpenContainersModal(item)}
                           className="text-sm font-medium text-primary hover:underline cursor-pointer"
                         >
                           {containerCount} container
@@ -380,12 +312,12 @@ export function AcceptedShipItemsTable({
                       </TableCell>
                       <TableCell className="text-right">
                         <span className="font-semibold">
-                          {formatPrice(totalPrice)}
+                          {formatPrice(price)}
                         </span>
                       </TableCell>
                       <TableCell>{currency}</TableCell>
                       <TableCell>
-                        <UploadedDocsCell shipItems={group.ship_items} />
+                        <UploadedDocsCell shipItems={[item]} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Badge variant="secondary" className="gap-1">
@@ -410,12 +342,9 @@ export function AcceptedShipItemsTable({
             <DialogDescription>
               {selectedShipItem && (
                 <>
-                  Showing {getAllContainersFromGroup(selectedShipItem).length}{" "}
-                  container
-                  {getAllContainersFromGroup(selectedShipItem).length !== 1
-                    ? "s"
-                    : ""}{" "}
-                  for this transporter
+                  Showing {selectedContainers.length} container
+                  {selectedContainers.length !== 1 ? "s" : ""} for this ship
+                  item
                 </>
               )}
             </DialogDescription>
@@ -433,12 +362,11 @@ export function AcceptedShipItemsTable({
                         <TableHead>Weight</TableHead>
                         <TableHead>Return Status</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Documents</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedShipItem &&
-                        getAllContainersFromGroup(selectedShipItem).map(
-                          (container, index) => (
+                      {selectedContainers.map((container, index) => (
                         <TableRow key={container.id || index}>
                           <TableCell className="font-medium">
                             {container.container_number || "-"}
@@ -453,9 +381,9 @@ export function AcceptedShipItemsTable({
                           <TableCell>
                             {container.container_type
                               ? container.container_type
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                container.container_type.slice(1)
+                                .charAt(0)
+                                .toUpperCase() +
+                              container.container_type.slice(1)
                               : "-"}
                           </TableCell>
                           <TableCell>
@@ -481,13 +409,25 @@ export function AcceptedShipItemsTable({
                             )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="w-fit text-xs">
-                              {container.status || "N/A"}
-                            </Badge>
+                            {(() => {
+                              console.log(`[AcceptedShipItemsTable] Rendering row for container: ${container.id} (shipItem: ${selectedShipItem.id})`);
+                              return (
+                                <Badge variant="outline" className="w-fit text-xs">
+                                  {container.status || "N/A"}
+                                </Badge>
+                              );
+                            })()}
+                          </TableCell>
+                          <TableCell>
+                            {selectedShipItem && (
+                              <UploadedDocsCell
+                                shipItems={[{ id: selectedShipItem.id }]}
+                                containerId={container.id}
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
-                          ),
-                        )}
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
