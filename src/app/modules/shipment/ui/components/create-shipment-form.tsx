@@ -32,8 +32,8 @@ interface CreateShipmentFormProps {
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   const defaultValues = useMemo<CreateShipmentInput>(
     () => ({
-      origin: "" as any,
-      destination: "" as any,
+      origin: "" as unknown as CreateShipmentInput["origin"],
+      destination: "" as unknown as CreateShipmentInput["destination"],
       pickup_date: "",
       delivery_date: "",
       status: "created",

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
-  Clock,
   MapPin,
   Boxes,
 } from "lucide-react";

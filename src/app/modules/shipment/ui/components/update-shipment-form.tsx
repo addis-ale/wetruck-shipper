@@ -31,7 +31,10 @@ import {
 } from "@/lib/zod/shipment.schema";
 import { useUpdateShipment } from "@/app/modules/shipment/server/hooks/use-update-shipment";
 import { Package } from "lucide-react";
-import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
+import type {
+  Shipment,
+  UpdateShipmentPayload,
+} from "@/app/modules/shipment/server/types/shipment.types";
 import {
   COUNTRIES,
   getRegionsByCountryCode,
@@ -192,7 +195,7 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
         : undefined,
     };
 
-    mutate(payload as any);
+    mutate(payload as UpdateShipmentPayload);
   }
 
   const formatLocation = (location: string) => {
