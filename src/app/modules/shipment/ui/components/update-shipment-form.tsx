@@ -99,13 +99,30 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
       destination: toUiLocation(shipment.destination),
       pickup_date: formatDateForInput(shipment.pickup_date),
       delivery_date: formatDateForInput(shipment.delivery_date),
-      pickup_facility: shipment.pickup_facility,
-      delivery_facility: shipment.delivery_facility,
-      shipment_details: shipment.shipment_details
-        ? {
-            bill_of_lading_number: shipment.shipment_details?.bill_of_lading_number,
-          }
-        : undefined,
+      pickup_facility: {
+        country: shipment.pickup_facility?.country || "",
+        region: shipment.pickup_facility?.region || "",
+        name: shipment.pickup_facility?.name || "",
+        address: shipment.pickup_facility?.address || "",
+        contact_name: shipment.pickup_facility?.contact_name || "",
+        contact_phone_number:
+          shipment.pickup_facility?.contact_phone_number || "",
+        contact_email: shipment.pickup_facility?.contact_email || "",
+      },
+      delivery_facility: {
+        country: shipment.delivery_facility?.country || "",
+        region: shipment.delivery_facility?.region || "",
+        name: shipment.delivery_facility?.name || "",
+        address: shipment.delivery_facility?.address || "",
+        contact_name: shipment.delivery_facility?.contact_name || "",
+        contact_phone_number:
+          shipment.delivery_facility?.contact_phone_number || "",
+        contact_email: shipment.delivery_facility?.contact_email || "",
+      },
+      shipment_details: {
+        bill_of_lading_number:
+          shipment.shipment_details?.bill_of_lading_number || "",
+      },
       status: shipment.status,
     }),
     [shipment]
@@ -130,13 +147,13 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
   const pickupCountry = watch("pickup_facility.country");
   const deliveryCountry = watch("delivery_facility.country");
 
-  const pickupRegions = useMemo(() => 
+  const pickupRegions = useMemo(() =>
     pickupCountry ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
       value: r.code,
       label: r.name,
     })) : [], [pickupCountry]);
 
-  const deliveryRegions = useMemo(() => 
+  const deliveryRegions = useMemo(() =>
     deliveryCountry ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
       value: r.code,
       label: r.name,
@@ -267,11 +284,11 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     name="pickup_facility.country"
                     control={control}
                     render={({ field }) => (
-                      <Select 
+                      <Select
                         onValueChange={(val) => {
                           field.onChange(val);
                           setValue("pickup_facility.region", "");
-                        }} 
+                        }}
                         value={field.value}
                       >
                         <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
@@ -298,10 +315,10 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     )}
                   />
                 </div>
-              <div className="space-y-2">
-  <Label>Clearance Agent Name</Label>
-  <Input {...register("pickup_facility.name")} />
-</div>
+                <div className="space-y-2">
+                  <Label>Clearance Agent Name</Label>
+                  <Input {...register("pickup_facility.name")} />
+                </div>
                 <div className="space-y-2">
                   <Label>Address</Label>
                   <Input {...register("pickup_facility.address")} />
@@ -329,11 +346,11 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     name="delivery_facility.country"
                     control={control}
                     render={({ field }) => (
-                      <Select 
+                      <Select
                         onValueChange={(val) => {
                           field.onChange(val);
                           setValue("delivery_facility.region", "");
-                        }} 
+                        }}
                         value={field.value}
                       >
                         <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
@@ -360,10 +377,10 @@ export function UpdateShipmentForm({ shipment, onSuccess }: UpdateShipmentFormPr
                     )}
                   />
                 </div>
-              <div className="space-y-2">
-  <Label>Clearance Agent Name</Label>
-  <Input {...register("delivery_facility.name")} />
-</div>
+                <div className="space-y-2">
+                  <Label>Clearance Agent Name</Label>
+                  <Input {...register("delivery_facility.name")} />
+                </div>
                 <div className="space-y-2">
                   <Label>Address</Label>
                   <Input {...register("delivery_facility.address")} />
