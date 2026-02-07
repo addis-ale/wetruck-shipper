@@ -50,11 +50,6 @@ export function Sidebar({
             alt="WeTruck"
             className={cn("h-8 w-auto transition-all", collapsed ? "scale-90" : "")}
           />
-          {!collapsed && (
-            <span className="ml-3 text-xl font-bold text-sidebar-primary tracking-tight">
-              WeTruck
-            </span>
-          )}
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FileText, Upload } from "lucide-react";
+import { FileText, Upload, X } from "lucide-react";
 import { useUploadShipItemDocument } from "@/app/modules/shipment/server/hooks/use-upload-ship-item-document";
 import { toast } from "sonner";
 
@@ -16,15 +16,25 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("container_return_receipt");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { mutate, isPending } = useUploadShipItemDocument(shipItemId);
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Upload Document</Button>
+      <Button onClick={() => {
+        setOpen(true);
+        setUploadError(null);
+      }}>Upload Document</Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) {
+          setFile(null);
+          setUploadError(null);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
@@ -48,7 +58,11 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
               ref={fileInputRef}
               type="file"
               hidden
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                setFile(e.target.files?.[0] ?? null);
+                setUploadError(null);
+              }}
             />
 
             <Button
@@ -66,7 +80,24 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
               <div className="flex items-center gap-2 text-sm text-muted-foreground border rounded p-2">
                 <FileText className="h-4 w-4" />
                 <span className="truncate">{file.name}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto h-6 w-6"
+                  onClick={() => {
+                    setFile(null);
+                    setUploadError(null);
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </div>
+            )}
+
+            {uploadError && (
+              <p className="text-xs font-medium text-destructive mt-1 italic">
+                {uploadError}
+              </p>
             )}
           </div>
 
@@ -76,6 +107,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
             disabled={!file || isPending}
             onClick={() => {
               if (!file) return;
+              setUploadError(null);
 
               mutate(
                 { document_type: type, file },
@@ -84,8 +116,10 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
                     toast.success("Document uploaded successfully");
                     setOpen(false);
                     setFile(null);
+                    setUploadError(null);
                   },
                   onError: (err: Error) => {
+                    setUploadError(err.message);
                     toast.error(err.message || "Upload failed");
                   },
                 }
