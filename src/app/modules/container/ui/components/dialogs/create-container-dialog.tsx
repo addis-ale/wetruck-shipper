@@ -31,6 +31,7 @@ import {
 } from "@/lib/zod/container.schema";
 import { COUNTRIES } from "@/lib/constants/locations";
 import { useCreateContainer } from "../../../server/hooks/use-create-container";
+import type { Container } from "../../../server/types/container.types";
 import { toast } from "sonner";
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
@@ -120,9 +121,31 @@ function extractFormMessage(data: BackendErrorShape, fallback: string) {
   return msg ?? fallback;
 }
 
-export function CreateContainerDialog() {
-  const [open, setOpen] = useState(false);
+export interface CreateContainerDialogProps {
+  /** Controlled open state (when set, dialog is controlled and no default trigger is shown) */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Called with the created container when creation succeeds (e.g. to assign it to a shipment) */
+  onCreated?: (container: Container) => void;
+  /** When true, do not render the default "Add Container" trigger button */
+  hideTrigger?: boolean;
+}
+
+export function CreateContainerDialog(props?: CreateContainerDialogProps) {
+  const {
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange,
+    onCreated,
+    hideTrigger = false,
+  } = props ?? {};
+
+  const [internalOpen, setInternalOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const isControlled =
+    controlledOpen !== undefined && controlledOnOpenChange !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange : setInternalOpen;
 
   const defaultValues = useMemo<CreateContainerFormValues>(
     () => ({
@@ -197,12 +220,12 @@ export function CreateContainerDialog() {
   }));
 
   const { mutateAsync, isPending } = useCreateContainer({
-    onSuccess: () => {
+    onSuccess: (container) => {
       toast.success("Container created successfully");
-
       setFormError(null);
       setOpen(false);
       reset(defaultValues);
+      onCreated?.(container);
     },
   });
 
@@ -289,7 +312,9 @@ export function CreateContainerDialog() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Add Container</Button>
+      {!hideTrigger && (
+        <Button onClick={() => setOpen(true)}>Add Container</Button>
+      )}
 
       <Dialog
         open={open}
@@ -301,7 +326,7 @@ export function CreateContainerDialog() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="create-container-dialog sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Add Container</DialogTitle>
             <DialogDescription>
@@ -313,7 +338,7 @@ export function CreateContainerDialog() {
           <form
             id="create-container-form"
             onSubmit={handleSubmit(onSubmit)}
-            className="flex-1 overflow-y-auto pr-1 space-y-6"
+            className="flex-1 overflow-y-auto pr-1 space-y-6 scrollbar-hide"
           >
             {/* ================= TOP FIELDS ================= */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -542,35 +567,35 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-            <Label>Cargo Description</Label>
-             <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-  {commodities.fields.map((field, idx) => (
-    <div key={field.id} className="flex gap-2">
-      <Input
-        placeholder={`Cargo Description ${idx + 1}`}
-        {...register(
-          `container_details.commodity.${idx}` as const,
-        )}
-      />
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => commodities.remove(idx)}
-        disabled={commodities.fields.length === 1}
-      >
-        Remove
-      </Button>
-    </div>
-  ))}
-</div>
-            <Button
-  type="button"
-  variant="secondary"
-  onClick={() => commodities.append("")}
->
-  Add Cargo Description
-</Button>
+                <Label>Cargo Description</Label>
+                <div className="space-y-3 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
+                  {commodities.fields.map((field, idx) => (
+                    <div key={field.id} className="flex gap-2">
+                      <Input
+                        placeholder={`Cargo Description ${idx + 1}`}
+                        {...register(
+                          `container_details.commodity.${idx}` as const,
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => commodities.remove(idx)}
+                        disabled={commodities.fields.length === 1}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => commodities.append("")}
+                >
+                  Add Cargo Description
+                </Button>
 
                 {errors.container_details?.commodity && (
                   <p className="text-sm text-destructive">

@@ -1,21 +1,11 @@
 import { z } from "zod";
 import { COUNTRIES } from "@/lib/constants/locations";
 
-export const containerSizeEnum = z.enum([
-  "twenty_feet",
-  "forty_feet",
-]);
+export const containerSizeEnum = z.enum(["twenty_feet", "forty_feet"]);
 
-export const containerTypeEnum = z.enum([
-  "dry",
-  "reefer",
-  "open_top",
-  "tank",
-]);
+export const containerTypeEnum = z.enum(["dry", "reefer", "open_top", "tank"]);
 
-export const weightUnitEnum = z.enum([
-  "kg",
-]);
+export const weightUnitEnum = z.enum(["kg"]);
 
 export const containerStatusEnum = z.enum([
   "created",
@@ -30,13 +20,10 @@ export const containerStatusEnum = z.enum([
   "completed",
 ]);
 
-export const truckTypeEnum = z.enum([
-  "flatbed",
-  "trailer",
-]);
+export const truckTypeEnum = z.enum(["flatbed", "trailer"]);
 
 export const countryEnum = z.enum(
-  COUNTRIES.map((c) => c.name) as [string, ...string[]]
+  COUNTRIES.map((c) => c.name) as [string, ...string[]],
 );
 
 export const containerDetailsSchema = z
@@ -89,13 +76,9 @@ const containerBaseSchema = z.object({
   is_returning: z.boolean(),
 });
 
-
 export const createContainerSchema = containerBaseSchema
   .superRefine((val, ctx) => {
-    if (
-      val.tare_weight !== undefined &&
-      val.tare_weight >= val.gross_weight
-    ) {
+    if (val.tare_weight !== undefined && val.tare_weight >= val.gross_weight) {
       ctx.addIssue({
         path: ["tare_weight"],
         code: z.ZodIssueCode.custom,
@@ -137,15 +120,22 @@ export const returnLocationResponseSchema = z.object({
   address: z.string(),
 });
 
-export const containerSchema = containerBaseSchema.extend({
-  id: z.number(),
-  status: containerStatusEnum.optional(),
-  recommended_truck_type: truckTypeEnum.nullable().optional(),
-  recommended_axle_type: z.string().nullable().optional(),
-  return_location_info: returnLocationResponseSchema.nullable().optional(),
-  ship_id: z.number().nullable().optional(),
-}).passthrough();
-
+export const containerSchema = containerBaseSchema
+  .extend({
+    id: z.number(),
+    status: containerStatusEnum.optional(),
+    recommended_truck_type: truckTypeEnum.nullable().optional(),
+    recommended_axle_type: z.string().nullable().optional(),
+    return_location_info: returnLocationResponseSchema.nullable().optional(),
+    ship_id: z.number().nullable().optional(),
+    // API can return tare_weight as 0 or null; strict .gt(0) only for create
+    tare_weight: z.coerce
+      .number()
+      .min(0, "Tare weight must be 0 or greater")
+      .optional()
+      .nullable(),
+  })
+  .passthrough();
 
 export const containerListSchema = z.object({
   items: z.array(containerSchema),

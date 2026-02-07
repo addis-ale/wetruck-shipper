@@ -1,30 +1,25 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { containerApi } from "../api/container.api";
 import { CreateContainerInput } from "@/lib/zod/container.schema";
+import type { Container } from "../types/container.types";
 
 type UseCreateContainerOptions = {
-  onSuccess?: () => void;
+  onSuccess?: (container: Container) => void;
 };
 
-export const useCreateContainer = (
-  options?: UseCreateContainerOptions
-) => {
+export const useCreateContainer = (options?: UseCreateContainerOptions) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateContainerInput) =>
-      containerApi.create(payload),
+    mutationFn: (payload: CreateContainerInput) => containerApi.create(payload),
 
-    onSuccess: () => {
-   
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["containers"] });
-      
-      qc.refetchQueries({ 
+      qc.refetchQueries({
         queryKey: ["containers"],
-        type: "active"
+        type: "active",
       });
-      
-      options?.onSuccess?.();
+      options?.onSuccess?.(data);
     },
   });
 };

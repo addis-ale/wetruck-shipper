@@ -25,26 +25,31 @@ import { Plus } from "lucide-react";
 
 export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
-  const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<string>("created");
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Fetch data
-  const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
-  
-  const allShipments = useMemo(() => shipmentsResponse?.items || [], [shipmentsResponse?.items]);
+  const { data: shipmentsResponse, isLoading: shipmentsLoading } =
+    useShipments();
+
+  const allShipments = useMemo(
+    () => shipmentsResponse?.items || [],
+    [shipmentsResponse?.items],
+  );
 
   // Filter shipments by status based on active tab
-  const filteredShipments = useMemo(() => 
-    allShipments.filter((s) => s.status === activeTab),
-    [allShipments, activeTab]
+  const filteredShipments = useMemo(
+    () => allShipments.filter((s) => s.status === activeTab),
+    [allShipments, activeTab],
   );
 
   // Auto-select first shipment when filtered list changes
   useEffect(() => {
     if (filteredShipments.length > 0) {
       // Only auto-select if current activeShipmentId is not in the filtered list
-      const isStillInList = filteredShipments.some((s) => s.id === activeShipmentId);
+      const isStillInList = filteredShipments.some(
+        (s) => s.id === activeShipmentId,
+      );
       if (!isStillInList) {
         setActiveShipmentId(filteredShipments[0].id);
       }
@@ -52,13 +57,13 @@ export function ShipmentsView() {
       setActiveShipmentId(null);
     }
   }, [filteredShipments, activeShipmentId]);
-  
+
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
   const { data: assignedContainersData } = useContainers(
     activeShipmentId ? { ship_id: activeShipmentId } : undefined,
-    { enabled: !!activeShipmentId }
+    { enabled: !!activeShipmentId },
   );
-  
+
   // Fetch all containers for counts and search
   const { data: allContainersData } = useContainers();
 
@@ -74,7 +79,7 @@ export function ShipmentsView() {
     if (container.ship_id) {
       containerCounts.set(
         container.ship_id,
-        (containerCounts.get(container.ship_id) || 0) + 1
+        (containerCounts.get(container.ship_id) || 0) + 1,
       );
     }
   });
@@ -83,18 +88,27 @@ export function ShipmentsView() {
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
   const { mutate: getPrice } = useGetPrice();
-  const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
-  
+  const { mutate: requestPrice, isPending: isRequestingPrice } =
+    useRequestPrice();
+
   // Get active shipment status
-  const activeShipment = allShipments.find(s => s.id === activeShipmentId);
+  const activeShipment = allShipments.find((s) => s.id === activeShipmentId);
 
   // Get assigned container IDs for active shipment (for column actions)
   const assignedContainerIds = assignedContainers.map((c) => c.id);
 
-  // Handle container assignment
+  // Handle container assignment (single or bulk)
   const handleAssignContainer = (containerId: number) => {
     if (!activeShipmentId) return;
-    assignContainers({ shipmentId: activeShipmentId, containerIds: [containerId] });
+    assignContainers({
+      shipmentId: activeShipmentId,
+      containerIds: [containerId],
+    });
+  };
+
+  const handleAssignContainers = (containerIds: number[]) => {
+    if (!activeShipmentId || containerIds.length === 0) return;
+    assignContainers({ shipmentId: activeShipmentId, containerIds });
   };
 
   // Handle container removal
@@ -108,15 +122,12 @@ export function ShipmentsView() {
     const newId = parseInt(shipmentId, 10);
     if (!isNaN(newId)) {
       setActiveShipmentId(newId);
-      setSelectedContainers([]); // Clear selection when switching shipments
       setShowCreateForm(false); // Hide form after creation
     }
   };
 
-  // Clear selection when switching shipments
   const handleSelectShipment = (shipmentId: number) => {
     setActiveShipmentId(shipmentId);
-    setSelectedContainers([]); // Clear selection
   };
 
   // Handle get price
@@ -124,21 +135,20 @@ export function ShipmentsView() {
     if (!activeShipmentId || containerIds.length === 0) return;
     getPrice({ shipmentId: activeShipmentId, containerIds });
   };
-  
+
   // Handle request price
   const handleRequestPrice = (shipmentId: number) => {
     requestPrice(shipmentId);
   };
 
-  // Get columns with actions
+  // Get columns; hide Actions column when status is not "created" (e.g. price_requested tab)
   const columns = useContainerAssignColumns({
     activeShipmentId,
     assignedContainers: assignedContainerIds,
     onAssign: handleAssignContainer,
     onRemove: handleRemoveContainer,
-    selectedContainers,
-    onSelectionChange: setSelectedContainers,
     data: filteredContainers,
+    showActionsColumn: activeShipment?.status === "created",
   });
 
   // Loading state - only show skeleton on initial load, not on refetch
@@ -164,12 +174,14 @@ export function ShipmentsView() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Shipments</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Shipments
+            </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Manage and track your shipments in one place
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="sm:w-auto w-full"
           >
@@ -177,7 +189,7 @@ export function ShipmentsView() {
             {showCreateForm ? "Cancel" : "Create Shipment"}
           </Button>
         </div>
-        
+
         {/* Create Shipment Form - Conditionally rendered */}
         {showCreateForm && (
           <Card className="border shadow-sm">
@@ -186,7 +198,7 @@ export function ShipmentsView() {
             </CardContent>
           </Card>
         )}
-        
+
         <Separator className="my-2" />
       </div>
 
@@ -215,32 +227,71 @@ export function ShipmentsView() {
         {/* Right side: Tabs + Content Area - Takes 3/4 width on desktop, full width on mobile */}
         <div className="lg:col-span-3">
           <div className="bg-card rounded-xl border p-1 shadow-sm">
-            <Tabs defaultValue="created" onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              defaultValue="created"
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <div className="px-2 sm:px-4 py-3">
                 <h2 className="text-lg font-semibold mb-3">Shipment Status</h2>
                 <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1 bg-muted/30 border">
-                  <TabsTrigger value="created" className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200">
+                  <TabsTrigger
+                    value="created"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
+                  >
                     <span className="font-medium text-sm">Created</span>
-                    <Badge variant="secondary" className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium">
-                      {allShipments.filter(s => s.status === "created").length}
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
+                    >
+                      {
+                        allShipments.filter((s) => s.status === "created")
+                          .length
+                      }
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="price_requested" className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200">
+                  <TabsTrigger
+                    value="price_requested"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
+                  >
                     <span className="font-medium text-sm">Price Requested</span>
-                    <Badge variant="secondary" className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium">
-                      {allShipments.filter(s => s.status === "price_requested").length}
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
+                    >
+                      {
+                        allShipments.filter(
+                          (s) => s.status === "price_requested",
+                        ).length
+                      }
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="priced" className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200">
+                  <TabsTrigger
+                    value="priced"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
+                  >
                     <span className="font-medium text-sm">Priced</span>
-                    <Badge variant="secondary" className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium">
-                      {allShipments.filter(s => s.status === "priced").length}
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
+                    >
+                      {allShipments.filter((s) => s.status === "priced").length}
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="accepted_by_shipper" className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200">
+                  <TabsTrigger
+                    value="accepted_by_shipper"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
+                  >
                     <span className="font-medium text-sm">Accepted</span>
-                    <Badge variant="secondary" className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium">
-                      {allShipments.filter(s => s.status === "accepted_by_shipper").length}
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
+                    >
+                      {
+                        allShipments.filter(
+                          (s) => s.status === "accepted_by_shipper",
+                        ).length
+                      }
                     </Badge>
                   </TabsTrigger>
                 </TabsList>
@@ -267,25 +318,25 @@ export function ShipmentsView() {
                             <Package className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
                           </div>
                           <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                            {activeTab === "created" 
+                            {activeTab === "created"
                               ? "No shipments created"
                               : activeTab === "price_requested"
-                              ? "No price requests"
-                              : activeTab === "priced"
-                              ? "No quotes received"
-                              : "No shipments accepted"}
+                                ? "No price requests"
+                                : activeTab === "priced"
+                                  ? "No quotes received"
+                                  : "No shipments accepted"}
                           </h3>
                           <p className="text-muted-foreground max-w-sm text-sm sm:text-base mb-6">
                             {activeTab === "created"
                               ? "Get started by creating your first shipment using the form above."
                               : activeTab === "price_requested"
-                              ? "Once you request pricing for a shipment, it will appear here."
-                              : activeTab === "priced"
-                              ? "Shipments awaiting transporter quotes will appear here once priced."
-                              : "Your accepted shipments and their final quotes will be listed here."}
+                                ? "Once you request pricing for a shipment, it will appear here."
+                                : activeTab === "priced"
+                                  ? "Shipments awaiting transporter quotes will appear here once priced."
+                                  : "Your accepted shipments and their final quotes will be listed here."}
                           </p>
                           {activeTab === "created" && (
-                            <Button 
+                            <Button
                               onClick={() => setShowCreateForm(true)}
                               variant="outline"
                               className="w-full sm:w-auto"
@@ -300,13 +351,17 @@ export function ShipmentsView() {
                   ) : activeTab === "priced" ? (
                     <Card className="border shadow-sm overflow-hidden">
                       <CardContent className="p-0">
-                        <PricedShipItemsTable activeShipmentId={activeShipmentId} />
+                        <PricedShipItemsTable
+                          activeShipmentId={activeShipmentId}
+                        />
                       </CardContent>
                     </Card>
                   ) : activeTab === "accepted_by_shipper" ? (
                     <Card className="border shadow-sm overflow-hidden">
                       <CardContent className="p-0">
-                        <AcceptedShipItemsTable activeShipmentId={activeShipmentId} />
+                        <AcceptedShipItemsTable
+                          activeShipmentId={activeShipmentId}
+                        />
                       </CardContent>
                     </Card>
                   ) : (
@@ -317,6 +372,7 @@ export function ShipmentsView() {
                           data={filteredContainers}
                           activeShipmentId={activeShipmentId}
                           onAssignContainer={handleAssignContainer}
+                          onAssignContainers={handleAssignContainers}
                           onGetPrice={handleGetPrice}
                           onRequestPrice={handleRequestPrice}
                           shipmentStatus={activeShipment?.status}
