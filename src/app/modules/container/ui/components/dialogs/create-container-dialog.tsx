@@ -542,36 +542,35 @@ export function CreateContainerDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label>Commodity</Label>
-                <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                  {commodities.fields.map((field, idx) => (
-                    <div key={field.id} className="flex gap-2">
-                      <Input
-                        placeholder={`Commodity ${idx + 1}`}
-                        {...register(
-                          `container_details.commodity.${idx}` as const,
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => commodities.remove(idx)}
-                        disabled={commodities.fields.length === 1}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => commodities.append("")}
-                >
-                  Add Commodity
-                </Button>
+            <Label>Cargo Description</Label>
+             <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+  {commodities.fields.map((field, idx) => (
+    <div key={field.id} className="flex gap-2">
+      <Input
+        placeholder={`Cargo Description ${idx + 1}`}
+        {...register(
+          `container_details.commodity.${idx}` as const,
+        )}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => commodities.remove(idx)}
+        disabled={commodities.fields.length === 1}
+      >
+        Remove
+      </Button>
+    </div>
+  ))}
+</div>
+            <Button
+  type="button"
+  variant="secondary"
+  onClick={() => commodities.append("")}
+>
+  Add Cargo Description
+</Button>
 
                 {errors.container_details?.commodity && (
                   <p className="text-sm text-destructive">
