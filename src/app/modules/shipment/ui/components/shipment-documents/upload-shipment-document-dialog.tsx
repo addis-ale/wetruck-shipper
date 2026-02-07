@@ -27,14 +27,7 @@ import { useCreateShipmentDocument } from
 ----------------------------------------- */
 const SHIPMENT_DOCUMENT_TYPES = [
   { value: "BILL_OF_LADING", label: "Bill of Lading" },
-  { value: "COMMERCIAL_INVOICE", label: "Commercial Invoice" },
   { value: "PACKING_LIST", label: "Packing List" },
-  { value: "DELIVERY_NOTE", label: "Delivery Note" },
-  { value: "INSURANCE_CERTIFICATE", label: "Insurance Certificate" },
-  { value: "CUSTOMS_DECLARATION", label: "Customs Declaration" },
-  { value: "LICENSE", label: "License" },
-  { value: "PERMIT", label: "Permit" },
-  { value: "OTHER", label: "Other" },
 ] as const;
 
 type ShipmentDocumentType =
