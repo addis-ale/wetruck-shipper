@@ -83,18 +83,18 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
           <Section title="Cargo Information" icon={<Package className="h-4 w-4" />}>
             <div className="space-y-4">
               {details?.commodity && details.commodity.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Commodity
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {details.commodity.map((item: string, index: number) => (
-                      <Badge key={index} variant="secondary">
-                        {item}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+              <div className="space-y-2">
+  <p className="text-sm text-muted-foreground">
+    Cargo Description
+  </p>
+  <div className="flex flex-wrap gap-2">
+    {details.commodity.map((item: string, index: number) => (
+      <Badge key={index} variant="secondary">
+        {item}
+      </Badge>
+    ))}
+  </div>
+</div>
               )}
 
               {details?.instruction && (

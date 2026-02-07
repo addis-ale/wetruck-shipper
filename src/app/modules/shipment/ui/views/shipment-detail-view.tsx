@@ -37,6 +37,7 @@ import {
   Clock,
   CheckCircle2,
   ChevronRight,
+  DollarSign,
 } from "lucide-react";
 import { useShipment } from "@/app/modules/shipment/server/hooks/use-shipment";
 import { useDeleteShipment } from "@/app/modules/shipment/server/hooks/use-delete-shipment";
@@ -50,7 +51,6 @@ import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
-import { DollarSign } from "lucide-react";
 
 interface ShipmentDetailViewProps {
   shipmentId: number;
@@ -512,28 +512,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       Bill of Lading Number
                     </p>
                     <p className="text-sm font-mono">
-                      <p className="text-sm font-mono">
-                        {shipment.shipment_details?.bill_of_lading_number ??
-                          "N/A"}
-                      </p>
-                    </p>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Pickup Number
-                    </p>
-                    <p className="text-sm font-mono">
-                      {shipment.shipment_details?.pickup_number ?? "N/A"}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Delivery Number
-                    </p>
-                    <p className="text-sm font-mono">
-                      {shipment.shipment_details?.delivery_number ?? "N/A"}
+                      {shipment.shipment_details?.bill_of_lading_number ?? "N/A"}
                     </p>
                   </div>
                 </CardContent>

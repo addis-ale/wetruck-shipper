@@ -51,7 +51,7 @@ const navigation = [
   { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
   { name: "Priced Shipments", href: "/dashboard/shipments/priced", icon: CheckCircle2 },
   { name: "Containers", href: "/dashboard/containers", icon: Boxes },
-  { name: "Order History", href: "/history", icon: Clock },
+  // { name: "Order History", href: "/history", icon: Clock },
   { name: "Live Tracking", href: "/tracking", icon: MapPin },
 ];
 
