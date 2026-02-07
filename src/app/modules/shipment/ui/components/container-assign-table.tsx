@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   ColumnDef,
@@ -79,10 +79,14 @@ export function ContainerAssignTable<TData, TValue>({
   const [viewSheetOpen, setViewSheetOpen] = useState(false);
   /** IDs selected in the "assign from list" popover for bulk assign */
   const [selectedToAssign, setSelectedToAssign] = useState<number[]>([]);
+  /** Pagination for search popover: start with 5, load more on scroll */
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchAccumulated, setSearchAccumulated] = useState<Container[]>([]);
+  const searchScrollRef = useRef<HTMLDivElement>(null);
 
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedSearch = useDebounce(searchQuery.trim(), 300);
+  const PER_PAGE = 5;
 
-  /** Fetch containers when focused - limit to 5 when showing initial results, 10 when searching */
   const {
     data: containers,
     isLoading,
@@ -90,20 +94,69 @@ export function ContainerAssignTable<TData, TValue>({
   } = useContainers(
     {
       container_number: debouncedSearch || undefined,
-      per_page: debouncedSearch ? 10 : 5,
+      per_page: PER_PAGE,
+      page: searchPage,
     },
     {
       enabled: !!activeShipmentId && searchOpen,
-      staleTime: 0, // Always refetch when params change
+      staleTime: 0,
     },
   );
 
-  /** Only show unassigned containers */
-  const availableContainers =
-    containers?.items.filter((container) => {
-      const shipId = (container as ContainerWithShipId).ship_id;
-      return shipId === null || shipId === undefined || shipId === 0;
-    }) || [];
+  const total = containers?.total ?? 0;
+
+  // Accumulate search result pages (only when response matches requested page)
+  useEffect(() => {
+    if (!searchOpen || !containers?.items || containers.page !== searchPage)
+      return;
+    if (searchPage === 1) {
+      setSearchAccumulated(containers.items);
+    } else {
+      setSearchAccumulated((prev) => [...prev, ...containers.items]);
+    }
+  }, [containers?.items, containers?.page, searchPage, searchOpen]);
+
+  // Reset search pagination when search term changes (same as ViewContainersSheet)
+  useEffect(() => {
+    if (!searchOpen) return;
+    setSearchPage(1);
+    setSearchAccumulated([]);
+  }, [debouncedSearch, searchOpen]);
+
+  // Reset when popover closes (same as ViewContainersSheet)
+  useEffect(() => {
+    if (!searchOpen) {
+      setSearchPage(1);
+      setSearchAccumulated([]);
+    }
+  }, [searchOpen]);
+
+  /** Display items: use accumulated list, or fall back to containers.items when it matches
+   *  current page (avoids effect delay so we show data immediately on focus/search) */
+  const displayItems =
+    searchAccumulated.length > 0
+      ? searchAccumulated
+      : containers?.page === searchPage && containers?.items
+        ? containers.items
+        : [];
+
+  const hasMoreSearch = displayItems.length < total;
+
+  /** Only show unassigned containers from display list */
+  const availableContainers = displayItems.filter((container) => {
+    const shipId = (container as ContainerWithShipId).ship_id;
+    return shipId === null || shipId === undefined || shipId === 0;
+  });
+
+  const handleSearchScroll = useCallback(() => {
+    const el = searchScrollRef.current;
+    if (!el || isFetching || !hasMoreSearch) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const threshold = 60;
+    if (scrollTop + clientHeight >= scrollHeight - threshold) {
+      setSearchPage((p) => p + 1);
+    }
+  }, [isFetching, hasMoreSearch]);
 
   // Handle search change
   const handleSearchChange = (value: string) => {
@@ -227,8 +280,12 @@ export function ContainerAssignTable<TData, TValue>({
               sideOffset={5}
               onCloseAutoFocus={() => setSelectedToAssign([])}
             >
-              <div className="max-h-[220px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {isSearching ? (
+              <div
+                ref={searchScrollRef}
+                onScroll={handleSearchScroll}
+                className="max-h-[220px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              >
+                {(isLoading || isFetching) && searchAccumulated.length === 0 ? (
                   <div className="flex items-center justify-center p-3">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
@@ -257,6 +314,7 @@ export function ContainerAssignTable<TData, TValue>({
                         <span>
                           Select containers to assign •{" "}
                           {availableContainers.length} available
+                          {hasMoreSearch ? " (scroll for more)" : ""}
                         </span>
                       </div>
                     )}
@@ -286,6 +344,11 @@ export function ContainerAssignTable<TData, TValue>({
                         </div>
                       </label>
                     ))}
+                    {hasMoreSearch && isFetching && (
+                      <div className="flex items-center justify-center py-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-3 text-sm text-muted-foreground text-center">
