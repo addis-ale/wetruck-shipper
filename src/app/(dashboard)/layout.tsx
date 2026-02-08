@@ -207,15 +207,6 @@ export default function DashboardLayout({
                         <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
                         <span>Change Password</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="cursor-pointer rounded-md py-2 px-3"
-                        onClick={() =>
-                          router.push("/dashboard/organazation/documents")
-                        }
-                      >
-                        <Upload className="mr-3 h-4 w-4 text-muted-foreground" />
-                        <span>Upload Document</span>
-                      </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer rounded-md py-2 px-3">
                         <Settings className="mr-3 h-4 w-4 text-muted-foreground" />
                         <span>Account Settings</span>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { shipmentApi } from "@/app/modules/shipment/server/api/shipment.api";
 
 interface UseRequestPriceOptions {
@@ -17,15 +16,11 @@ export function useRequestPrice(options?: UseRequestPriceOptions) {
       // Invalidate shipment queries to refetch with updated status
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
       queryClient.invalidateQueries({ queryKey: ["shipment", shipmentId] });
-      
-      // Show success message
-      const message = data.success_message || "Price request submitted successfully";
-      toast.success(message);
-      
+
       options?.onSuccess?.(shipmentId);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to request price");
+      // Error will be handled in the UI component
     },
   });
 }
