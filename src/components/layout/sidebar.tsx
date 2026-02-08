@@ -7,11 +7,13 @@ import {
   Package,
   MapPin,
   Boxes,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Upload Document", href: "/dashboard/organazation/documents", icon: Upload },
   { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
   { name: "Containers", href: "/dashboard/containers", icon: Boxes },
   // { name: "Order History", href: "/history", icon: Clock },
