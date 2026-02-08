@@ -116,13 +116,10 @@ async function apiRequest<T>(
     let responseText = "";
     try {
       responseText = await response.text();
-      // Debug logging in development
+      // Debug logging in development - log as string so values are always visible
       if (process.env.NODE_ENV === "development") {
-        console.error("❌ API Error Response:", {
-          status: response.status,
-          statusText: response.statusText,
-          body: responseText,
-        });
+        const errMsg = `❌ API Error [${fullUrl}]: ${response.status} ${response.statusText}${responseText ? ` | body: ${responseText}` : " (empty body)"}`;
+        console.error(errMsg);
       }
       // Try to parse as JSON
       if (responseText) {
@@ -264,7 +261,11 @@ async function apiRequest<T>(
       errorData.error ||
       errorData.message ||
       errorData.error_message ||
-      (typeof errorData.detail === "object" && errorData.detail && "message" in errorData.detail ? (errorData.detail as { message?: string }).message : null) ||
+      (typeof errorData.detail === "object" &&
+      errorData.detail &&
+      "message" in errorData.detail
+        ? (errorData.detail as { message?: string }).message
+        : null) ||
       (typeof errorData.detail === "string" ? errorData.detail : null) ||
       `HTTP ${response.status}: ${response.statusText}`;
 

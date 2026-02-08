@@ -93,7 +93,6 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
 
   const { data: shipment, isLoading, error } = useShipment(shipmentId);
   const { mutate: deleteShipment, isPending: isDeleting } = useDeleteShipment();
@@ -112,7 +111,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const assignedContainers = containersData?.items || [];
   const assignedContainerIds = assignedContainers.map((c) => c.id);
 
-  // Get columns with actions
+  // Get columns; hide Actions column when status is not "created" (e.g. price_requested)
   const columns = useContainerAssignColumns({
     activeShipmentId: shipmentId,
     assignedContainers: assignedContainerIds,
@@ -122,9 +121,8 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
     onRemove: (containerId) => {
       removeContainer({ shipmentId, containerId });
     },
-    selectedContainers,
-    onSelectionChange: setSelectedContainers,
     data: assignedContainers,
+    showActionsColumn: shipment?.status === "created",
   });
 
   const handleGetPrice = (containerIds: number[]) => {
@@ -512,7 +510,8 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       Bill of Lading Number
                     </p>
                     <p className="text-sm font-mono">
-                      {shipment.shipment_details?.bill_of_lading_number ?? "N/A"}
+                      {shipment.shipment_details?.bill_of_lading_number ??
+                        "N/A"}
                     </p>
                   </div>
                 </CardContent>
@@ -593,8 +592,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             onAssignContainer={(containerId) => {
               assignContainers({ shipmentId, containerIds: [containerId] });
             }}
-            selectedContainers={selectedContainers}
-            onSelectionChange={setSelectedContainers}
+            onAssignContainers={(containerIds) => {
+              assignContainers({ shipmentId, containerIds });
+            }}
             onGetPrice={handleGetPrice}
             onRequestPrice={handleRequestPrice}
             shipmentStatus={shipment?.status}

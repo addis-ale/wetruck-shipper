@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Minus } from "lucide-react";
 import {
   Dialog,
@@ -34,9 +33,7 @@ function ActionCell({
 
   if (!activeShipmentId) {
     return (
-      <span className="text-xs text-muted-foreground">
-        Select a shipment
-      </span>
+      <span className="text-xs text-muted-foreground">Select a shipment</span>
     );
   }
 
@@ -87,11 +84,7 @@ function ActionCell({
   }
 
   return (
-    <Button
-      size="sm"
-      onClick={() => onAssign(container.id)}
-      className="h-8"
-    >
+    <Button size="sm" onClick={() => onAssign(container.id)} className="h-8">
       <Plus className="h-3 w-3 mr-1" />
       Assign
     </Button>
@@ -103,9 +96,9 @@ interface ContainerColumnsProps {
   assignedContainers: number[];
   onAssign: (containerId: number) => void;
   onRemove: (containerId: number) => void;
-  selectedContainers?: number[];
-  onSelectionChange?: (containerIds: number[]) => void;
   data?: Container[];
+  /** When false, the Actions column is omitted (e.g. for price_requested tab) */
+  showActionsColumn?: boolean;
 }
 
 export function useContainerAssignColumns({
@@ -113,61 +106,9 @@ export function useContainerAssignColumns({
   assignedContainers,
   onAssign,
   onRemove,
-  selectedContainers = [],
-  onSelectionChange,
+  showActionsColumn = true,
 }: ContainerColumnsProps): ColumnDef<Container>[] {
-  return [
-    {
-      id: "select",
-      header: ({ table }) => {
-        const tableData = table.getRowModel().rows.map((row) => row.original);
-        const allSelected = tableData.length > 0 && 
-          tableData.every((container) => selectedContainers.includes(container.id));
-        const someSelected = tableData.some((container) => selectedContainers.includes(container.id)) && !allSelected;
-        
-        return (
-          <Checkbox
-            checked={allSelected ? true : someSelected ? "indeterminate" : false}
-            onCheckedChange={(checked) => {
-              if (!onSelectionChange) return;
-              
-              const currentPageIds = tableData.map((container) => container.id);
-              
-              if (checked) {
-                // Select all containers in current page
-                onSelectionChange([...new Set([...selectedContainers, ...currentPageIds])]);
-              } else {
-                // Deselect all containers in current page
-                onSelectionChange(selectedContainers.filter((id) => !currentPageIds.includes(id)));
-              }
-            }}
-            aria-label="Select all"
-          />
-        );
-      },
-      cell: ({ row }) => {
-        const containerId = row.original.id;
-        const isSelected = selectedContainers.includes(containerId);
-        
-        return (
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => {
-              if (!onSelectionChange) return;
-              
-              if (checked) {
-                onSelectionChange([...selectedContainers, containerId]);
-              } else {
-                onSelectionChange(selectedContainers.filter((id) => id !== containerId));
-              }
-            }}
-            aria-label="Select row"
-          />
-        );
-      },
-      enableSorting: false,
-      enableHiding: false,
-    },
+  const columns: ColumnDef<Container>[] = [
     {
       accessorKey: "container_number",
       header: "Container Name",
@@ -203,40 +144,31 @@ export function useContainerAssignColumns({
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const isAssigned = assignedContainers.includes(row.original.id);
-        
-        const variant = isAssigned
-          ? "default"
-          : status === "created"
-          ? "secondary"
-          : status === "in_transit"
-          ? "outline"
-          : "secondary";
-
-        return (
-          <Badge variant={variant}>
-            {isAssigned ? "Assigned" : status}
-          </Badge>
-        );
+      cell: () => {
+        // This table only shows containers assigned to the shipment, so status is always Assigned
+        return <Badge variant="default">Assigned</Badge>;
       },
     },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const isAssigned = assignedContainers.includes(row.original.id);
-        return (
-          <ActionCell
-            container={row.original}
-            isAssigned={isAssigned}
-            activeShipmentId={activeShipmentId}
-            onAssign={onAssign}
-            onRemove={onRemove}
-          />
-        );
-      },
-    },
+    ...(showActionsColumn
+      ? [
+          {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => {
+              const isAssigned = assignedContainers.includes(row.original.id);
+              return (
+                <ActionCell
+                  container={row.original}
+                  isAssigned={isAssigned}
+                  activeShipmentId={activeShipmentId}
+                  onAssign={onAssign}
+                  onRemove={onRemove}
+                />
+              );
+            },
+          } as ColumnDef<Container>,
+        ]
+      : []),
   ];
+  return columns;
 }
