@@ -53,7 +53,7 @@ async function apiRequest<T>(
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     console.error(`[shipItemDocumentsApi] Request failed for ${url}:`, error);
-    throw new Error(error?.detail || "Request failed");
+    throw new Error(error?.detail || error?.error || "Request failed");
   }
 
   if (response.status === 204) return {} as T;

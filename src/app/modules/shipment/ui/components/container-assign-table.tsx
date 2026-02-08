@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   ColumnDef,
@@ -38,7 +38,14 @@ import {
 } from "@/components/ui/popover";
 import { Search, Loader2, CheckCircle, X } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
+import { CreateContainerDialog } from "@/app/modules/container/ui/components/dialogs/create-container-dialog";
+import { ViewContainersSheet } from "@/app/modules/container/ui/components/view-containers-sheet";
 import type { Container } from "@/app/modules/container/server/types/container.types";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useCallback, useEffect, useRef } from "react";
+
+const PER_PAGE = 5;
 
 // Extended container type
 type ContainerWithShipId = Container & { ship_id?: number | null };
@@ -47,8 +54,8 @@ interface ContainerAssignTableProps<TData, TValue> {
   data: TData[];
   activeShipmentId: number | null;
   onAssignContainer?: (containerId: number) => void;
-  selectedContainers?: number[];
-  onSelectionChange?: (containerIds: number[]) => void;
+  /** Assign multiple containers at once (used when user selects multiple from the list) */
+  onAssignContainers?: (containerIds: number[]) => void;
   onGetPrice?: (containerIds: number[]) => void;
   onRequestPrice?: (shipmentId: number) => void;
   shipmentStatus?: string;
@@ -61,8 +68,7 @@ export function ContainerAssignTable<TData, TValue>({
   data,
   activeShipmentId,
   onAssignContainer,
-  selectedContainers = [],
-  onGetPrice,
+  onAssignContainers,
   onRequestPrice,
   shipmentStatus,
   isRequestingPrice = false,
@@ -118,27 +124,75 @@ export function ContainerAssignTable<TData, TValue>({
   const { data: containers, isLoading, isFetching } = useContainers(
     {
       container_number: debouncedSearch || undefined,
-      per_page: debouncedSearch ? 10 : 5,
+      per_page: PER_PAGE,
+      page: searchPage,
     },
     {
+    {
       enabled: !!activeShipmentId && searchOpen,
-      staleTime: 0, // Always refetch when params change
-    }
+      staleTime: 0,
+    },
   );
 
-  /** Only show unassigned containers */
-  const availableContainers =
-    containers?.items.filter((container) => {
-      const shipId = (container as ContainerWithShipId).ship_id;
-      return shipId === null || shipId === undefined || shipId === 0;
-    }) || [];
+  const total = containers?.total ?? 0;
+
+  // Accumulate search result pages (only when response matches requested page)
+  useEffect(() => {
+    if (!searchOpen || !containers?.items || containers.page !== searchPage)
+      return;
+    if (searchPage === 1) {
+      setSearchAccumulated(containers.items);
+    } else {
+      setSearchAccumulated((prev) => [...prev, ...containers.items]);
+    }
+  }, [containers?.items, containers?.page, searchPage, searchOpen]);
+
+  // Reset search pagination when search term changes (same as ViewContainersSheet)
+  useEffect(() => {
+    if (!searchOpen) return;
+    setSearchPage(1);
+    setSearchAccumulated([]);
+  }, [debouncedSearch, searchOpen]);
+
+  // Reset when popover closes (same as ViewContainersSheet)
+  useEffect(() => {
+    if (!searchOpen) {
+      setSearchPage(1);
+      setSearchAccumulated([]);
+    }
+  }, [searchOpen]);
+
+  /** Display items: use accumulated list, or fall back to containers.items when it matches
+   *  current page (avoids effect delay so we show data immediately on focus/search) */
+  const displayItems =
+    searchAccumulated.length > 0
+      ? searchAccumulated
+      : containers?.page === searchPage && containers?.items
+        ? containers.items
+        : [];
+
+  const hasMoreSearch = displayItems.length < total;
+
+  /** Only show unassigned containers from display list */
+  const availableContainers = displayItems.filter((container) => {
+    const shipId = (container as ContainerWithShipId).ship_id;
+    return shipId === null || shipId === undefined || shipId === 0;
+  });
+
+  const handleSearchScroll = useCallback(() => {
+    const el = searchScrollRef.current;
+    if (!el || isFetching || !hasMoreSearch) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const threshold = 60;
+    if (scrollTop + clientHeight >= scrollHeight - threshold) {
+      setSearchPage((p) => p + 1);
+    }
+  }, [isFetching, hasMoreSearch]);
 
   // Handle search change
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
   };
-
-  const isSearching = isLoading || isFetching;
 
   const table = useReactTable({
     data,
@@ -157,8 +211,30 @@ export function ContainerAssignTable<TData, TValue>({
     },
   });
 
-  const handleContainerSelect = (container: Container) => {
-    onAssignContainer?.(container.id);
+  const toggleSelectToAssign = (containerId: number) => {
+    setSelectedToAssign((prev) =>
+      prev.includes(containerId)
+        ? prev.filter((id) => id !== containerId)
+        : [...prev, containerId],
+    );
+  };
+
+  const selectAllToAssign = (checked: boolean) => {
+    if (checked) {
+      setSelectedToAssign(availableContainers.map((c) => c.id));
+    } else {
+      setSelectedToAssign([]);
+    }
+  };
+
+  const handleAssignSelected = () => {
+    if (selectedToAssign.length === 0) return;
+    if (onAssignContainers) {
+      onAssignContainers(selectedToAssign);
+    } else {
+      selectedToAssign.forEach((id) => onAssignContainer?.(id));
+    }
+    setSelectedToAssign([]);
     setSearchQuery("");
     setSearchOpen(false);
     setIsFocused(false);
@@ -172,7 +248,7 @@ export function ContainerAssignTable<TData, TValue>({
   const handleBlur = (e: React.FocusEvent) => {
     // Check if the new focus target is inside the popover
     const relatedTarget = e.relatedTarget as HTMLElement;
-    if (relatedTarget?.closest('[data-radix-popper-content-wrapper]')) {
+    if (relatedTarget?.closest("[data-radix-popper-content-wrapper]")) {
       return; // Don't close if clicking inside popover
     }
     // Delay closing to allow click on popover items
@@ -194,12 +270,9 @@ export function ContainerAssignTable<TData, TValue>({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Search */}
-        <div className="flex items-center gap-2">
-          <Popover
-            open={searchOpen && isFocused}
-            onOpenChange={setSearchOpen}
-          >
+        {/* Search + Add New Container + View Containers */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Popover open={searchOpen && isFocused} onOpenChange={setSearchOpen}>
             <PopoverAnchor asChild>
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
@@ -219,9 +292,14 @@ export function ContainerAssignTable<TData, TValue>({
               align="start"
               onOpenAutoFocus={(e) => e.preventDefault()}
               sideOffset={5}
+              onCloseAutoFocus={() => setSelectedToAssign([])}
             >
-              <div className="max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {isSearching ? (
+              <div
+                ref={searchScrollRef}
+                onScroll={handleSearchScroll}
+                className="max-h-[220px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              >
+                {(isLoading || isFetching) && searchAccumulated.length === 0 ? (
                   <div className="flex items-center justify-center p-3">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
@@ -233,36 +311,101 @@ export function ContainerAssignTable<TData, TValue>({
                       </div>
                     )}
                     {availableContainers.map((container) => (
-                      <button
+                      <label
                         key={container.id}
-                        onClick={() => handleContainerSelect(container)}
-                        className="w-full p-2 text-left hover:bg-accent transition-colors"
+                        className="flex items-center gap-3 w-full p-2 cursor-pointer hover:bg-accent/50 transition-colors"
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-sm">
-                              {container.container_number}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {container.container_size === "twenty_feet"
-                                ? "20ft"
-                                : "40ft"}{" "}
-                              • {container.container_type}
-                            </div>
+                        <Checkbox
+                          checked={selectedToAssign.includes(container.id)}
+                          onCheckedChange={() =>
+                            toggleSelectToAssign(container.id)
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Select ${container.container_number}`}
+                        />
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="font-medium text-sm">
+                            {container.container_number}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {container.container_size === "twenty_feet"
+                              ? "20ft"
+                              : "40ft"}{" "}
+                            • {container.container_type}
                           </div>
                         </div>
-                      </button>
+                      </label>
                     ))}
+                    {hasMoreSearch && isFetching && (
+                      <div className="flex items-center justify-center py-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-3 text-sm text-muted-foreground text-center">
-                    {debouncedSearch ? "No containers found" : "No available containers"}
+                    {debouncedSearch
+                      ? "No containers found"
+                      : "No available containers"}
                   </div>
                 )}
               </div>
+              {availableContainers.length > 0 &&
+                selectedToAssign.length > 0 && (
+                  <div className="p-2 border-t bg-muted/30">
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={handleAssignSelected}
+                    >
+                      Assign selected ({selectedToAssign.length})
+                    </Button>
+                  </div>
+                )}
             </PopoverContent>
           </Popover>
+          {activeShipmentId && shipmentStatus === "created" && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCreateDialogOpen(true)}
+                className="gap-1.5 shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Container
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewSheetOpen(true)}
+                className="gap-1.5 shrink-0"
+              >
+                <List className="h-4 w-4" />
+                View Containers
+              </Button>
+            </>
+          )}
         </div>
+
+        <CreateContainerDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          hideTrigger
+          onCreated={(container) => {
+            onAssignContainer?.(container.id);
+            setCreateDialogOpen(false);
+          }}
+        />
+
+        <ViewContainersSheet
+          open={viewSheetOpen}
+          onOpenChange={setViewSheetOpen}
+          activeShipmentId={activeShipmentId}
+          onAssignContainers={onAssignContainers}
+        />
 
         {/* Table */}
         <div className="rounded-md border w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -274,7 +417,7 @@ export function ContainerAssignTable<TData, TValue>({
                     <TableHead key={header.id}>
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                     </TableHead>
                   ))}
@@ -290,7 +433,7 @@ export function ContainerAssignTable<TData, TValue>({
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
@@ -298,7 +441,10 @@ export function ContainerAssignTable<TData, TValue>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No containers found.
                   </TableCell>
                 </TableRow>
@@ -313,11 +459,6 @@ export function ContainerAssignTable<TData, TValue>({
             <div className="text-sm text-muted-foreground">
               Showing {table.getRowModel().rows.length} of {data.length}{" "}
               container(s)
-              {selectedContainers.length > 0 && (
-                <span className="ml-2 text-primary">
-                  • {selectedContainers.length} selected
-                </span>
-              )}
             </div>
             <div className="flex items-center space-x-2">
               <Button

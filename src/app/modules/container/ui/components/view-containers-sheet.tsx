@@ -1,0 +1,264 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { useContainers } from "../../server/hooks/use-containers";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Search } from "lucide-react";
+import type { Container } from "../../server/types/container.types";
+
+const PER_PAGE = 20;
+
+function formatSize(size: string) {
+  return size === "twenty_feet" ? "20ft" : "40ft";
+}
+
+function formatType(type: string) {
+  return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+export interface ViewContainersSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** When set, show checkboxes on available containers and "Assign selected" button */
+  activeShipmentId?: number | null;
+  onAssignContainers?: (containerIds: number[]) => void;
+}
+
+export function ViewContainersSheet({
+  open,
+  onOpenChange,
+  activeShipmentId,
+  onAssignContainers,
+}: ViewContainersSheetProps) {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [page, setPage] = useState(1);
+  const [accumulated, setAccumulated] = useState<Container[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const debouncedSearch = useDebounce(searchQuery.trim(), 300);
+
+  const { data, isLoading, isFetching } = useContainers(
+    {
+      per_page: PER_PAGE,
+      page,
+      container_number: debouncedSearch || undefined,
+    },
+    { enabled: open },
+  );
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    if (!open) return;
+    setPage(1);
+    setAccumulated([]);
+  }, [debouncedSearch, open]);
+
+  const total = data?.total ?? 0;
+  const hasMore = accumulated.length < total;
+
+  // Accumulate pages: first page replaces, next pages append (only when response matches requested page)
+  useEffect(() => {
+    if (!open || !data?.items || data.page !== page) return;
+    if (page === 1) {
+      setAccumulated(data.items);
+    } else {
+      setAccumulated((prev) => [...prev, ...data.items]);
+    }
+  }, [data?.items, data?.page, page, open]);
+
+  const availableContainers = accumulated.filter(
+    (c) => c.ship_id == null || c.ship_id === 0,
+  );
+  const canAssign = Boolean(
+    activeShipmentId && onAssignContainers && availableContainers.length > 0,
+  );
+  const showOnlyAvailable = Boolean(activeShipmentId && onAssignContainers);
+  const listContainers = showOnlyAvailable ? availableContainers : accumulated;
+
+  // Reset when sheet closes
+  useEffect(() => {
+    if (!open) {
+      setSelectedIds([]);
+      setPage(1);
+      setAccumulated([]);
+      setSearchQuery("");
+    }
+  }, [open]);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const selectAllAvailable = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(listContainers.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleAssignSelected = () => {
+    if (selectedIds.length === 0 || !onAssignContainers) return;
+    onAssignContainers(selectedIds);
+    setSelectedIds([]);
+    onOpenChange(false);
+  };
+
+  const allAvailableSelected =
+    listContainers.length > 0 &&
+    listContainers.every((c) => selectedIds.includes(c.id));
+  const someAvailableSelected =
+    listContainers.some((c) => selectedIds.includes(c.id)) &&
+    !allAvailableSelected;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex h-full max-h-full flex-col sm:max-w-lg">
+        <SheetHeader className="shrink-0">
+          <SheetTitle>
+            {showOnlyAvailable ? "Available Containers" : "All Containers"}
+          </SheetTitle>
+          <SheetDescription>
+            {showOnlyAvailable
+              ? "Containers you can assign to this shipment. Select one or more, then assign."
+              : "View and reference your existing containers"}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="shrink-0 px-4 -mt-2 mb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search by container number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+              disabled={!open}
+            />
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-hidden -mx-6 px-6 mt-0">
+          <ScrollArea className="h-full">
+            {isLoading && accumulated.length === 0 ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : isFetching && accumulated.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Searching...</p>
+              </div>
+            ) : listContainers.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 px-4">
+                {debouncedSearch
+                  ? "No containers match your search. Try a different container number."
+                  : showOnlyAvailable
+                    ? 'No available containers. Create one using "Add New Container" or assign existing ones from the search above.'
+                    : 'No containers found. Create one using "Add New Container".'}
+              </p>
+            ) : (
+              <ul className="space-y-1 py-2">
+                {canAssign && listContainers.length > 0 && (
+                  <li className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/50 rounded-lg mb-2">
+                    <Checkbox
+                      checked={
+                        allAvailableSelected
+                          ? true
+                          : someAvailableSelected
+                            ? "indeterminate"
+                            : false
+                      }
+                      onCheckedChange={(checked) =>
+                        selectAllAvailable(checked === true)
+                      }
+                      aria-label="Select all"
+                    />
+                    <span>{listContainers.length} available to assign</span>
+                  </li>
+                )}
+                {listContainers.map((c) => {
+                  const isSelected = selectedIds.includes(c.id);
+                  const showCheckbox = canAssign;
+
+                  return (
+                    <li
+                      key={c.id}
+                      className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                        showCheckbox ? "cursor-pointer hover:bg-accent/50" : ""
+                      }`}
+                      onClick={
+                        showCheckbox ? () => toggleSelect(c.id) : undefined
+                      }
+                    >
+                      {showCheckbox ? (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleSelect(c.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Select ${c.container_number}`}
+                        />
+                      ) : (
+                        <span className="w-5 shrink-0" aria-hidden />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium">
+                          {c.container_number}
+                        </span>
+                        <span className="text-muted-foreground ml-2">
+                          {formatSize(c.container_size)} •{" "}
+                          {formatType(c.container_type)}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+                {hasMore && (
+                  <li className="pt-2 pb-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={isFetching}
+                    >
+                      {isFetching ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>Load more</>
+                      )}
+                    </Button>
+                  </li>
+                )}
+              </ul>
+            )}
+          </ScrollArea>
+        </div>
+        {canAssign && selectedIds.length > 0 && (
+          <div className="shrink-0 border-t pt-3 mt-3 pb-4">
+            <Button className="w-full" size="sm" onClick={handleAssignSelected}>
+              Assign selected ({selectedIds.length}) to shipment
+            </Button>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}

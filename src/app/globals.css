@@ -82,7 +82,7 @@
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.93 0.01 145);
   --sidebar-accent-foreground: oklch(0.21 0.02 253);
-  --sidebar-border: oklch(0.90 0.01 145);
+  --sidebar-border: oklch(0.9 0.01 145);
   --sidebar-ring: oklch(0.61 0.16 145);
 }
 
@@ -129,6 +129,19 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Neutral focus in create container dialog: no green, no ring/shadow */
+.create-container-dialog [data-slot="input"]:focus-visible,
+.create-container-dialog [data-slot="select-trigger"]:focus-visible {
+  --tw-ring-color: transparent;
+  --tw-ring-shadow: none;
+  box-shadow: none;
+  outline: 1px solid var(--border);
+  outline-offset: 0;
+}
+.create-container-dialog {
+  --ring: var(--border);
 }
 
 @layer utilities {
