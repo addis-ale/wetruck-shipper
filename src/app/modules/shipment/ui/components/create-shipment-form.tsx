@@ -202,7 +202,6 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                       <SelectItem value="debre_zeit">Debre Zeit</SelectItem>
                       <SelectItem value="hawassa">Hawassa</SelectItem>
                       <SelectItem value="shashemene">Shashemene</SelectItem>
-                      <SelectItem value="djibouti_port">Djibouti Port</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
