@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +38,8 @@ import {
   CheckCircle2,
   ChevronRight,
   DollarSign,
+  CheckCircle2 as CheckCircle,
+  X,
 } from "lucide-react";
 import { useShipment } from "@/app/modules/shipment/server/hooks/use-shipment";
 import { useDeleteShipment } from "@/app/modules/shipment/server/hooks/use-delete-shipment";
@@ -94,6 +96,19 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedContainers, setSelectedContainers] = useState<number[]>([]);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Record<number, boolean>>({});
+
+  // Load dismissed alerts from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('dismissedPriceRequestAlerts');
+    if (stored) {
+      try {
+        setDismissedAlerts(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse dismissed alerts:', e);
+      }
+    }
+  }, []);
 
   const { data: shipment, isLoading, error } = useShipment(shipmentId);
   const { mutate: deleteShipment, isPending: isDeleting } = useDeleteShipment();
@@ -102,6 +117,16 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const { mutate: getPrice } = useGetPrice();
   const { mutate: requestPrice, isPending: isRequestingPrice } =
     useRequestPrice();
+
+  // Determine if alert should be shown (after shipment is loaded)
+  const shouldShowPriceRequestAlert =
+    shipment?.status === "price_requested" && !dismissedAlerts[shipmentId];
+
+  const handleDismissAlert = () => {
+    const updated = { ...dismissedAlerts, [shipmentId]: true };
+    setDismissedAlerts(updated);
+    localStorage.setItem('dismissedPriceRequestAlerts', JSON.stringify(updated));
+  };
 
   const handleRequestPrice = (shipmentId: number) => {
     requestPrice(shipmentId);
@@ -255,6 +280,36 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           </Button>
         </div>
       </div>
+
+      {/* Price Request Confirmation Message Box - Shows when status is price_requested */}
+      {shouldShowPriceRequestAlert && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
+                  Price Request Submitted Successfully
+                </h3>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Your price request has been successfully submitted. You will be notified once a response is received.
+                </p>
+              </div>
+              <button
+                onClick={handleDismissAlert}
+                className="flex-shrink-0 rounded-md p-1.5 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                aria-label="Dismiss message"
+              >
+                <X className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
