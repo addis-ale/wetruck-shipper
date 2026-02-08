@@ -52,7 +52,7 @@ export function useRemoveContainer(options?: UseRemoveContainerOptions) {
       }
       toast.error(error.message || "Failed to remove container");
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
       queryClient.invalidateQueries({ queryKey: ["containers"] });
       toast.success("Container removed successfully");

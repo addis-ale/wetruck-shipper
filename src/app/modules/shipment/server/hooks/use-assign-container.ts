@@ -87,7 +87,7 @@ export function useAssignContainers(options?: UseAssignContainersOptions) {
       }
       toast.error(error.message || "Failed to assign containers");
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
       queryClient.invalidateQueries({ queryKey: ["containers"] });
       toast.success("Containers assigned successfully");

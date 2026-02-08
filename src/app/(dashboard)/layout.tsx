@@ -11,7 +11,6 @@ import {
   User,
   Settings,
   LogOut,
-  Bell,
   Upload,
   Lock,
   Boxes,
@@ -48,7 +47,11 @@ import { PasswordResetDialog } from "@/components/profile/password-reset-dialog"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
-  { name: "Priced Shipments", href: "/dashboard/shipments/priced", icon: CheckCircle2 },
+  {
+    name: "Priced Shipments",
+    href: "/dashboard/shipments/priced",
+    icon: CheckCircle2,
+  },
   { name: "Containers", href: "/dashboard/containers", icon: Boxes },
   // { name: "Order History", href: "/history", icon: Clock },
   { name: "Live Tracking", href: "/tracking", icon: MapPin },
@@ -90,20 +93,20 @@ export default function DashboardLayout({
           <div
             className={cn(
               "fixed inset-0 z-50 lg:hidden transition-all duration-300",
-              sidebarOpen ? "visible" : "invisible"
+              sidebarOpen ? "visible" : "invisible",
             )}
           >
             <div
               className={cn(
                 "fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
-                sidebarOpen ? "opacity-100" : "opacity-0"
+                sidebarOpen ? "opacity-100" : "opacity-0",
               )}
               onClick={() => setSidebarOpen(false)}
             />
             <div
               className={cn(
                 "fixed inset-y-0 left-0 w-[280px] sm:w-80 bg-sidebar shadow-2xl transform transition-transform duration-300 ease-in-out z-50",
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                sidebarOpen ? "translate-x-0" : "-translate-x-full",
               )}
             >
               <Sidebar onClose={() => setSidebarOpen(false)} />
@@ -111,17 +114,21 @@ export default function DashboardLayout({
           </div>
 
           {/* Static sidebar for desktop */}
-          <aside className={cn(
-            "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r bg-sidebar transition-all duration-300 z-50",
-            isSidebarCollapsed ? "lg:w-20" : "lg:w-72"
-          )}>
+          <aside
+            className={cn(
+              "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r bg-sidebar transition-all duration-300 z-50",
+              isSidebarCollapsed ? "lg:w-20" : "lg:w-72",
+            )}
+          >
             <Sidebar collapsed={isSidebarCollapsed} />
           </aside>
 
-          <div className={cn(
-            "flex flex-1 flex-col transition-all duration-300",
-            isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
-          )}>
+          <div
+            className={cn(
+              "flex flex-1 flex-col transition-all duration-300",
+              isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72",
+            )}
+          >
             <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/95 px-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 sm:gap-x-6 sm:px-6 lg:px-8">
               <button
                 type="button"
@@ -156,16 +163,6 @@ export default function DashboardLayout({
                 </div>
                 <div className="flex items-center gap-x-3 sm:gap-x-6">
                   <ModeToggle />
-                  <button className="relative text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-accent">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-1 right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                    </span>
-                    <span className="sr-only">View notifications</span>
-                  </button>
-
-                  <div className="h-6 w-px bg-border" aria-hidden="true" />
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -212,7 +209,9 @@ export default function DashboardLayout({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="cursor-pointer rounded-md py-2 px-3"
-                        onClick={() => router.push("/dashboard/organazation/documents")}
+                        onClick={() =>
+                          router.push("/dashboard/organazation/documents")
+                        }
                       >
                         <Upload className="mr-3 h-4 w-4 text-muted-foreground" />
                         <span>Upload Document</span>
@@ -285,10 +284,12 @@ export default function DashboardLayout({
                       otherItem.href !== item.href &&
                       otherItem.href.length > item.href.length &&
                       otherItem.href.startsWith(item.href) &&
-                      (pathname.startsWith(`${otherItem.href}/`) || pathname === otherItem.href)
+                      (pathname.startsWith(`${otherItem.href}/`) ||
+                        pathname === otherItem.href),
                   );
 
-                  const isActive = isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
+                  const isActive =
+                    isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
                   return (
                     <Link
                       key={item.name}
@@ -297,7 +298,7 @@ export default function DashboardLayout({
                         "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all relative",
                         isActive
                           ? "text-primary scale-110"
-                          : "text-muted-foreground hover:text-foreground opacity-60"
+                          : "text-muted-foreground hover:text-foreground opacity-60",
                       )}
                     >
                       {isActive && (
@@ -306,13 +307,13 @@ export default function DashboardLayout({
                       <item.icon
                         className={cn(
                           "h-6 w-6",
-                          isActive ? "stroke-[2.5px]" : "stroke-[2px]"
+                          isActive ? "stroke-[2.5px]" : "stroke-[2px]",
                         )}
                       />
                       <span
                         className={cn(
                           "text-[10px] font-bold leading-none tracking-tight transition-all",
-                          isActive ? "opacity-100" : "opacity-0 invisible h-0"
+                          isActive ? "opacity-100" : "opacity-0 invisible h-0",
                         )}
                       >
                         {item.name.split(" ")[0]}

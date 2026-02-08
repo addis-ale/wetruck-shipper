@@ -64,7 +64,6 @@ export function ContainerAssignTable<TData, TValue>({
   activeShipmentId,
   onAssignContainer,
   onAssignContainers,
-  onGetPrice,
   onRequestPrice,
   shipmentStatus,
   isRequestingPrice = false,
@@ -163,8 +162,6 @@ export function ContainerAssignTable<TData, TValue>({
     setSearchQuery(value);
   };
 
-  const isSearching = isLoading || isFetching;
-
   const table = useReactTable({
     data,
     columns,
@@ -189,13 +186,6 @@ export function ContainerAssignTable<TData, TValue>({
     setIsFocused(false);
     setSelectedToAssign([]);
   }, [activeShipmentId]);
-
-  const handleContainerSelect = (container: Container) => {
-    onAssignContainer?.(container.id);
-    setSearchQuery("");
-    setSearchOpen(false);
-    setIsFocused(false);
-  };
 
   const toggleSelectToAssign = (containerId: number) => {
     setSelectedToAssign((prev) =>
