@@ -36,7 +36,7 @@ export function DataTable<TData>({
 
   return (
     <div className="rounded-md border relative overflow-hidden">
-      <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]">
+      <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <Table className="relative">
           <TableHeader className="sticky top-0 z-20 bg-background shadow-[0_1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.1)]">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -46,9 +46,9 @@ export function DataTable<TData>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -74,7 +74,7 @@ export function DataTable<TData>({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
