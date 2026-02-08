@@ -36,14 +36,12 @@ import {
   PopoverContent,
   PopoverAnchor,
 } from "@/components/ui/popover";
-import { Search, Loader2, CheckCircle, X } from "lucide-react";
+import { Search, Loader2, CheckCircle, X, Plus, List } from "lucide-react";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import { CreateContainerDialog } from "@/app/modules/container/ui/components/dialogs/create-container-dialog";
 import { ViewContainersSheet } from "@/app/modules/container/ui/components/view-containers-sheet";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useDebounce } from "@/hooks/use-debounce";
-import { useCallback, useEffect, useRef } from "react";
 
 const PER_PAGE = 5;
 
@@ -56,7 +54,6 @@ interface ContainerAssignTableProps<TData, TValue> {
   onAssignContainer?: (containerId: number) => void;
   /** Assign multiple containers at once (used when user selects multiple from the list) */
   onAssignContainers?: (containerIds: number[]) => void;
-  onGetPrice?: (containerIds: number[]) => void;
   onRequestPrice?: (shipmentId: number) => void;
   shipmentStatus?: string;
   isRequestingPrice?: boolean;
@@ -80,8 +77,14 @@ export function ContainerAssignTable<TData, TValue>({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewSheetOpen, setViewSheetOpen] = useState(false);
+  const [selectedToAssign, setSelectedToAssign] = useState<number[]>([]);
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchAccumulated, setSearchAccumulated] = useState<Container[]>([]);
   const [dismissedMessageBox, setDismissedMessageBox] = useState<Record<number, boolean>>({});
   const [recentlySubmitted, setRecentlySubmitted] = useState<Record<number, boolean>>({});
+  const searchScrollRef = useRef<HTMLDivElement>(null);
 
   // Load dismissed message boxes from localStorage on mount
   useEffect(() => {
@@ -127,7 +130,6 @@ export function ContainerAssignTable<TData, TValue>({
       per_page: PER_PAGE,
       page: searchPage,
     },
-    {
     {
       enabled: !!activeShipmentId && searchOpen,
       staleTime: 0,
@@ -550,20 +552,6 @@ export function ContainerAssignTable<TData, TValue>({
                 </div>
               ) : null}
             </div>
-          </div>
-        )}
-
-        {/* Get Price Button - For selected containers (if still needed) */}
-        {selectedContainers.length > 0 && onGetPrice && (
-          <div className="flex justify-end pt-2 border-t">
-            <Button
-              variant="outline"
-              onClick={() => onGetPrice(selectedContainers)}
-              disabled={!activeShipmentId || selectedContainers.length === 0}
-              className="gap-2"
-            >
-              Get Price Quote ({selectedContainers.length})
-            </Button>
           </div>
         )}
       </CardContent>

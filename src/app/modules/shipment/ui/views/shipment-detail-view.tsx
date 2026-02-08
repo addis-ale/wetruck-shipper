@@ -651,7 +651,6 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             onAssignContainers={(containerIds) => {
               assignContainers({ shipmentId, containerIds });
             }}
-            onGetPrice={handleGetPrice}
             onRequestPrice={handleRequestPrice}
             shipmentStatus={shipment?.status}
             isRequestingPrice={isRequestingPrice}

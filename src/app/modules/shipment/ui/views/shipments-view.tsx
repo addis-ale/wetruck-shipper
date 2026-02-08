@@ -373,7 +373,6 @@ export function ShipmentsView() {
                           activeShipmentId={activeShipmentId}
                           onAssignContainer={handleAssignContainer}
                           onAssignContainers={handleAssignContainers}
-                          onGetPrice={handleGetPrice}
                           onRequestPrice={handleRequestPrice}
                           shipmentStatus={activeShipment?.status}
                           isRequestingPrice={isRequestingPrice}
