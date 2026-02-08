@@ -53,6 +53,7 @@ interface ContainerAssignTableProps<TData, TValue> {
   onRequestPrice?: (shipmentId: number) => void;
   shipmentStatus?: string;
   isRequestingPrice?: boolean;
+  hideMessageBox?: boolean; // Hide the persistent message box (used on detail page)
 }
 
 export function ContainerAssignTable<TData, TValue>({
@@ -65,6 +66,7 @@ export function ContainerAssignTable<TData, TValue>({
   onRequestPrice,
   shipmentStatus,
   isRequestingPrice = false,
+  hideMessageBox = false,
 }: ContainerAssignTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -72,7 +74,43 @@ export function ContainerAssignTable<TData, TValue>({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [dismissedMessageBox, setDismissedMessageBox] = useState<Record<number, boolean>>({});
+  const [recentlySubmitted, setRecentlySubmitted] = useState<Record<number, boolean>>({});
+
+  // Load dismissed message boxes from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('dismissedPriceRequestMessageBoxes');
+    if (stored) {
+      try {
+        setDismissedMessageBox(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse dismissed message boxes:', e);
+      }
+    }
+
+    // Load recently submitted shipments
+    const recentlySubmittedStored = localStorage.getItem('recentlySubmittedPriceRequests');
+    if (recentlySubmittedStored) {
+      try {
+        setRecentlySubmitted(JSON.parse(recentlySubmittedStored));
+      } catch (e) {
+        console.error('Failed to parse recently submitted:', e);
+      }
+    }
+  }, []);
+
+  const handleDismissMessageBox = () => {
+    if (!activeShipmentId) return;
+    const updated = { ...dismissedMessageBox, [activeShipmentId]: true };
+    setDismissedMessageBox(updated);
+    localStorage.setItem('dismissedPriceRequestMessageBoxes', JSON.stringify(updated));
+  };
+
+  const markAsRecentlySubmitted = (shipmentId: number) => {
+    const updated = { ...recentlySubmitted, [shipmentId]: true };
+    setRecentlySubmitted(updated);
+    localStorage.setItem('recentlySubmittedPriceRequests', JSON.stringify(updated));
+  };
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -118,24 +156,6 @@ export function ContainerAssignTable<TData, TValue>({
       globalFilter,
     },
   });
-
-  // Auto-dismiss success alert after 5 seconds
-  useEffect(() => {
-    if (showSuccessAlert) {
-      const timer = setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccessAlert]);
-
-  // Close popover and reset alert when shipment changes
-  useEffect(() => {
-    setSearchOpen(false);
-    setSearchQuery("");
-    setIsFocused(false);
-    setShowSuccessAlert(false);
-  }, [activeShipmentId]);
 
   const handleContainerSelect = (container: Container) => {
     onAssignContainer?.(container.id);
@@ -323,36 +343,8 @@ export function ContainerAssignTable<TData, TValue>({
         {/* Request Price Button - Show when status is "created" and has containers */}
         {data.length > 0 && activeShipmentId && (
           <div className="space-y-4 pt-2 border-t">
-            {/* Success Alert - Shows after successful price request */}
-            {showSuccessAlert && (
-              <div className="rounded-lg border border-green-500 bg-green-50 dark:bg-green-950/20 p-4">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-                      <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
-                      Price Request Submitted Successfully
-                    </h3>
-                    <p className="text-sm text-green-700 dark:text-green-300">
-                      Your price request has been successfully submitted. You will be notified once a response is received.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowSuccessAlert(false)}
-                    className="flex-shrink-0 rounded-md p-1.5 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
-                    aria-label="Dismiss message"
-                  >
-                    <X className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Persistent Message Box - Shows when status is price_requested */}
-            {shipmentStatus === "price_requested" && (
+            {!hideMessageBox && shipmentStatus === "price_requested" && activeShipmentId && !dismissedMessageBox[activeShipmentId] && (
               <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
@@ -369,6 +361,13 @@ export function ContainerAssignTable<TData, TValue>({
                         Your price request has been successfully submitted. You will be notified once a response is received.
                       </p>
                     </div>
+                    <button
+                      onClick={handleDismissMessageBox}
+                      className="flex-shrink-0 rounded-md p-1.5 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                      aria-label="Dismiss message"
+                    >
+                      <X className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </button>
                   </div>
                 </CardContent>
               </Card>
@@ -379,8 +378,10 @@ export function ContainerAssignTable<TData, TValue>({
               {shipmentStatus === "created" && onRequestPrice ? (
                 <Button
                   onClick={() => {
-                    onRequestPrice(activeShipmentId);
-                    setShowSuccessAlert(true);
+                    if (activeShipmentId) {
+                      onRequestPrice(activeShipmentId);
+                      markAsRecentlySubmitted(activeShipmentId);
+                    }
                   }}
                   disabled={isRequestingPrice || !activeShipmentId || data.length === 0}
                   className="gap-2"

@@ -31,11 +31,11 @@ export function ShipmentsView() {
 
   // Fetch data
   const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments();
-  
+
   const allShipments = useMemo(() => shipmentsResponse?.items || [], [shipmentsResponse?.items]);
 
   // Filter shipments by status based on active tab
-  const filteredShipments = useMemo(() => 
+  const filteredShipments = useMemo(() =>
     allShipments.filter((s) => s.status === activeTab),
     [allShipments, activeTab]
   );
@@ -52,13 +52,13 @@ export function ShipmentsView() {
       setActiveShipmentId(null);
     }
   }, [filteredShipments, activeShipmentId]);
-  
+
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
   const { data: assignedContainersData } = useContainers(
     activeShipmentId ? { ship_id: activeShipmentId } : undefined,
     { enabled: !!activeShipmentId }
   );
-  
+
   // Fetch all containers for counts and search
   const { data: allContainersData } = useContainers();
 
@@ -84,7 +84,7 @@ export function ShipmentsView() {
   const { mutate: removeContainer } = useRemoveContainer();
   const { mutate: getPrice } = useGetPrice();
   const { mutate: requestPrice, isPending: isRequestingPrice } = useRequestPrice();
-  
+
   // Get active shipment status
   const activeShipment = allShipments.find(s => s.id === activeShipmentId);
 
@@ -124,7 +124,7 @@ export function ShipmentsView() {
     if (!activeShipmentId || containerIds.length === 0) return;
     getPrice({ shipmentId: activeShipmentId, containerIds });
   };
-  
+
   // Handle request price
   const handleRequestPrice = (shipmentId: number) => {
     requestPrice(shipmentId);
@@ -169,7 +169,7 @@ export function ShipmentsView() {
               Manage and track your shipments in one place
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="sm:w-auto w-full"
           >
@@ -177,7 +177,7 @@ export function ShipmentsView() {
             {showCreateForm ? "Cancel" : "Create Shipment"}
           </Button>
         </div>
-        
+
         {/* Create Shipment Form - Conditionally rendered */}
         {showCreateForm && (
           <Card className="border shadow-sm">
@@ -186,7 +186,7 @@ export function ShipmentsView() {
             </CardContent>
           </Card>
         )}
-        
+
         <Separator className="my-2" />
       </div>
 
@@ -267,25 +267,25 @@ export function ShipmentsView() {
                             <Package className="h-10 w-10 sm:h-12 sm:w-12 text-primary" />
                           </div>
                           <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                            {activeTab === "created" 
+                            {activeTab === "created"
                               ? "No shipments created"
                               : activeTab === "price_requested"
-                              ? "No price requests"
-                              : activeTab === "priced"
-                              ? "No quotes received"
-                              : "No shipments accepted"}
+                                ? "No price requests"
+                                : activeTab === "priced"
+                                  ? "No quotes received"
+                                  : "No shipments accepted"}
                           </h3>
                           <p className="text-muted-foreground max-w-sm text-sm sm:text-base mb-6">
                             {activeTab === "created"
                               ? "Get started by creating your first shipment using the form above."
                               : activeTab === "price_requested"
-                              ? "Once you request pricing for a shipment, it will appear here."
-                              : activeTab === "priced"
-                              ? "Shipments awaiting transporter quotes will appear here once priced."
-                              : "Your accepted shipments and their final quotes will be listed here."}
+                                ? "Once you request pricing for a shipment, it will appear here."
+                                : activeTab === "priced"
+                                  ? "Shipments awaiting transporter quotes will appear here once priced."
+                                  : "Your accepted shipments and their final quotes will be listed here."}
                           </p>
                           {activeTab === "created" && (
-                            <Button 
+                            <Button
                               onClick={() => setShowCreateForm(true)}
                               variant="outline"
                               className="w-full sm:w-auto"

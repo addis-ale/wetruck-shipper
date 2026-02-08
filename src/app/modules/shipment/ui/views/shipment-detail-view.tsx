@@ -654,6 +654,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             onRequestPrice={handleRequestPrice}
             shipmentStatus={shipment?.status}
             isRequestingPrice={isRequestingPrice}
+            hideMessageBox={true}
           />
         </CardContent>
       </Card>
