@@ -8,7 +8,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -18,10 +24,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { createShipmentSchema, CreateShipmentInput } from "@/lib/zod/shipment.schema";
+import {
+  createShipmentSchema,
+  CreateShipmentInput,
+} from "@/lib/zod/shipment.schema";
 import { useCreateShipment } from "@/app/modules/shipment/server/hooks/use-create-shipment";
 import { Package } from "lucide-react";
-import { COUNTRIES, getRegionsByCountryCode, type Region } from "@/lib/constants/locations";
+import {
+  COUNTRIES,
+  getRegionsByCountryCode,
+  type Region,
+} from "@/lib/constants/locations";
 
 type CreateShipmentFormValues = z.input<typeof createShipmentSchema>;
 
@@ -59,9 +72,8 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
         bill_of_lading_number: "",
       },
     }),
-    []
+    [],
   );
-
 
   const form = useForm<CreateShipmentFormValues>({
     resolver: zodResolver(createShipmentSchema),
@@ -86,16 +98,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   // Get region options based on selected country
   const pickupRegions = pickupCountry
     ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
-      value: r.code,
-      label: r.name,
-    }))
+        value: r.code,
+        label: r.name,
+      }))
     : [];
 
   const deliveryRegions = deliveryCountry
     ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
-      value: r.code,
-      label: r.name,
-    }))
+        value: r.code,
+        label: r.name,
+      }))
     : [];
 
   // Country options
@@ -142,9 +154,8 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
     mutate(parsed);
   }
 
-
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-white">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary" />
@@ -181,7 +192,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 )}
               />
               {errors.origin && (
-                <p className="text-sm text-destructive">{errors.origin.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.origin.message}
+                </p>
               )}
             </div>
 
@@ -207,7 +220,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 )}
               />
               {errors.destination && (
-                <p className="text-sm text-destructive">{errors.destination.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.destination.message}
+                </p>
               )}
             </div>
 
@@ -219,7 +234,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 {...register("pickup_date")}
               />
               {errors.pickup_date && (
-                <p className="text-sm text-destructive">{errors.pickup_date.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.pickup_date.message}
+                </p>
               )}
             </div>
 
@@ -231,12 +248,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 {...register("delivery_date")}
               />
               {errors.delivery_date && (
-                <p className="text-sm text-destructive">{errors.delivery_date.message}</p>
+                <p className="text-sm text-destructive">
+                  {errors.delivery_date.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bill_of_lading_number">Bill of Lading Number</Label>
+              <Label htmlFor="bill_of_lading_number">
+                Bill of Lading Number
+              </Label>
               <Input
                 id="bill_of_lading_number"
                 {...register("shipment_details.bill_of_lading_number")}
@@ -253,7 +274,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Pickup Facility */}
-            <div className="rounded-md border p-4 space-y-4">
+            <div className="rounded-md border p-4 space-y-4 bg-white">
               <h3 className="text-sm font-semibold">Pickup Address</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -268,9 +289,13 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                             field.onChange(value);
                             // Auto-set region for Djibouti, otherwise reset
                             if (value === "dj") {
-                              const djiboutiRegions = getRegionsByCountryCode("dj");
+                              const djiboutiRegions =
+                                getRegionsByCountryCode("dj");
                               if (djiboutiRegions.length > 0) {
-                                setValue("pickup_facility.region", djiboutiRegions[0].code);
+                                setValue(
+                                  "pickup_facility.region",
+                                  djiboutiRegions[0].code,
+                                );
                               }
                             } else {
                               setValue("pickup_facility.region", "");
@@ -283,7 +308,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           </SelectTrigger>
                           <SelectContent>
                             {countryOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -309,10 +337,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           options={pickupRegions}
                           value={field.value}
                           onValueChange={field.onChange}
-                          placeholder={pickupCountry ? "Select region" : "Select country first"}
+                          placeholder={
+                            pickupCountry
+                              ? "Select region"
+                              : "Select country first"
+                          }
                           searchPlaceholder="Search region..."
                           emptyMessage="No region found."
-                          disabled={!pickupCountry || pickupRegions.length === 0}
+                          disabled={
+                            !pickupCountry || pickupRegions.length === 0
+                          }
                           allowCustomValue={false}
                         />
                       )}
@@ -339,8 +373,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_address">Address</Label>
-                    <Input id="pickup_address" {...register("pickup_facility.address")} />
+                    <Label htmlFor="pickup_address">Loading Address</Label>
+                    <Input
+                      id="pickup_address"
+                      {...register("pickup_facility.address")}
+                    />
                     {errors.pickup_facility?.address && (
                       <p className="text-sm text-destructive">
                         {errors.pickup_facility.address.message}
@@ -392,7 +429,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
             </div>
 
             {/* Delivery Facility */}
-            <div className="rounded-md border p-4 space-y-4">
+            <div className="rounded-md border p-4 space-y-4 bg-white">
               <h3 className="text-sm font-semibold">Delivery Address</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -407,9 +444,13 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                             field.onChange(value);
                             // Auto-set region for Djibouti, otherwise reset
                             if (value === "dj") {
-                              const djiboutiRegions = getRegionsByCountryCode("dj");
+                              const djiboutiRegions =
+                                getRegionsByCountryCode("dj");
                               if (djiboutiRegions.length > 0) {
-                                setValue("delivery_facility.region", djiboutiRegions[0].code);
+                                setValue(
+                                  "delivery_facility.region",
+                                  djiboutiRegions[0].code,
+                                );
                               }
                             } else {
                               setValue("delivery_facility.region", "");
@@ -417,12 +458,18 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           }}
                           value={field.value}
                         >
-                          <SelectTrigger id="delivery_country" className="w-full">
+                          <SelectTrigger
+                            id="delivery_country"
+                            className="w-full"
+                          >
                             <SelectValue placeholder="Select country" />
                           </SelectTrigger>
                           <SelectContent>
                             {countryOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -448,10 +495,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           options={deliveryRegions}
                           value={field.value}
                           onValueChange={field.onChange}
-                          placeholder={deliveryCountry ? "Select region" : "Select country first"}
+                          placeholder={
+                            deliveryCountry
+                              ? "Select region"
+                              : "Select country first"
+                          }
                           searchPlaceholder="Search region..."
                           emptyMessage="No region found."
-                          disabled={!deliveryCountry || deliveryRegions.length === 0}
+                          disabled={
+                            !deliveryCountry || deliveryRegions.length === 0
+                          }
                           allowCustomValue={false}
                         />
                       )}
@@ -478,7 +531,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_address">Address</Label>
+                    <Label htmlFor="delivery_address">
+                      Off Loading Address
+                    </Label>
                     <Input
                       id="delivery_address"
                       {...register("delivery_facility.address")}
@@ -504,7 +559,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_contact_phone">Contact Phone</Label>
+                    <Label htmlFor="delivery_contact_phone">
+                      Contact Phone
+                    </Label>
                     <Input
                       id="delivery_contact_phone"
                       {...register("delivery_facility.contact_phone_number")}
@@ -517,7 +574,9 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_contact_email">Contact Email</Label>
+                    <Label htmlFor="delivery_contact_email">
+                      Contact Email
+                    </Label>
                     <Input
                       id="delivery_contact_email"
                       type="email"

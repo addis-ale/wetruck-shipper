@@ -37,6 +37,12 @@ export function ShipmentsView() {
     [shipmentsResponse?.items],
   );
 
+  // Get priced shipments count
+  const pricedShipmentsCount = useMemo(
+    () => allShipments.filter((s) => s.status === "priced").length,
+    [allShipments],
+  );
+
   // Filter shipments by status based on active tab
   const filteredShipments = useMemo(
     () => allShipments.filter((s) => s.status === activeTab),
@@ -185,7 +191,7 @@ export function ShipmentsView() {
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="sm:w-auto w-full"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            {!showCreateForm && <Plus className="h-4 w-4 mr-2" />}
             {showCreateForm ? "Cancel" : "Create Shipment"}
           </Button>
         </div>
@@ -268,15 +274,23 @@ export function ShipmentsView() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="priced"
-                    className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200 relative"
                   >
                     <span className="font-medium text-sm">Priced</span>
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
-                    >
-                      {allShipments.filter((s) => s.status === "priced").length}
-                    </Badge>
+                    <div className="relative ml-1">
+                      <Badge
+                        variant="secondary"
+                        className="h-6 min-w-6 justify-center px-1.5 font-medium"
+                      >
+                        {pricedShipmentsCount}
+                      </Badge>
+                      {pricedShipmentsCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                      )}
+                    </div>
                   </TabsTrigger>
                   <TabsTrigger
                     value="accepted_by_shipper"

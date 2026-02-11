@@ -61,8 +61,9 @@ function getStatusVariant(
     case "ready_for_pickup":
       return "default";
     case "price_requested":
-    case "priced":
       return "secondary";
+    case "priced":
+      return "destructive";
     case "delivered":
     case "completed":
       return "outline";
