@@ -554,9 +554,16 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
               <div className="font-medium">Container Details</div>
 
               <div className="space-y-2">
-                <Label htmlFor="instruction">Instruction</Label>
+                <div>
+                  <Label htmlFor="instruction">Instruction</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Provide any special handling instructions or important notes
+                    about the container contents for transporters
+                  </p>
+                </div>
                 <Input
                   id="instruction"
+                  placeholder="e.g., The content inside the container is fragile..."
                   {...register("container_details.instruction")}
                 />
                 {errors.container_details?.instruction && (

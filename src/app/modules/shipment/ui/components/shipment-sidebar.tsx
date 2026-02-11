@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package2, MapPin, Calendar, Edit, ExternalLink } from "lucide-react";
 
-
 interface ShipmentSidebarProps {
   shipments: Shipment[];
   activeShipmentId: number | null;
@@ -33,6 +32,8 @@ export function ShipmentSidebar({
       case "delivered":
         return "outline";
       case "cancelled":
+        return "destructive";
+      case "priced":
         return "destructive";
       default:
         return "secondary";
@@ -83,72 +84,77 @@ export function ShipmentSidebar({
                       "rounded-lg border p-3 transition-all hover:shadow-md",
                       isActive
                         ? "border-primary bg-primary/5 shadow-sm"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
                     <div
                       onClick={() => onSelectShipment(shipment.id)}
                       className="cursor-pointer"
                     >
-                    <div className="space-y-2">
-                      {/* Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                          <Badge variant={getStatusColor(shipment.status ?? "created")}>
-  {shipment.status ?? "created"}
-</Badge>
+                      <div className="space-y-2">
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={getStatusColor(
+                                  shipment.status ?? "created",
+                                )}
+                              >
+                                {shipment.status ?? "created"}
+                              </Badge>
 
-                            {containerCount > 0 && (
-                              <span className="text-xs text-muted-foreground">
-                                {containerCount} container
-                                {containerCount !== 1 ? "s" : ""}
-                              </span>
-                            )}
+                              {containerCount > 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  {containerCount} container
+                                  {containerCount !== 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
                           </div>
+                          {onEditShipment && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditShipment(shipment.id);
+                              }}
+                              className="h-7 w-7 p-0 hover:bg-primary/10"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
-                        {onEditShipment && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditShipment(shipment.id);
-                            }}
-                            className="h-7 w-7 p-0 hover:bg-primary/10"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        )}
+
+                        {/* Route */}
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="truncate font-medium">
+                            {formatLocation(shipment.origin)}
+                          </span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="truncate font-medium">
+                            {formatLocation(shipment.destination)}
+                          </span>
+                        </div>
+
+                        {/* Dates */}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3 shrink-0" />
+                          <span>
+                            {formatDate(shipment.pickup_date)} -{" "}
+                            {formatDate(shipment.delivery_date)}
+                          </span>
+                        </div>
+
+                        {/* BOL Number */}
+                        <div className="text-xs text-muted-foreground truncate">
+                          BOL:{" "}
+                          {shipment.shipment_details?.bill_of_lading_number ??
+                            "N/A"}
+                        </div>
                       </div>
-
-                      {/* Route */}
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="truncate font-medium">
-                          {formatLocation(shipment.origin)}
-                        </span>
-                        <span className="text-muted-foreground">→</span>
-                        <span className="truncate font-medium">
-                          {formatLocation(shipment.destination)}
-                        </span>
-                      </div>
-
-                      {/* Dates */}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3 shrink-0" />
-                        <span>
-                          {formatDate(shipment.pickup_date)} -{" "}
-                          {formatDate(shipment.delivery_date)}
-                        </span>
-                      </div>
-
-                      {/* BOL Number */}
-                      <div className="text-xs text-muted-foreground truncate">
-  BOL: {shipment.shipment_details?.bill_of_lading_number ?? "N/A"}
-</div>
-
-                    </div>
                     </div>
                     {/* View Details Link */}
                     <div className="mt-2 pt-2 border-t">
@@ -171,4 +177,3 @@ export function ShipmentSidebar({
     </Card>
   );
 }
-
