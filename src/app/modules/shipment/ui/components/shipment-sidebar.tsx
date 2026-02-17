@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package2, MapPin, Calendar, Edit, ExternalLink } from "lucide-react";
+import { Package2, MapPin, Calendar, Edit, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ShipmentSidebarProps {
   shipments: Shipment[];
@@ -14,6 +14,9 @@ interface ShipmentSidebarProps {
   onSelectShipment: (shipmentId: number) => void;
   onEditShipment?: (shipmentId: number) => void;
   containerCounts?: Map<number, number>;
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function ShipmentSidebar({
@@ -22,6 +25,9 @@ export function ShipmentSidebar({
   onSelectShipment,
   onEditShipment,
   containerCounts,
+  page = 1,
+  totalPages = 1,
+  onPageChange,
 }: ShipmentSidebarProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,7 +40,7 @@ export function ShipmentSidebar({
       case "cancelled":
         return "destructive";
       case "priced":
-        return "destructive";
+        return "priced";
       default:
         return "secondary";
     }
@@ -99,7 +105,12 @@ export function ShipmentSidebar({
                               <Badge
                                 variant={getStatusColor(
                                   shipment.status ?? "created",
-                                )}
+                                ) as any}
+                                className={
+                                  shipment.status === "priced"
+                                    ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                    : ""
+                                }
                               >
                                 {shipment.status ?? "created"}
                               </Badge>
@@ -173,6 +184,32 @@ export function ShipmentSidebar({
             )}
           </div>
         </div>
+        {/* Pagination Controls */}
+        {onPageChange && (
+          <div className="border-t p-3 flex items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

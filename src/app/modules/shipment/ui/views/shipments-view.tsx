@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
 import { ContainerAssignTable } from "@/app/modules/shipment/ui/components/container-assign-table";
@@ -27,14 +28,24 @@ export function ShipmentsView() {
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<string>("created");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [sidebarPage, setSidebarPage] = useState(1);
+  const SIDEBAR_PER_PAGE = 10;
 
-  // Fetch data
+  // Fetch data with server-side pagination and status filtering
   const { data: shipmentsResponse, isLoading: shipmentsLoading } =
-    useShipments();
+    useShipments({ page: sidebarPage, per_page: SIDEBAR_PER_PAGE, status: activeTab });
 
-  const allShipments = useMemo(
+  // Also fetch all shipments (without status filter) for tab counts
+  const { data: allShipmentsResponse } = useShipments();
+
+  const filteredShipments = useMemo(
     () => shipmentsResponse?.items || [],
     [shipmentsResponse?.items],
+  );
+
+  const allShipments = useMemo(
+    () => allShipmentsResponse?.items || [],
+    [allShipmentsResponse?.items],
   );
 
   // Get priced shipments count
@@ -43,16 +54,18 @@ export function ShipmentsView() {
     [allShipments],
   );
 
-  // Filter shipments by status based on active tab
-  const filteredShipments = useMemo(
-    () => allShipments.filter((s) => s.status === activeTab),
-    [allShipments, activeTab],
-  );
+  // Pagination info from the filtered query
+  const sidebarTotalPages = shipmentsResponse?.pages || 1;
+
+  // Reset page when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSidebarPage(1);
+  };
 
   // Auto-select first shipment when filtered list changes
   useEffect(() => {
     if (filteredShipments.length > 0) {
-      // Only auto-select if current activeShipmentId is not in the filtered list
       const isStillInList = filteredShipments.some(
         (s) => s.id === activeShipmentId,
       );
@@ -225,6 +238,9 @@ export function ShipmentsView() {
                 activeShipmentId={activeShipmentId}
                 onSelectShipment={handleSelectShipment}
                 containerCounts={containerCounts}
+                page={sidebarPage}
+                totalPages={sidebarTotalPages}
+                onPageChange={setSidebarPage}
               />
             </CardContent>
           </Card>
@@ -235,7 +251,7 @@ export function ShipmentsView() {
           <div className="bg-card rounded-xl border p-1 shadow-sm">
             <Tabs
               defaultValue="created"
-              onValueChange={setActiveTab}
+              onValueChange={handleTabChange}
               className="w-full"
             >
               <div className="px-2 sm:px-4 py-3">
@@ -280,15 +296,15 @@ export function ShipmentsView() {
                     <div className="relative ml-1">
                       <Badge
                         variant="secondary"
-                        className="h-6 min-w-6 justify-center px-1.5 font-medium"
+                        className={cn(
+                          "h-6 min-w-6 justify-center px-1.5 font-medium",
+                          pricedShipmentsCount > 0 && "bg-red-50 text-red-600 border border-red-200"
+                        )}
                       >
                         {pricedShipmentsCount}
                       </Badge>
                       {pricedShipmentsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                        </span>
+                        <span className="absolute -top-1 -right-1 inline-flex h-2.5 w-2.5 rounded-full bg-red-400 border-2 border-white" />
                       )}
                     </div>
                   </TabsTrigger>

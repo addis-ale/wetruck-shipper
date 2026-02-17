@@ -98,16 +98,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   // Get region options based on selected country
   const pickupRegions = pickupCountry
     ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
 
   const deliveryRegions = deliveryCountry
     ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
 
   // Country options
@@ -155,7 +155,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   }
 
   return (
-    <Card className="w-full bg-white">
+    <Card className="w-full">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary" />
@@ -274,7 +274,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Pickup Facility */}
-            <div className="rounded-md border p-4 space-y-4 bg-white">
+            <div className="rounded-md border p-4 space-y-4">
               <h3 className="text-sm font-semibold">Pickup Address</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -429,7 +429,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
             </div>
 
             {/* Delivery Facility */}
-            <div className="rounded-md border p-4 space-y-4 bg-white">
+            <div className="rounded-md border p-4 space-y-4">
               <h3 className="text-sm font-semibold">Delivery Address</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
