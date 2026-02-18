@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ChevronRight,
+  ChevronLeft,
   Plus,
 } from "lucide-react";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
@@ -63,7 +64,7 @@ function getStatusVariant(
     case "price_requested":
       return "secondary";
     case "priced":
-      return "destructive";
+      return "secondary"; // styled via className override for light-red
     case "delivered":
     case "completed":
       return "outline";
@@ -74,8 +75,11 @@ function getStatusVariant(
   }
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function ShipperDashboard() {
   const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
   const { data: shipmentsData, isLoading: shipmentsLoading } = useShipments({
     per_page: 100,
   });
@@ -109,45 +113,50 @@ export default function ShipperDashboard() {
         value: String(active),
         icon: Truck,
         description: "In transit or ready for pickup",
-        color: "text-blue-600",
-        bgColor: "bg-blue-500/10",
+        color: "text-green-800 dark:text-green-300",
+        bgColor: "bg-green-100 dark:bg-green-900/50",
       },
       {
         title: "Pending Quotes",
         value: String(pendingQuotes),
         icon: Clock,
         description: "Awaiting price or your acceptance",
-        color: "text-amber-600",
-        bgColor: "bg-amber-500/10",
+        color: "text-green-800 dark:text-green-300",
+        bgColor: "bg-green-100 dark:bg-green-900/50",
       },
       {
         title: "Completed",
         value: String(completed),
         icon: CheckCircle2,
         description: "Successfully delivered",
-        color: "text-emerald-600",
-        bgColor: "bg-emerald-500/10",
+        color: "text-green-800 dark:text-green-300",
+        bgColor: "bg-green-100 dark:bg-green-900/50",
       },
       {
         title: "Drafts",
         value: String(drafts),
         icon: Package,
         description: "Incomplete order requests",
-        color: "text-slate-600",
-        bgColor: "bg-slate-500/10",
+        color: "text-green-800 dark:text-green-300",
+        bgColor: "bg-green-100 dark:bg-green-900/50",
       },
     ];
   }, [shipments]);
 
-  const recentShipments = useMemo(() => {
+  const sortedShipments = useMemo(() => {
     return [...shipments]
       .sort((a, b) => {
         const dateA = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
         const dateB = new Date(a.updated_at ?? a.created_at ?? 0).getTime();
         return dateA - dateB;
-      })
-      .slice(0, 6);
+      });
   }, [shipments]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedShipments.length / ITEMS_PER_PAGE));
+  const recentShipments = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedShipments.slice(start, start + ITEMS_PER_PAGE);
+  }, [sortedShipments, currentPage]);
 
   const actionRequired = useMemo(() => {
     const priced = shipments.filter((s) => s.status === "priced");
@@ -209,7 +218,7 @@ export default function ShipperDashboard() {
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="overflow-hidden transition-all hover:shadow-md border-border/60"
+            className="overflow-hidden transition-all hover:shadow-md border-border/60 relative bg-gradient-to-br from-white to-green-50 dark:from-green-950/40 dark:to-green-900/30 dark:border-green-900/50"
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -296,6 +305,34 @@ export default function ShipperDashboard() {
                     />
                   ))}
                 </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
+                    <span className="text-xs text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage <= 1}
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={currentPage >= totalPages}
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </CardContent>
@@ -407,7 +444,10 @@ function ShipmentRow({
       <TableCell>
         <Badge
           variant={getStatusVariant(status)}
-          className="font-medium capitalize"
+          className={cn(
+            "font-medium capitalize",
+            status === "priced" && "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+          )}
         >
           {getStatusLabel(status)}
         </Badge>
@@ -438,7 +478,10 @@ function ShipmentMobileRow({
           <span className="font-medium text-primary">#{shipment.id}</span>
           <Badge
             variant={getStatusVariant(status)}
-            className="font-medium text-xs capitalize"
+            className={cn(
+              "font-medium text-xs capitalize",
+              status === "priced" && "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+            )}
           >
             {getStatusLabel(status)}
           </Badge>
