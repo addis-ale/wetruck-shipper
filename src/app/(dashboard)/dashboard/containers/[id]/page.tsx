@@ -1,11 +1,12 @@
-import { ContainerDetailsView } from "@/app/modules/container/ui/view/container-details-view";
+import ContainerDetailsClient from "./ContainerDetailsClient";
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
+export const dynamic = "force-static";
+export const dynamicParams = false;
 
-export default function ContainerDetailsPage({ params }: PageProps) {
-  return <ContainerDetailsView containerId={Number(params.id)} />;
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
+}
+
+export default function ContainerDetailsPage() {
+  return <ContainerDetailsClient />;
 }

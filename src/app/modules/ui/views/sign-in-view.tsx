@@ -64,7 +64,7 @@ export const SignInView = () => {
     const lowerMsg = msg.toLowerCase();
     if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
       setError(
-        "Unable to load security code. Please refresh the page and try again."
+        "Unable to load security code. Please refresh the page and try again.",
       );
     } else {
       setError(msg);
@@ -97,7 +97,7 @@ export const SignInView = () => {
             lowerErrorMessage.includes("code")))
       ) {
         setError(
-          "The security code you entered is incorrect. Please enter the code from the new image below."
+          "The security code you entered is incorrect. Please enter the code from the new image below.",
         );
         // Refresh captcha on error
         setCaptchaSolution("");
@@ -117,7 +117,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("connection")
       ) {
         setError(
-          "Unable to connect to the server. Please check your internet connection and try again."
+          "Unable to connect to the server. Please check your internet connection and try again.",
         );
       }
       // Invalid credentials (but not captcha)
@@ -134,7 +134,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("401")
       ) {
         setError(
-          "The email or password you entered is incorrect. Please check your credentials and try again."
+          "The email or password you entered is incorrect. Please check your credentials and try again.",
         );
       }
       // Account-related errors
@@ -144,7 +144,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("user not found")
       ) {
         setError(
-          "No account found with this email address. Please check your email or contact support."
+          "No account found with this email address. Please check your email or contact support.",
         );
       } else if (
         lowerErrorMessage.includes("disabled") ||
@@ -152,7 +152,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("inactive")
       ) {
         setError(
-          "Your account has been disabled. Please contact support for assistance."
+          "Your account has been disabled. Please contact support for assistance.",
         );
       }
       // Server errors
@@ -170,13 +170,13 @@ export const SignInView = () => {
         lowerErrorMessage.includes("429")
       ) {
         setError(
-          "Too many login attempts. Please wait a few minutes before trying again."
+          "Too many login attempts. Please wait a few minutes before trying again.",
         );
       }
       // Generic fallback
       else {
         setError(
-          "Login failed. Please check your credentials and try again. If the problem persists, contact support."
+          "Login failed. Please check your credentials and try again. If the problem persists, contact support.",
         );
       }
     } finally {
@@ -237,7 +237,10 @@ export const SignInView = () => {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-semibold uppercase tracking-wider text-gray-500" required>
+                          <FormLabel
+                            className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                            required
+                          >
                             Email Address
                           </FormLabel>
                           <FormControl>
@@ -261,7 +264,10 @@ export const SignInView = () => {
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center justify-between">
-                            <FormLabel className="text-xs font-semibold uppercase tracking-wider text-gray-500" required>
+                            <FormLabel
+                              className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                              required
+                            >
                               Password
                             </FormLabel>
                             <a
@@ -342,18 +348,6 @@ export const SignInView = () => {
                       "Sign In"
                     )}
                   </Button>
-
-                  <div className="text-center text-sm">
-                    <span className="text-muted-foreground">
-                      Don&apos;t have an account?{" "}
-                    </span>
-                    <a
-                      href="#"
-                      className="text-primary font-semibold hover:underline"
-                    >
-                      Sign Up
-                    </a>
-                  </div>
                 </form>
               </Form>
             </div>

@@ -1,6 +1,16 @@
 "use client";
 
-import { File, Eye, Edit, Trash2, MoreHorizontal, Truck, User, Calendar } from "lucide-react";
+import {
+  FileText,
+  File,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  Truck,
+  User,
+  Calendar,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,13 +42,13 @@ export function DocumentCardView({
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "approved":
-        return "bg-green-100 text-green-700 border-green-200";
+        return "bg-primary text-primary-foreground border-0";
       case "rejected":
-        return "bg-red-100 text-red-700 border-red-200";
+        return "bg-red-500 text-white border-0";
       case "pending":
-        return "bg-amber-100 text-amber-700 border-amber-200";
+        return "bg-amber-500 text-white border-0";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -53,11 +63,11 @@ export function DocumentCardView({
 
   const formatDocumentType = (type?: string) => {
     if (!type) return "Document";
-    // Handle both uppercase (from UI) and lowercase (from backend)
     const typeUpper = type.toUpperCase();
     const typeMap: Record<string, string> = {
       TRADE_LICENCE: "Trade Licence",
-      AUTHORISED_CONTACT_PERSON_COMPANY_ID: "Authorised Contact Person Company ID",
+      AUTHORISED_CONTACT_PERSON_COMPANY_ID:
+        "Authorised Contact Person Company ID",
       OTHER: "Other",
     };
     return typeMap[typeUpper] || type.replace(/_/g, " ");
@@ -73,68 +83,126 @@ export function DocumentCardView({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-3">
       {documents.map((doc) => {
         const entityType = doc.entity_type;
         const entityId = entityType === "truck" ? doc.truck_id : doc.driver_id;
+        const status = doc.status || "pending";
+        const isPending = status === "pending";
 
         return (
           <div
             key={doc.id}
-            className="p-3 space-y-2 border border-border rounded-lg bg-card active:bg-accent/50 transition-colors"
+            className="p-4 border border-border rounded-xl bg-card shadow-sm space-y-3 sm:space-y-2 sm:p-3"
           >
-            {/* Header with Document Type and Actions */}
-            <div className="flex items-center gap-2">
-              <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
-                <File className="h-3.5 w-3.5" />
+            {/* Mobile: icon left, title, status right; subtitle Organization */}
+            <div className="flex items-start gap-3">
+              <div
+                className={cn(
+                  "p-2.5 rounded-lg shrink-0",
+                  isPending
+                    ? "bg-amber-500/10 text-amber-600"
+                    : "bg-primary/10 text-primary",
+                )}
+              >
+                <FileText className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-xs text-foreground truncate flex-1">
-                {formatDocumentType(doc.document_type)}
-              </h3>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-6 w-6 p-0 shrink-0">
-                    <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onView(String(doc.id))}>
-                    <Eye className="mr-2 h-4 w-4" /> View
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit(String(doc.id))}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => onDelete(doc.id)}
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            {/* Status Badge */}
-            <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm text-foreground">
+                  {formatDocumentType(doc.document_type)}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Organization
+                </p>
+              </div>
               <Badge
                 variant="secondary"
                 className={cn(
-                  "font-semibold text-[9px] px-1.5 py-0.5 h-4 capitalize",
-                  getStatusColor(doc.status || "pending")
+                  "shrink-0 font-semibold text-[10px] px-2 py-0.5 capitalize",
+                  getStatusColor(status),
                 )}
               >
-                {doc.status || "pending"}
+                {status}
               </Badge>
-              {entityType && (
+            </div>
+
+            {/* Date row */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border/50">
+              <Calendar className="h-3.5 w-3.5 text-primary" />
+              <span>{formatDate(doc.created_at)}</span>
+            </div>
+
+            {/* Mobile: View, Edit, Delete with icons - aligned right */}
+            <div className="flex items-center justify-end gap-2 pt-2 sm:hidden">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 hover:text-primary"
+                onClick={() => onView(String(doc.id))}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                View
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 hover:text-primary"
+                onClick={() => onEdit(String(doc.id))}
+              >
+                <Edit className="h-3.5 w-3.5" />
+                Edit
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 disabled:hover:bg-transparent"
+                onClick={() => onDelete(doc.id)}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+            </div>
+
+            {/* Desktop: dropdown menu only */}
+            <div className="hidden sm:block pt-1 border-t border-border/50">
+              <div className="flex items-center justify-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-6 w-6 p-0 shrink-0"
+                      aria-label="More actions"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => onView(String(doc.id))}>
+                      <Eye className="mr-2 h-4 w-4" /> View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit(String(doc.id))}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => onDelete(doc.id)}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Desktop: entity badge */}
+            {entityType && (
+              <div className="hidden sm:flex flex-wrap items-center gap-1.5">
                 <Badge
                   variant="outline"
                   className={cn(
                     "font-medium text-[9px] px-1.5 py-0.5 h-4 capitalize",
                     entityId
                       ? "cursor-pointer hover:bg-accent"
-                      : "opacity-50 cursor-not-allowed"
+                      : "opacity-50 cursor-not-allowed",
                   )}
                   onClick={
                     entityId && onEntityClick
@@ -151,18 +219,11 @@ export function DocumentCardView({
                     <span className="truncate max-w-[40px]">{entityType}</span>
                   </div>
                 </Badge>
-              )}
-            </div>
-
-            {/* Date */}
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <Calendar className="h-3 w-3 shrink-0" />
-              <span className="truncate">{formatDate(doc.created_at)}</span>
-            </div>
+              </div>
+            )}
           </div>
         );
       })}
     </div>
   );
 }
-

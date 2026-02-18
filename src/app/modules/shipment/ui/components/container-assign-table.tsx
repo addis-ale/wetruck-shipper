@@ -37,8 +37,10 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { Search, Loader2, CheckCircle, X, Plus, List } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import { CreateContainerDialog } from "@/app/modules/container/ui/components/dialogs/create-container-dialog";
+import { CreateContainerDrawer } from "@/app/modules/container/ui/components/create-container-drawer";
 import { ViewContainersSheet } from "@/app/modules/container/ui/components/view-containers-sheet";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,33 +79,40 @@ export function ContainerAssignTable<TData, TValue>({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewSheetOpen, setViewSheetOpen] = useState(false);
   const [selectedToAssign, setSelectedToAssign] = useState<number[]>([]);
   const [searchPage, setSearchPage] = useState(1);
   const [searchAccumulated, setSearchAccumulated] = useState<Container[]>([]);
-  const [dismissedMessageBox, setDismissedMessageBox] = useState<Record<number, boolean>>({});
-  const [recentlySubmitted, setRecentlySubmitted] = useState<Record<number, boolean>>({});
+  const [dismissedMessageBox, setDismissedMessageBox] = useState<
+    Record<number, boolean>
+  >({});
+  const [recentlySubmitted, setRecentlySubmitted] = useState<
+    Record<number, boolean>
+  >({});
   const searchScrollRef = useRef<HTMLDivElement>(null);
 
   // Load dismissed message boxes from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('dismissedPriceRequestMessageBoxes');
+    const stored = localStorage.getItem("dismissedPriceRequestMessageBoxes");
     if (stored) {
       try {
         setDismissedMessageBox(JSON.parse(stored));
       } catch (e) {
-        console.error('Failed to parse dismissed message boxes:', e);
+        console.error("Failed to parse dismissed message boxes:", e);
       }
     }
 
     // Load recently submitted shipments
-    const recentlySubmittedStored = localStorage.getItem('recentlySubmittedPriceRequests');
+    const recentlySubmittedStored = localStorage.getItem(
+      "recentlySubmittedPriceRequests",
+    );
     if (recentlySubmittedStored) {
       try {
         setRecentlySubmitted(JSON.parse(recentlySubmittedStored));
       } catch (e) {
-        console.error('Failed to parse recently submitted:', e);
+        console.error("Failed to parse recently submitted:", e);
       }
     }
   }, []);
@@ -112,19 +121,29 @@ export function ContainerAssignTable<TData, TValue>({
     if (!activeShipmentId) return;
     const updated = { ...dismissedMessageBox, [activeShipmentId]: true };
     setDismissedMessageBox(updated);
-    localStorage.setItem('dismissedPriceRequestMessageBoxes', JSON.stringify(updated));
+    localStorage.setItem(
+      "dismissedPriceRequestMessageBoxes",
+      JSON.stringify(updated),
+    );
   };
 
   const markAsRecentlySubmitted = (shipmentId: number) => {
     const updated = { ...recentlySubmitted, [shipmentId]: true };
     setRecentlySubmitted(updated);
-    localStorage.setItem('recentlySubmittedPriceRequests', JSON.stringify(updated));
+    localStorage.setItem(
+      "recentlySubmittedPriceRequests",
+      JSON.stringify(updated),
+    );
   };
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   /** Fetch containers when focused - limit to 5 when showing initial results, 10 when searching */
-  const { data: containers, isLoading, isFetching } = useContainers(
+  const {
+    data: containers,
+    isLoading,
+    isFetching,
+  } = useContainers(
     {
       container_number: debouncedSearch || undefined,
       per_page: PER_PAGE,
@@ -221,14 +240,6 @@ export function ContainerAssignTable<TData, TValue>({
     );
   };
 
-  const selectAllToAssign = (checked: boolean) => {
-    if (checked) {
-      setSelectedToAssign(availableContainers.map((c) => c.id));
-    } else {
-      setSelectedToAssign([]);
-    }
-  };
-
   const handleAssignSelected = () => {
     if (selectedToAssign.length === 0) return;
     if (onAssignContainers) {
@@ -309,7 +320,8 @@ export function ContainerAssignTable<TData, TValue>({
                   <div className="divide-y">
                     {!debouncedSearch && (
                       <div className="px-3 py-1.5 text-xs text-muted-foreground bg-muted/50">
-                        Showing {availableContainers.length} available containers • Type to search
+                        Showing {availableContainers.length} available
+                        containers • Type to search
                       </div>
                     )}
                     {availableContainers.map((container) => (
@@ -392,15 +404,26 @@ export function ContainerAssignTable<TData, TValue>({
           )}
         </div>
 
-        <CreateContainerDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          hideTrigger
-          onCreated={(container) => {
-            onAssignContainer?.(container.id);
-            setCreateDialogOpen(false);
-          }}
-        />
+        {isMobile ? (
+          <CreateContainerDrawer
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            onCreated={(container) => {
+              onAssignContainer?.(container.id);
+              setCreateDialogOpen(false);
+            }}
+          />
+        ) : (
+          <CreateContainerDialog
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            hideTrigger
+            onCreated={(container) => {
+              onAssignContainer?.(container.id);
+              setCreateDialogOpen(false);
+            }}
+          />
+        )}
 
         <ViewContainersSheet
           open={viewSheetOpen}
@@ -487,34 +510,38 @@ export function ContainerAssignTable<TData, TValue>({
         {data.length > 0 && activeShipmentId && (
           <div className="space-y-4 pt-2 border-t">
             {/* Persistent Message Box - Shows when status is price_requested */}
-            {!hideMessageBox && shipmentStatus === "price_requested" && activeShipmentId && !dismissedMessageBox[activeShipmentId] && (
-              <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+            {!hideMessageBox &&
+              shipmentStatus === "price_requested" &&
+              activeShipmentId &&
+              !dismissedMessageBox[activeShipmentId] && (
+                <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                        </div>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
+                          Price Request Submitted Successfully
+                        </h3>
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          Your price request has been successfully submitted.
+                          You will be notified once a response is received.
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleDismissMessageBox}
+                        className="flex-shrink-0 rounded-md p-1.5 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                        aria-label="Dismiss message"
+                      >
+                        <X className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
-                        Price Request Submitted Successfully
-                      </h3>
-                      <p className="text-sm text-green-700 dark:text-green-300">
-                        Your price request has been successfully submitted. You will be notified once a response is received.
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleDismissMessageBox}
-                      className="flex-shrink-0 rounded-md p-1.5 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
-                      aria-label="Dismiss message"
-                    >
-                      <X className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Request Price Button */}
             <div className="flex justify-end">
@@ -526,7 +553,9 @@ export function ContainerAssignTable<TData, TValue>({
                       markAsRecentlySubmitted(activeShipmentId);
                     }
                   }}
-                  disabled={isRequestingPrice || !activeShipmentId || data.length === 0}
+                  disabled={
+                    isRequestingPrice || !activeShipmentId || data.length === 0
+                  }
                   className="gap-2"
                 >
                   {isRequestingPrice ? (
@@ -536,7 +565,8 @@ export function ContainerAssignTable<TData, TValue>({
                     </>
                   ) : (
                     <>
-                      Request Price ({data.length} container{data.length !== 1 ? "s" : ""})
+                      Request Price ({data.length} container
+                      {data.length !== 1 ? "s" : ""})
                     </>
                   )}
                 </Button>
@@ -547,7 +577,10 @@ export function ContainerAssignTable<TData, TValue>({
               ) : shipmentStatus ? (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
                   <span className="text-sm">
-                    Status: {shipmentStatus.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    Status:{" "}
+                    {shipmentStatus
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </span>
                 </div>
               ) : null}

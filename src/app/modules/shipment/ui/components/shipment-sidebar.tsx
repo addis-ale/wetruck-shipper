@@ -170,7 +170,7 @@ export function ShipmentSidebar({
                     {/* View Details Link */}
                     <div className="mt-2 pt-2 border-t">
                       <Link
-                        href={`/dashboard/shipments/${shipment.id}`}
+                        href={`/dashboard/shipments/placeholder?id=${shipment.id}`}
                         onClick={(e) => e.stopPropagation()}
                         className="flex items-center gap-2 text-xs text-primary hover:underline"
                       >

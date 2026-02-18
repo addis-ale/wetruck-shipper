@@ -18,7 +18,10 @@ import { cn } from "@/lib/utils";
 
 const DOCUMENT_TYPES = [
   { value: "TRADE_LICENCE", label: "Trade Licence" },
-  { value: "AUTHORISED_CONTACT_PERSON_COMPANY_ID", label: "Authorised Contact Person Company ID" },
+  {
+    value: "AUTHORISED_CONTACT_PERSON_COMPANY_ID",
+    label: "Authorised Contact Person Company ID",
+  },
   { value: "OTHER", label: "Other" },
 ] as const;
 
@@ -36,14 +39,23 @@ const ENTITY_TYPES = [
 interface DocumentFilterControlsProps {
   filters: {
     status?: "pending" | "approved" | "rejected" | null;
-    document_type?: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | null;
+    document_type?:
+      | "TRADE_LICENCE"
+      | "AUTHORISED_CONTACT_PERSON_COMPANY_ID"
+      | "OTHER"
+      | null;
     entity_type?: "truck" | "driver" | null;
   };
   onStatusFilter: (
-    status: "pending" | "approved" | "rejected" | "all" | null
+    status: "pending" | "approved" | "rejected" | "all" | null,
   ) => void;
   onDocumentTypeFilter: (
-    type: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | "all" | null
+    type:
+      | "TRADE_LICENCE"
+      | "AUTHORISED_CONTACT_PERSON_COMPANY_ID"
+      | "OTHER"
+      | "all"
+      | null,
   ) => void;
   onEntityTypeFilter: (type: "truck" | "driver" | "all" | null) => void;
   onClearFilters: () => void;
@@ -62,191 +74,230 @@ export function DocumentFilterControls({
   const [isEntityTypeFilterOpen, setIsEntityTypeFilterOpen] = useState(false);
 
   return (
-    <div className="flex items-center gap-2 w-full flex-wrap sm:flex-nowrap">
-      <Popover open={isStatusFilterOpen} onOpenChange={setIsStatusFilterOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="h-9 text-xs sm:text-sm min-w-[100px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap">
-            <span className="hidden sm:inline">Status: </span>
-            {filters.status
-              ? DOCUMENT_STATUSES.find((s) => s.value === filters.status)?.label
-              : "All"}
-            <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="p-0 min-w-[140px] sm:min-w-0"
-          align="start"
-          sideOffset={4}
-          style={{
-            width: "max(var(--radix-popover-trigger-width), 140px)",
-          }}
-        >
-          <Command>
-            <CommandList>
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    onStatusFilter("all");
-                    setIsStatusFilterOpen(false);
-                  }}
-                  className={cn(
-                    !filters.status && "bg-amber-100 text-amber-700 font-medium",
-                    "whitespace-nowrap"
-                  )}
-                >
-                  All
-                </CommandItem>
-                {DOCUMENT_STATUSES.map((status) => (
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full flex-wrap sm:flex-nowrap">
+      {/* Mobile: status pill buttons - full width */}
+      <div className="grid grid-cols-4 gap-2 w-full sm:hidden">
+        {(["all", "approved", "pending", "rejected"] as const).map((status) => {
+          const isAll = status === "all";
+          const isSelected = isAll
+            ? !filters.status
+            : filters.status === status;
+          return (
+            <Button
+              key={status}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "w-full rounded-full text-xs font-medium capitalize h-8 px-2",
+                isSelected
+                  ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground"
+                  : "text-primary border-primary/30 hover:bg-primary/10",
+              )}
+              onClick={() => onStatusFilter(isAll ? "all" : status)}
+            >
+              {isAll ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+            </Button>
+          );
+        })}
+      </div>
+      <div className="hidden sm:flex items-center gap-2 w-full flex-wrap sm:flex-nowrap">
+        <Popover open={isStatusFilterOpen} onOpenChange={setIsStatusFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-9 text-xs sm:text-sm min-w-[100px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap"
+            >
+              <span className="hidden sm:inline">Status: </span>
+              {filters.status
+                ? DOCUMENT_STATUSES.find((s) => s.value === filters.status)
+                    ?.label
+                : "All"}
+              <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="p-0 min-w-[140px] sm:min-w-0"
+            align="start"
+            sideOffset={4}
+            style={{
+              width: "max(var(--radix-popover-trigger-width), 140px)",
+            }}
+          >
+            <Command>
+              <CommandList>
+                <CommandGroup>
                   <CommandItem
-                    key={status.value}
                     onSelect={() => {
-                      onStatusFilter(status.value);
+                      onStatusFilter("all");
                       setIsStatusFilterOpen(false);
                     }}
                     className={cn(
-                      status.value === filters.status &&
+                      !filters.status &&
                         "bg-amber-100 text-amber-700 font-medium",
-                      "whitespace-nowrap"
+                      "whitespace-nowrap",
                     )}
                   >
-                    {status.label}
+                    All
                   </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                  {DOCUMENT_STATUSES.map((status) => (
+                    <CommandItem
+                      key={status.value}
+                      onSelect={() => {
+                        onStatusFilter(status.value);
+                        setIsStatusFilterOpen(false);
+                      }}
+                      className={cn(
+                        status.value === filters.status &&
+                          "bg-amber-100 text-amber-700 font-medium",
+                        "whitespace-nowrap",
+                      )}
+                    >
+                      {status.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-      <Popover
-        open={isDocumentTypeFilterOpen}
-        onOpenChange={setIsDocumentTypeFilterOpen}
-      >
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="h-9 text-xs sm:text-sm min-w-[120px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap">
-            <span className="hidden sm:inline">Document Type: </span>
-            {filters.document_type
-              ? DOCUMENT_TYPES.find((t) => t.value === filters.document_type)
-                  ?.label
-              : "All"}
-            <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="p-0 min-w-[160px] sm:min-w-0"
-          align="start"
-          sideOffset={4}
-          style={{
-            width: "max(var(--radix-popover-trigger-width), 160px)",
-          }}
+        <Popover
+          open={isDocumentTypeFilterOpen}
+          onOpenChange={setIsDocumentTypeFilterOpen}
         >
-          <Command>
-            <CommandList>
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    onDocumentTypeFilter("all");
-                    setIsDocumentTypeFilterOpen(false);
-                  }}
-                  className={cn(
-                    !filters.document_type &&
-                      "bg-amber-100 text-amber-700 font-medium",
-                    "whitespace-nowrap"
-                  )}
-                >
-                  All
-                </CommandItem>
-                {DOCUMENT_TYPES.map((type) => (
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-9 text-xs sm:text-sm min-w-[120px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap"
+            >
+              <span className="hidden sm:inline">Document Type: </span>
+              {filters.document_type
+                ? DOCUMENT_TYPES.find((t) => t.value === filters.document_type)
+                    ?.label
+                : "All"}
+              <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="p-0 min-w-[160px] sm:min-w-0"
+            align="start"
+            sideOffset={4}
+            style={{
+              width: "max(var(--radix-popover-trigger-width), 160px)",
+            }}
+          >
+            <Command>
+              <CommandList>
+                <CommandGroup>
                   <CommandItem
-                    key={type.value}
                     onSelect={() => {
-                      onDocumentTypeFilter(type.value);
+                      onDocumentTypeFilter("all");
                       setIsDocumentTypeFilterOpen(false);
                     }}
                     className={cn(
-                      type.value === filters.document_type &&
+                      !filters.document_type &&
                         "bg-amber-100 text-amber-700 font-medium",
-                      "whitespace-nowrap"
+                      "whitespace-nowrap",
                     )}
                   >
-                    {type.label}
+                    All
                   </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                  {DOCUMENT_TYPES.map((type) => (
+                    <CommandItem
+                      key={type.value}
+                      onSelect={() => {
+                        onDocumentTypeFilter(type.value);
+                        setIsDocumentTypeFilterOpen(false);
+                      }}
+                      className={cn(
+                        type.value === filters.document_type &&
+                          "bg-amber-100 text-amber-700 font-medium",
+                        "whitespace-nowrap",
+                      )}
+                    >
+                      {type.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-      <Popover
-        open={isEntityTypeFilterOpen}
-        onOpenChange={setIsEntityTypeFilterOpen}
-      >
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="h-9 text-xs sm:text-sm min-w-[100px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap">
-            <span className="hidden sm:inline">Entity Type: </span>
-            {filters.entity_type
-              ? ENTITY_TYPES.find((t) => t.value === filters.entity_type)?.label
-              : "All"}
-            <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="p-0 min-w-[140px] sm:min-w-0"
-          align="start"
-          sideOffset={4}
-          style={{
-            width: "max(var(--radix-popover-trigger-width), 140px)",
-          }}
+        <Popover
+          open={isEntityTypeFilterOpen}
+          onOpenChange={setIsEntityTypeFilterOpen}
         >
-          <Command>
-            <CommandList>
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    onEntityTypeFilter("all");
-                    setIsEntityTypeFilterOpen(false);
-                  }}
-                  className={cn(
-                    !filters.entity_type &&
-                      "bg-amber-100 text-amber-700 font-medium",
-                    "whitespace-nowrap"
-                  )}
-                >
-                  All
-                </CommandItem>
-                {ENTITY_TYPES.map((type) => (
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-9 text-xs sm:text-sm min-w-[100px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap"
+            >
+              <span className="hidden sm:inline">Entity Type: </span>
+              {filters.entity_type
+                ? ENTITY_TYPES.find((t) => t.value === filters.entity_type)
+                    ?.label
+                : "All"}
+              <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="p-0 min-w-[140px] sm:min-w-0"
+            align="start"
+            sideOffset={4}
+            style={{
+              width: "max(var(--radix-popover-trigger-width), 140px)",
+            }}
+          >
+            <Command>
+              <CommandList>
+                <CommandGroup>
                   <CommandItem
-                    key={type.value}
                     onSelect={() => {
-                      onEntityTypeFilter(type.value);
+                      onEntityTypeFilter("all");
                       setIsEntityTypeFilterOpen(false);
                     }}
                     className={cn(
-                      type.value === filters.entity_type &&
+                      !filters.entity_type &&
                         "bg-amber-100 text-amber-700 font-medium",
-                      "whitespace-nowrap"
+                      "whitespace-nowrap",
                     )}
                   >
-                    {type.label}
+                    All
                   </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                  {ENTITY_TYPES.map((type) => (
+                    <CommandItem
+                      key={type.value}
+                      onSelect={() => {
+                        onEntityTypeFilter(type.value);
+                        setIsEntityTypeFilterOpen(false);
+                      }}
+                      className={cn(
+                        type.value === filters.entity_type &&
+                          "bg-amber-100 text-amber-700 font-medium",
+                        "whitespace-nowrap",
+                      )}
+                    >
+                      {type.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-      {(filters.status || filters.document_type || filters.entity_type) && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClearFilters}
-          className="h-9 text-xs sm:text-sm shrink-0"
-        >
-          Clear
-        </Button>
-      )}
+        {(filters.status || filters.document_type || filters.entity_type) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearFilters}
+            className="h-9 text-xs sm:text-sm shrink-0"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -87,7 +87,18 @@ export const containerApi = {
     });
 
     if (res.error) {
-      throw new Error(res.error);
+      const errMsg =
+        typeof res.error === "string"
+          ? res.error
+          : Array.isArray(res.error)
+            ? (res.error as Array<{ msg?: string; message?: string }>)
+                .map((e) => e?.msg ?? e?.message ?? "")
+                .filter(Boolean)
+                .join(" ") || "Update failed"
+            : typeof (res.error as { message?: string })?.message === "string"
+              ? (res.error as { message: string }).message
+              : "Update failed";
+      throw new Error(errMsg);
     }
 
     return { ...payload, id } as Container;

@@ -1,32 +1,9 @@
+import { getAuthToken } from "@/lib/auth-token";
 import type { ShipItemDocument } from "../types/ship-item-document";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PREFIX = "/api/v1";
 const API_PATH = "/ship-item";
-
-// Helper to get auth token from localStorage or cookies
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-
-  // First try localStorage (most reliable for cross-origin requests)
-  const localStorageToken = localStorage.getItem("wetruck_access_token");
-  if (localStorageToken) {
-    return localStorageToken;
-  }
-
-  // Fallback to cookie
-  if (typeof document !== "undefined") {
-    const cookies = document.cookie.split(";");
-    const tokenCookie = cookies.find((c) =>
-      c.trim().startsWith("access_token="),
-    );
-    if (tokenCookie) {
-      return tokenCookie.split("=")[1];
-    }
-  }
-
-  return null;
-}
 
 async function apiRequest<T>(
   endpoint: string,
@@ -43,7 +20,9 @@ async function apiRequest<T>(
   }
 
   const url = `${BASE_URL.replace(/\/api\/v1\/?$/, "")}${API_PREFIX}${endpoint}`;
-  console.log(`[shipItemDocumentsApi] Requesting: ${options.method || "GET"} ${url}`);
+  console.log(
+    `[shipItemDocumentsApi] Requesting: ${options.method || "GET"} ${url}`,
+  );
   const response = await fetch(url, {
     ...options,
     headers,
@@ -70,7 +49,9 @@ export const shipItemDocumentsApi = {
    * @param containerId - Optional filter by container ID
    */
   list(shipItemId: number, containerId?: number): Promise<ShipItemDocument[]> {
-    console.log(`[shipItemDocumentsApi.list] shipItemId: ${shipItemId}, containerId: ${containerId}`);
+    console.log(
+      `[shipItemDocumentsApi.list] shipItemId: ${shipItemId}, containerId: ${containerId}`,
+    );
     const params = new URLSearchParams();
     if (containerId != null) {
       params.append("container_id", containerId.toString());
@@ -109,17 +90,23 @@ export const shipItemDocumentsApi = {
   }> {
     // Re-implementing get to use the allowed list/shipper endpoint
     // to avoid the 403 Forbidden error on the direct direct document ID endpoint.
-    console.log(`[shipItemDocumentsApi.get] shipItemId: ${shipItemId}, documentId: ${documentId}, containerId: ${containerId}`);
+    console.log(
+      `[shipItemDocumentsApi.get] shipItemId: ${shipItemId}, documentId: ${documentId}, containerId: ${containerId}`,
+    );
     const documents = await this.list(shipItemId, containerId);
     const doc = documents.find((d) => d.id === documentId);
 
     if (!doc) {
-      console.error(`[shipItemDocumentsApi.get] Document ${documentId} not found in shipper list for shipItem ${shipItemId}`);
+      console.error(
+        `[shipItemDocumentsApi.get] Document ${documentId} not found in shipper list for shipItem ${shipItemId}`,
+      );
       throw new Error("Document not found");
     }
 
     if (!doc.presigned_url) {
-      console.error(`[shipItemDocumentsApi.get] Document ${documentId} found but no presigned_url available`);
+      console.error(
+        `[shipItemDocumentsApi.get] Document ${documentId} found but no presigned_url available`,
+      );
       throw new Error("Presigned URL not available for this document");
     }
 

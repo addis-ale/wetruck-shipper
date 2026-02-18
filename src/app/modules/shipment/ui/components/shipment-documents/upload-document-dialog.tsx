@@ -23,19 +23,26 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
 
   return (
     <>
-      <Button onClick={() => {
-        setOpen(true);
-        setUploadError(null);
-      }}>Upload Document</Button>
-
-      <Dialog open={open} onOpenChange={(val) => {
-        setOpen(val);
-        if (!val) {
-          setFile(null);
+      <Button
+        onClick={() => {
+          setOpen(true);
           setUploadError(null);
-        }
-      }}>
-        <DialogContent>
+        }}
+      >
+        Upload Document
+      </Button>
+
+      <Dialog
+        open={open}
+        onOpenChange={(val) => {
+          setOpen(val);
+          if (!val) {
+            setFile(null);
+            setUploadError(null);
+          }
+        }}
+      >
+        <DialogContent className="overflow-hidden max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
           </DialogHeader>
@@ -53,7 +60,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
           </select>
 
           {/* File picker */}
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-hidden">
             <input
               ref={fileInputRef}
               type="file"
@@ -77,13 +84,15 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
 
             {/* Selected file display */}
             {file && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground border rounded p-2">
-                <FileText className="h-4 w-4" />
-                <span className="truncate">{file.name}</span>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground border rounded p-2 min-w-0 overflow-hidden">
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="flex-1 truncate min-w-0" title={file.name}>
+                  {file.name}
+                </span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="ml-auto h-6 w-6"
+                  className="shrink-0 h-6 w-6"
                   onClick={() => {
                     setFile(null);
                     setUploadError(null);
@@ -122,7 +131,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
                     setUploadError(err.message);
                     toast.error(err.message || "Upload failed");
                   },
-                }
+                },
               );
             }}
           >

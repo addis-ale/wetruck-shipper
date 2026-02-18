@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { CreateShipmentDrawer } from "@/app/modules/shipment/ui/components/create-shipment-drawer";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
 import { ContainerAssignTable } from "@/app/modules/shipment/ui/components/container-assign-table";
@@ -16,15 +17,35 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Package } from "lucide-react";
+import { Package, Plus, Truck, Calendar, ChevronRight } from "lucide-react";
 import { PricedShipItemsTable } from "@/app/modules/shipment/ui/components/priced-ship-items-table";
 import { AcceptedShipItemsTable } from "@/app/modules/shipment/ui/components/accepted-ship-items-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
+
+function formatLocation(location: string) {
+  return location
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function formatDateShort(dateString: string) {
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "N/A";
+  }
+}
 
 export function ShipmentsView() {
+  const isMobile = useIsMobile();
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<string>("created");
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -32,8 +53,9 @@ export function ShipmentsView() {
   const SIDEBAR_PER_PAGE = 10;
 
   // Fetch data with server-side pagination and status filtering
-  const { data: shipmentsResponse, isLoading: shipmentsLoading } =
-    useShipments({ page: sidebarPage, per_page: SIDEBAR_PER_PAGE, status: activeTab });
+  const { data: shipmentsResponse, isLoading: shipmentsLoading } = useShipments(
+    { page: sidebarPage, per_page: SIDEBAR_PER_PAGE, status: activeTab },
+  );
 
   // Also fetch all shipments (without status filter) for tab counts
   const { data: allShipmentsResponse } = useShipments();
@@ -54,14 +76,26 @@ export function ShipmentsView() {
     [allShipments],
   );
 
-  // Pagination info from the filtered query
-  const sidebarTotalPages = shipmentsResponse?.pages || 1;
+  // Filter shipments by status based on active tab
+  const filteredShipments = useMemo(
+    () => allShipments.filter((s) => s.status === activeTab),
+    [allShipments, activeTab],
+  );
 
-  // Reset page when tab changes
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    setSidebarPage(1);
-  };
+  // Count per status for mobile tab cards
+  const statusCounts = useMemo(
+    () => ({
+      created: allShipments.filter((s) => s.status === "created").length,
+      price_requested: allShipments.filter(
+        (s) => s.status === "price_requested",
+      ).length,
+      priced: allShipments.filter((s) => s.status === "priced").length,
+      accepted_by_shipper: allShipments.filter(
+        (s) => s.status === "accepted_by_shipper",
+      ).length,
+    }),
+    [allShipments],
+  );
 
   // Auto-select first shipment when filtered list changes
   useEffect(() => {
@@ -106,6 +140,7 @@ export function ShipmentsView() {
   // Mutations
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for Get price action
   const { mutate: getPrice } = useGetPrice();
   const { mutate: requestPrice, isPending: isRequestingPrice } =
     useRequestPrice();
@@ -149,12 +184,6 @@ export function ShipmentsView() {
     setActiveShipmentId(shipmentId);
   };
 
-  // Handle get price
-  const handleGetPrice = (containerIds: number[]) => {
-    if (!activeShipmentId || containerIds.length === 0) return;
-    getPrice({ shipmentId: activeShipmentId, containerIds });
-  };
-
   // Handle request price
   const handleRequestPrice = (shipmentId: number) => {
     requestPrice(shipmentId);
@@ -187,6 +216,152 @@ export function ShipmentsView() {
     );
   }
 
+  // Mobile: list/selection screen — tap a shipment to open detail
+  const tabLabels: Record<string, string> = {
+    created: "Created",
+    price_requested: "Price requested",
+    priced: "Priced",
+    accepted_by_shipper: "Accepted",
+  };
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4 pb-6">
+        <header className="flex items-center justify-between gap-2 pb-3 border-b border-border">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
+            Shipments
+          </h1>
+          <Button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            size="sm"
+            className="shrink-0"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            Create
+          </Button>
+        </header>
+        <CreateShipmentDrawer
+          open={showCreateForm}
+          onOpenChange={setShowCreateForm}
+          onSuccess={handleShipmentCreated}
+          onCancel={() => setShowCreateForm(false)}
+        />
+        <div className="grid grid-cols-4 gap-1.5">
+          {(
+            [
+              "created",
+              "price_requested",
+              "priced",
+              "accepted_by_shipper",
+            ] as const
+          ).map((tab) => {
+            const isActive = activeTab === tab;
+            const count = statusCounts[tab];
+            const showNotification =
+              tab === "priced" && pricedShipmentsCount > 0;
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`
+                    relative min-w-0 rounded-lg border p-2 text-center transition-colors
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    ${
+                      isActive
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-border bg-card hover:bg-muted/30 active:bg-muted/50"
+                    }
+                  `}
+              >
+                {showNotification && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                  </span>
+                )}
+                <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight">
+                  {tabLabels[tab]}
+                </p>
+                <p className="text-lg font-bold text-foreground tabular-nums mt-0.5">
+                  {count}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+        <div className="space-y-2">
+          {filteredShipments.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/20 py-12 px-4 text-center">
+              <Truck className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
+              <p className="text-sm font-medium text-foreground mb-1">
+                No shipments in this tab
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Create a shipment or switch to another tab.
+              </p>
+            </div>
+          ) : (
+            filteredShipments.map((shipment: Shipment) => (
+              <Link
+                key={shipment.id}
+                href={`/dashboard/shipments/placeholder?id=${shipment.id}`}
+                className="block"
+              >
+                <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden transition-colors hover:bg-muted/30 active:bg-muted/50">
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono font-medium text-muted-foreground">
+                            BOL #
+                            {shipment.shipment_details?.bill_of_lading_number ??
+                              shipment.id}
+                          </span>
+                          <Badge
+                            variant={
+                              shipment.status === "accepted_by_shipper"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className="text-[10px] uppercase font-medium shrink-0"
+                          >
+                            {shipment.status?.replace("_", " ") ?? ""}
+                          </Badge>
+                        </div>
+                        <div className="mt-2 rounded-md bg-muted/40 px-2.5 py-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="truncate font-semibold text-foreground">
+                              {formatLocation(shipment.origin)}
+                            </span>
+                            <span className="text-muted-foreground shrink-0">
+                              →
+                            </span>
+                            <span className="truncate font-semibold text-foreground">
+                              {formatLocation(shipment.destination)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3 shrink-0" />
+                            <span>
+                              {formatDateShort(shipment.pickup_date)} –{" "}
+                              {formatDateShort(shipment.delivery_date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-6">
       {/* Top Section with Header */}
@@ -209,13 +384,13 @@ export function ShipmentsView() {
           </Button>
         </div>
 
-        {/* Create Shipment Form - Conditionally rendered */}
         {showCreateForm && (
-          <Card className="border shadow-sm">
-            <CardContent className="p-6">
-              <CreateShipmentForm onSuccess={handleShipmentCreated} />
-            </CardContent>
-          </Card>
+          <CreateShipmentForm
+            onSuccess={(id) => {
+              handleShipmentCreated(id);
+              setShowCreateForm(false);
+            }}
+          />
         )}
 
         <Separator className="my-2" />
@@ -298,7 +473,8 @@ export function ShipmentsView() {
                         variant="secondary"
                         className={cn(
                           "h-6 min-w-6 justify-center px-1.5 font-medium",
-                          pricedShipmentsCount > 0 && "bg-red-50 text-red-600 border border-red-200"
+                          pricedShipmentsCount > 0 &&
+                            "bg-red-50 text-red-600 border border-red-200",
                         )}
                       >
                         {pricedShipmentsCount}

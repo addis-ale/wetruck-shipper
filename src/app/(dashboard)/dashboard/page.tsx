@@ -8,22 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Package,
   Truck,
   Clock,
   CheckCircle2,
-  AlertCircle,
   ChevronRight,
   ChevronLeft,
   Plus,
+  FileText,
 } from "lucide-react";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
@@ -52,30 +44,6 @@ function formatDate(dateString: string) {
 function getStatusLabel(status: string) {
   return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
-
-function getStatusVariant(
-  status: string,
-): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case "in_transit":
-    case "allocated":
-    case "ready_for_pickup":
-      return "default";
-    case "price_requested":
-      return "secondary";
-    case "priced":
-      return "secondary"; // styled via className override for light-red
-    case "delivered":
-    case "completed":
-      return "outline";
-    case "rejected_by_shipper":
-      return "destructive";
-    default:
-      return "secondary";
-  }
-}
-
-const ITEMS_PER_PAGE = 5;
 
 export default function ShipperDashboard() {
   const { user } = useAuth();
@@ -149,36 +117,20 @@ export default function ShipperDashboard() {
         const dateA = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
         const dateB = new Date(a.updated_at ?? a.created_at ?? 0).getTime();
         return dateA - dateB;
-      });
+      })
+      .slice(0, 3);
   }, [shipments]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedShipments.length / ITEMS_PER_PAGE));
-  const recentShipments = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return sortedShipments.slice(start, start + ITEMS_PER_PAGE);
-  }, [sortedShipments, currentPage]);
-
+  // Action required: only priced shipments (shipper must accept/reject the quote)
   const actionRequired = useMemo(() => {
-    const priced = shipments.filter((s) => s.status === "priced");
-    const priceRequested = shipments.filter(
-      (s) => s.status === "price_requested",
-    );
-    return [
-      ...priced.map((s) => ({
+    return shipments
+      .filter((s) => s.status === "priced")
+      .map((s) => ({
         shipment: s,
-        type: "review" as const,
-        title: `Review quotes for shipment #${s.id}`,
-        description: "Price is ready. Accept or reject the quote to proceed.",
-        href: `/dashboard/shipments/priced/${s.id}`,
-      })),
-      ...priceRequested.map((s) => ({
-        shipment: s,
-        type: "waiting" as const,
         title: `Price requested for shipment #${s.id}`,
-        description: "Waiting for transporters to submit their quotes.",
-        href: "/dashboard/shipments",
-      })),
-    ].slice(0, 3);
+        description: "Review the latest quotes from carriers.",
+        href: `/dashboard/shipments/priced/placeholder?shipId=${s.id}`,
+      }));
   }, [shipments]);
 
   if (shipmentsLoading) {
@@ -213,26 +165,26 @@ export default function ShipperDashboard() {
         </p>
       </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-4">
+      {/* Stats cards - horizontal scroll on mobile (scrollbar hidden), grid on desktop */}
+      <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-2 sm:overflow-visible sm:pb-0 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:gap-4 scrollbar-hide">
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="overflow-hidden transition-all hover:shadow-md border-border/60 relative bg-gradient-to-br from-white to-green-50 dark:from-green-950/40 dark:to-green-900/30 dark:border-green-900/50"
+            className="min-w-[calc(50%-0.375rem)] xs:min-w-[140px] sm:min-w-0 shrink-0 snap-start overflow-hidden transition-all hover:shadow-md border-border/60 lg:shrink"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <div className={cn("p-2 rounded-lg", stat.bgColor)}>
-                <stat.icon className={cn("h-4 w-4", stat.color)} />
+              <div className={cn("p-1.5 rounded-md", stat.bgColor)}>
+                <stat.icon className={cn("h-3.5 w-3.5", stat.color)} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold tracking-tight">
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold tracking-tight">
                 {stat.value}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
                 {stat.description}
               </p>
             </CardContent>
@@ -271,69 +223,15 @@ export default function ShipperDashboard() {
                 </Button>
               </div>
             ) : (
-              <>
-                <div className="hidden sm:block overflow-x-hidden min-w-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-border/50">
-                        <TableHead className="font-medium">ID</TableHead>
-                        <TableHead className="font-medium">Route</TableHead>
-                        <TableHead className="font-medium">Date</TableHead>
-                        <TableHead className="font-medium">
-                          Containers
-                        </TableHead>
-                        <TableHead className="font-medium">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentShipments.map((shipment) => (
-                        <ShipmentRow
-                          key={shipment.id}
-                          shipment={shipment}
-                          containerCount={containerCounts.get(shipment.id) ?? 0}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="divide-y divide-border/40 sm:hidden">
-                  {recentShipments.map((shipment) => (
-                    <ShipmentMobileRow
-                      key={shipment.id}
-                      shipment={shipment}
-                      containerCount={containerCounts.get(shipment.id) ?? 0}
-                    />
-                  ))}
-                </div>
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-                    <span className="text-xs text-muted-foreground">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={currentPage <= 1}
-                      >
-                        <ChevronLeft className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage >= totalPages}
-                      >
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
+              <div className="flex flex-col gap-3">
+                {recentShipments.map((shipment) => (
+                  <ShipmentCard
+                    key={shipment.id}
+                    shipment={shipment}
+                    containerCount={containerCounts.get(shipment.id) ?? 0}
+                  />
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -357,41 +255,29 @@ export default function ShipperDashboard() {
                 <Link
                   key={item.shipment.id}
                   href={item.href}
-                  className="flex items-start gap-4 rounded-xl border border-border/50 bg-background p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md group"
+                  className="flex items-start gap-4 rounded-xl border border-border/50 bg-background p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md group border-l-4 border-l-primary"
                 >
-                  <div
-                    className={cn(
-                      "p-2 rounded-lg shrink-0",
-                      item.type === "review"
-                        ? "bg-primary/10 group-hover:bg-primary/15"
-                        : "bg-blue-500/10 group-hover:bg-blue-500/15",
-                    )}
-                  >
-                    <AlertCircle
-                      className={cn(
-                        "h-5 w-5",
-                        item.type === "review"
-                          ? "text-primary"
-                          : "text-blue-600",
-                      )}
-                    />
+                  <div className="p-2 rounded-lg shrink-0 bg-primary/10 group-hover:bg-primary/15">
+                    <FileText className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-snug group-hover:text-primary transition-colors">
+                    <p className="text-sm font-medium leading-snug text-foreground">
                       {item.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {item.description}
                     </p>
+                    <span className="inline-block mt-2 text-primary font-semibold text-xs uppercase tracking-wide group-hover:underline">
+                      Review now &gt;
+                    </span>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                 </Link>
               ))
             )}
             {actionRequired.length > 0 && (
               <Button variant="outline" className="w-full mt-2" asChild>
                 <Link href="/dashboard/shipments/priced">
-                  View All Notifications
+                  View all priced shipments
                 </Link>
               </Button>
             )}
@@ -402,9 +288,8 @@ export default function ShipperDashboard() {
   );
 }
 
-function ShipmentRow({
+function ShipmentCard({
   shipment,
-  containerCount,
 }: {
   shipment: Shipment;
   containerCount: number;
@@ -412,94 +297,55 @@ function ShipmentRow({
   const status = shipment.status ?? "created";
   const href =
     status === "priced"
-      ? `/dashboard/shipments/priced/${shipment.id}`
+      ? `/dashboard/shipments/priced/placeholder?shipId=${shipment.id}`
       : status === "accepted_by_shipper"
-        ? `/dashboard/shipments/accepted/${shipment.id}`
-        : `/dashboard/shipments/${shipment.id}`;
-
-  return (
-    <TableRow className="cursor-pointer transition-colors border-border/40 group">
-      <TableCell className="font-medium">
-        <Link
-          href={href}
-          className="text-primary hover:underline flex items-center gap-1"
-        >
-          #{shipment.id}
-          <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Link>
-      </TableCell>
-      <TableCell className="text-muted-foreground">
-        {formatLocation(shipment.origin)} →{" "}
-        {formatLocation(shipment.destination)}
-      </TableCell>
-      <TableCell className="text-muted-foreground">
-        {formatDate(shipment.pickup_date)}
-      </TableCell>
-      <TableCell>
-        <span className="inline-flex items-center gap-1 font-medium">
-          <Package className="h-3 w-3 text-muted-foreground" />
-          {containerCount}
-        </span>
-      </TableCell>
-      <TableCell>
-        <Badge
-          variant={getStatusVariant(status)}
-          className={cn(
-            "font-medium capitalize",
-            status === "priced" && "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-          )}
-        >
-          {getStatusLabel(status)}
-        </Badge>
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function ShipmentMobileRow({
-  shipment,
-  containerCount,
-}: {
-  shipment: Shipment;
-  containerCount: number;
-}) {
-  const status = shipment.status ?? "created";
-  const href =
-    status === "priced"
-      ? `/dashboard/shipments/priced/${shipment.id}`
-      : status === "accepted_by_shipper"
-        ? `/dashboard/shipments/accepted/${shipment.id}`
-        : `/dashboard/shipments/${shipment.id}`;
+        ? `/dashboard/shipments/accepted/placeholder?shipId=${shipment.id}`
+        : `/dashboard/shipments/placeholder?id=${shipment.id}`;
 
   return (
     <Link href={href}>
-      <div className="p-4 space-y-3 active:bg-accent/50 transition-colors">
-        <div className="flex justify-between items-start">
-          <span className="font-medium text-primary">#{shipment.id}</span>
-          <Badge
-            variant={getStatusVariant(status)}
-            className={cn(
-              "font-medium text-xs capitalize",
-              status === "priced" && "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-            )}
-          >
-            {getStatusLabel(status)}
-          </Badge>
-        </div>
-        <div className="flex justify-between items-end">
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium">
-              {formatLocation(shipment.origin)} →{" "}
-              {formatLocation(shipment.destination)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatDate(shipment.pickup_date)}
-            </p>
+      <div className="flex items-stretch gap-4 rounded-xl border border-border/50 bg-background p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md group">
+        {/* Top row: #ID + date (left) | Status pill + arrow (right) */}
+        <div className="flex flex-1 min-w-0 flex-col">
+          <div className="flex justify-between items-start gap-2">
+            <span className="text-sm font-medium text-foreground">
+              #{shipment.id} {formatDate(shipment.pickup_date)}
+            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Badge
+                variant="outline"
+                className="font-semibold text-[10px] uppercase tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/10"
+              >
+                {getStatusLabel(status)}
+              </Badge>
+              <ChevronRight className="h-4 w-4 text-primary opacity-70 group-hover:opacity-100 transition-opacity" />
+            </div>
           </div>
-          <span className="text-xs font-medium bg-muted px-2 py-1 rounded-md flex items-center gap-1">
-            <Package className="h-3 w-3" />
-            {containerCount}
-          </span>
+          {/* Origin → Destination with vertical dashed line and green dots */}
+          <div className="flex gap-2 mt-3">
+            <div className="flex flex-col items-center shrink-0 pt-0.5">
+              <span
+                className="h-2 w-2 rounded-full bg-primary shrink-0"
+                aria-hidden
+              />
+              <div
+                className="w-px h-3 border-l border-dashed border-primary/50 my-0.5"
+                aria-hidden
+              />
+              <span
+                className="h-2 w-2 rounded-full bg-primary shrink-0"
+                aria-hidden
+              />
+            </div>
+            <div className="flex flex-col justify-center gap-0.5 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {formatLocation(shipment.origin)}
+              </p>
+              <p className="text-sm font-medium text-foreground truncate">
+                {formatLocation(shipment.destination)}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </Link>

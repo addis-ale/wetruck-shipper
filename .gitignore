@@ -20,7 +20,7 @@
 # Capacitor (Android, iOS, native builds)
 /android
 /ios
-
+/capacitor.config.ts
 # production
 /build
 

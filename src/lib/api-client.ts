@@ -1,3 +1,4 @@
+import { getAuthToken } from "@/lib/auth-token";
 
 const rawEnvApiUrl =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -17,28 +18,11 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   console.log("🔗 API BASE URL:", API_URL);
 }
 
-
 export type ApiResponse<T> = {
   data?: T;
   error?: string;
   status: number;
 };
-
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-
-  // Prefer localStorage (explicit)
-  const token = localStorage.getItem("wetruck_access_token");
-  if (token) return token;
-
-  // Fallback to cookie (optional)
-  const match = document.cookie
-    .split("; ")
-    .find((c) => c.startsWith("access_token="));
-
-  return match ? match.split("=")[1] : null;
-}
 
 async function logout() {
   if (typeof window === "undefined") return;
@@ -51,7 +35,6 @@ async function logout() {
     window.location.href = "/sign-in";
   }
 }
-
 
 async function tryRefreshToken(): Promise<boolean> {
   try {
@@ -87,7 +70,7 @@ async function tryRefreshToken(): Promise<boolean> {
 export async function request<T>(
   endpoint: string,
   options: RequestInit = {},
-  isRetry = false
+  isRetry = false,
 ): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -109,7 +92,7 @@ export async function request<T>(
     const response = await fetch(url, {
       ...options,
       headers,
-      credentials: "include", 
+      credentials: "include",
     });
 
     // Handle expired access token

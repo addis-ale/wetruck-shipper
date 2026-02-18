@@ -1,18 +1,12 @@
-import { ShipmentQuotesDetailView } from "@/app/modules/shipment/ui/views/shipment-quotes-detail-view";
+import ShipmentQuotesDetailClient from "./ShipmentQuotesDetailClient";
 
-export default async function ShipmentQuotesDetailPage({
-  params,
-}: {
-  params: Promise<{ shipId: string }>;
-}) {
-  const { shipId } = await params;
-  const id = parseInt(shipId, 10);
-  if (isNaN(id)) {
-    return (
-      <div className="p-6 text-center text-muted-foreground">
-        Invalid shipment ID
-      </div>
-    );
-  }
-  return <ShipmentQuotesDetailView shipId={id} />;
+export const dynamic = "force-static";
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return [{ shipId: "placeholder" }];
+}
+
+export default function ShipmentQuotesDetailPage() {
+  return <ShipmentQuotesDetailClient />;
 }

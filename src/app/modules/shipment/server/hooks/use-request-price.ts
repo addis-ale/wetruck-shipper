@@ -19,9 +19,8 @@ export function useRequestPrice(options?: UseRequestPriceOptions) {
 
       options?.onSuccess?.(shipmentId);
     },
-    onError: (error: Error) => {
+    onError: () => {
       // Error will be handled in the UI component
     },
   });
 }
-

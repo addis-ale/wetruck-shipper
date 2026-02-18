@@ -13,7 +13,8 @@ import {
   Trash2,
   Eye,
   Loader2,
-  X,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,8 @@ import type { ShipmentDocument } from "../../../server/types/shipment-document";
 import { useShipmentDocument } from "../../../server/hooks/use-shipment-document";
 import { useDeleteShipmentDocument } from "../../../server/hooks/use-delete-shipment-document";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
+import { extToMimeType } from "@/lib/utils/document-utils";
 
 /* ----------------------------------------
    Hard-coded document type labels
@@ -39,23 +42,25 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 export function ShipmentDocumentRow({
   shipId,
   document: doc,
+  compact,
 }: {
   shipId: number;
   document: ShipmentDocument;
+  compact?: boolean;
 }) {
   const [shouldFetchPreview, setShouldFetchPreview] = useState(false);
-  const [isViewing, setIsViewing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const { data, isLoading } = useShipmentDocument(
     shipId,
     doc.id,
-    shouldFetchPreview
+    shouldFetchPreview,
   );
 
   const { mutate: deleteDoc, isPending: isDeleting } =
     useDeleteShipmentDocument(shipId);
+
+  const { openDocument } = useDocumentPreviewContext();
 
   /* ---------------- View logic ---------------- */
 
@@ -66,59 +71,91 @@ export function ShipmentDocumentRow({
   const fileName = doc.file_path.split("/").pop() || "";
   const extension = fileName.split(".").pop()?.toLowerCase();
 
-  const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(extension || "");
-
-  const fetchImageForNewTab = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      setImageUrl(blobUrl);
-    } catch (error) {
-      console.error("Failed to fetch image for new tab:", error);
-      setImageUrl(url);
-    }
-  };
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(
+    extension || "",
+  );
 
   useEffect(() => {
     if (data?.presigned_url && shouldFetchPreview) {
-      setIsViewing(true);
-   
-      if (isImage) {
-        fetchImageForNewTab(data.presigned_url);
-      }
+      openDocument(
+        data.presigned_url,
+        fileName || undefined,
+        extToMimeType(doc.file_ext),
+      );
+      setShouldFetchPreview(false);
     }
-  }, [data, shouldFetchPreview, isImage]);
+  }, [data, shouldFetchPreview, openDocument, fileName, doc.file_ext]);
 
-  const closeViewer = () => {
-    setIsViewing(false);
-    setShouldFetchPreview(false);
-    if (imageUrl && imageUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(imageUrl);
-    }
-    setImageUrl(null);
-  };
+  const label = DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type;
 
-  const handleOpenInNewTab = () => {
-    if (!data?.presigned_url) return;
-  
-    const link = document.createElement("a");
-    link.href = data.presigned_url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.click();
-  };
-
-  const label =
-    DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type;
-
-  useEffect(() => {
-    return () => {
-      if (imageUrl && imageUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    };
-  }, [imageUrl]);
+  if (compact) {
+    return (
+      <>
+        <div className="flex items-center gap-3 py-2.5 px-1 border-b border-border last:border-b-0">
+          <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded bg-primary/10 text-primary">
+            {isImage ? (
+              <ImageIcon className="h-4 w-4" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-foreground truncate" title={label}>
+              {label}
+            </p>
+            <p
+              className="text-xs text-muted-foreground truncate"
+              title={fileName}
+            >
+              {fileName}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2.5 text-xs"
+              onClick={handleView}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Eye className="h-3.5 w-3.5 mr-1" />
+              )}
+              View
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              onClick={() => setConfirmOpen(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1" />
+              Delete
+            </Button>
+          </div>
+        </div>
+        <ConfirmDeleteDialog
+          open={confirmOpen}
+          loading={isDeleting}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={() =>
+            deleteDoc(doc.id, {
+              onSuccess: () => {
+                toast.success("Document deleted successfully");
+                setConfirmOpen(false);
+              },
+              onError: (e: Error) => {
+                toast.error(e.message || "Delete failed");
+                setConfirmOpen(false);
+              },
+            })
+          }
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -139,10 +176,7 @@ export function ShipmentDocumentRow({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={handleView}
-                disabled={isLoading}
-              >
+              <DropdownMenuItem onClick={handleView} disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -180,66 +214,6 @@ export function ShipmentDocumentRow({
           })
         }
       />
-
-      {/* Viewer Modal */}
-      {isViewing && data?.presigned_url && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh] bg-white rounded-lg overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <div>
-                <h3 className="font-medium">{label}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {fileName}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenInNewTab}
-                  disabled={!data?.presigned_url || (isImage && !imageUrl)}
-                >
-                  {isImage && !imageUrl ? 'Loading...' : 'Open in New Tab'}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeViewer}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-auto p-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-              ) : isImage ? (
-                <div className="flex items-center justify-center h-full">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={data.presigned_url}
-                    alt={label}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <iframe
-                  src={data.presigned_url}
-                  className="w-full h-full min-h-[500px]"
-                  title={label}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
