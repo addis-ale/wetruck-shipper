@@ -40,7 +40,7 @@ export function ShipmentSidebar({
       case "cancelled":
         return "destructive";
       case "priced":
-        return "priced";
+        return "secondary";
       default:
         return "secondary";
     }
@@ -105,7 +105,7 @@ export function ShipmentSidebar({
                               <Badge
                                 variant={getStatusColor(
                                   shipment.status ?? "created",
-                                ) as any}
+                                )}
                                 className={
                                   shipment.status === "priced"
                                     ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"

@@ -26,7 +26,7 @@ export function DocumentPreviewProvider({ children }: { children: ReactNode }) {
     (url: string, title?: string, mimeType?: string | null) => {
       preview.open(url, title, mimeType);
     },
-    [preview.open],
+    [preview],
   );
 
   return (

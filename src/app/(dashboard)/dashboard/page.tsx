@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +13,10 @@ import {
   Clock,
   CheckCircle2,
   ChevronRight,
-  ChevronLeft,
   Plus,
   FileText,
 } from "lucide-react";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
-import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
 
@@ -47,22 +45,11 @@ function getStatusLabel(status: string) {
 
 export default function ShipperDashboard() {
   const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState(1);
   const { data: shipmentsData, isLoading: shipmentsLoading } = useShipments({
     per_page: 100,
   });
-  const { data: containersData } = useContainers({ per_page: 500 });
 
   const shipments = useMemo(() => shipmentsData?.items ?? [], [shipmentsData]);
-  const containerCounts = useMemo(() => {
-    const counts = new Map<number, number>();
-    (containersData?.items ?? []).forEach((c) => {
-      if (c.ship_id) {
-        counts.set(c.ship_id, (counts.get(c.ship_id) ?? 0) + 1);
-      }
-    });
-    return counts;
-  }, [containersData?.items]);
 
   const stats = useMemo(() => {
     const active = shipments.filter((s) =>
@@ -111,7 +98,7 @@ export default function ShipperDashboard() {
     ];
   }, [shipments]);
 
-  const sortedShipments = useMemo(() => {
+  const recentShipments = useMemo(() => {
     return [...shipments]
       .sort((a, b) => {
         const dateA = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
@@ -228,7 +215,6 @@ export default function ShipperDashboard() {
                   <ShipmentCard
                     key={shipment.id}
                     shipment={shipment}
-                    containerCount={containerCounts.get(shipment.id) ?? 0}
                   />
                 ))}
               </div>
@@ -292,7 +278,6 @@ function ShipmentCard({
   shipment,
 }: {
   shipment: Shipment;
-  containerCount: number;
 }) {
   const status = shipment.status ?? "created";
   const href =

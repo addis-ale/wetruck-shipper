@@ -373,14 +373,13 @@ export function PricedShipItemsTable({
                       const hasReturning = hasReturningContainers(group);
                       // Note: Return fee calculation removed as it's not displayed
 
+                      const containerCount = group.total_containers ?? 0;
                       const totalPrice =
-                        group.total_price !== undefined &&
-                          group.total_price !== null
-                          ? Number(group.total_price)
-                          : 0;
+                        containerCount > 1
+                          ? Number(group.total_price || 0)
+                          : Number(group.ship_items[0]?.computed_price || 0);
 
                       const currency = group.currency ?? "ETB";
-                      const containerCount = group.total_containers ?? 0;
 
                       return (
                         <TableRow key={rowKey}>

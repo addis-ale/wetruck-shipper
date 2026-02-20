@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
 
 function formatLocation(location: string) {
@@ -60,10 +61,12 @@ export function ShipmentsView() {
   // Also fetch all shipments (without status filter) for tab counts
   const { data: allShipmentsResponse } = useShipments();
 
-  const filteredShipments = useMemo(
+  const paginatedShipments = useMemo(
     () => shipmentsResponse?.items || [],
     [shipmentsResponse?.items],
   );
+
+  const sidebarTotalPages = shipmentsResponse?.pages || 1;
 
   const allShipments = useMemo(
     () => allShipmentsResponse?.items || [],
@@ -99,17 +102,17 @@ export function ShipmentsView() {
 
   // Auto-select first shipment when filtered list changes
   useEffect(() => {
-    if (filteredShipments.length > 0) {
-      const isStillInList = filteredShipments.some(
+    if (paginatedShipments.length > 0) {
+      const isStillInList = paginatedShipments.some(
         (s) => s.id === activeShipmentId,
       );
       if (!isStillInList) {
-        setActiveShipmentId(filteredShipments[0].id);
+        setActiveShipmentId(paginatedShipments[0].id);
       }
     } else {
       setActiveShipmentId(null);
     }
-  }, [filteredShipments, activeShipmentId]);
+  }, [paginatedShipments, activeShipmentId]);
 
   // Fetch containers assigned to the active shipment (only when activeShipmentId is set)
   const { data: assignedContainersData } = useContainers(
@@ -187,6 +190,11 @@ export function ShipmentsView() {
   // Handle request price
   const handleRequestPrice = (shipmentId: number) => {
     requestPrice(shipmentId);
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSidebarPage(1); // Reset page when changing status
   };
 
   // Get columns; hide Actions column when status is not "created" (e.g. price_requested tab)
@@ -267,11 +275,10 @@ export function ShipmentsView() {
                 className={`
                     relative min-w-0 rounded-lg border p-2 text-center transition-colors
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
-                    ${
-                      isActive
-                        ? "border-primary bg-primary/10 shadow-sm"
-                        : "border-border bg-card hover:bg-muted/30 active:bg-muted/50"
-                    }
+                    ${isActive
+                    ? "border-primary bg-primary/10 shadow-sm"
+                    : "border-border bg-card hover:bg-muted/30 active:bg-muted/50"
+                  }
                   `}
               >
                 {showNotification && (
@@ -405,11 +412,11 @@ export function ShipmentsView() {
               <div className="p-4 border-b">
                 <h2 className="text-lg font-semibold">Active Shipments</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {filteredShipments.length} shipment(s) in {activeTab} status
+                  {paginatedShipments.length} shipment(s) in {activeTab} status
                 </p>
               </div>
               <ShipmentSidebar
-                shipments={filteredShipments}
+                shipments={paginatedShipments}
                 activeShipmentId={activeShipmentId}
                 onSelectShipment={handleSelectShipment}
                 containerCounts={containerCounts}
@@ -474,7 +481,7 @@ export function ShipmentsView() {
                         className={cn(
                           "h-6 min-w-6 justify-center px-1.5 font-medium",
                           pricedShipmentsCount > 0 &&
-                            "bg-red-50 text-red-600 border border-red-200",
+                          "bg-red-50 text-red-600 border border-red-200",
                         )}
                       >
                         {pricedShipmentsCount}
@@ -516,7 +523,7 @@ export function ShipmentsView() {
 
                 {/* Main Content */}
                 <div className="w-full">
-                  {filteredShipments.length === 0 ? (
+                  {paginatedShipments.length === 0 ? (
                     <Card className="border shadow-sm h-full">
                       <CardContent className="p-8 sm:p-12">
                         <div className="flex flex-col items-center justify-center text-center">

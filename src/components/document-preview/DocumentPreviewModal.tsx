@@ -361,6 +361,7 @@ export function DocumentPreviewModal({
                   <Loader2 className="h-10 w-10 animate-spin text-white" />
                 </div>
               )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}
                 alt={title}
