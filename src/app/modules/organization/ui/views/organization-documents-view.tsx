@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
-import {
-  Upload,
-  Search,
-  ChevronRight,
-} from "lucide-react";
+import { Upload, Search, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/data-table";
@@ -30,6 +26,8 @@ import {
 } from "../components";
 import { toast } from "sonner";
 import { organizationApi } from "@/lib/api/organization";
+import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
+import { extToMimeType } from "@/lib/utils/document-utils";
 
 export function OrganizationDocumentsView() {
   const router = useRouter();
@@ -37,22 +35,28 @@ export function OrganizationDocumentsView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    null
+    null,
   );
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+
+  const { openDocument } = useDocumentPreviewContext();
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [pageCount, setPageCount] = useState(0);
+  const [, setPageCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [, setIsSearchFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter state
   const [filters, setFilters] = useState<{
     status?: "pending" | "approved" | "rejected" | null;
-    document_type?: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | null;
+    document_type?:
+      | "TRADE_LICENCE"
+      | "AUTHORISED_CONTACT_PERSON_COMPANY_ID"
+      | "OTHER"
+      | null;
     entity_type?: "truck" | "driver" | null;
   }>({});
 
@@ -64,7 +68,7 @@ export function OrganizationDocumentsView() {
 
   // Get selected document for editing
   const { data: selectedDocument } = useOrganizationDocument(
-    selectedDocumentId || ""
+    selectedDocumentId || "",
   );
 
   const handleUploadDocument = async (file: File, documentType: string) => {
@@ -82,16 +86,18 @@ export function OrganizationDocumentsView() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to upload document"
+            error instanceof Error
+              ? error.message
+              : "Failed to upload document",
           );
         },
-      }
+      },
     );
   };
 
   const handleUpdateDocument = async (
     id: string | number,
-    data: { document_type?: string; file?: File }
+    data: { document_type?: string; file?: File },
   ) => {
     // Close modal optimistically
     setIsEditModalOpen(false);
@@ -105,10 +111,12 @@ export function OrganizationDocumentsView() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to update document"
+            error instanceof Error
+              ? error.message
+              : "Failed to update document",
           );
         },
-      }
+      },
     );
   };
 
@@ -128,7 +136,7 @@ export function OrganizationDocumentsView() {
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete document"
+          error instanceof Error ? error.message : "Failed to delete document",
         );
       },
     });
@@ -144,13 +152,19 @@ export function OrganizationDocumentsView() {
       }
 
       if (response.data.presigned_url) {
-        window.open(response.data.presigned_url, "_blank");
+        const fileName =
+          response.data.file_path?.split("/").pop() ?? "document";
+        openDocument(
+          response.data.presigned_url,
+          fileName,
+          extToMimeType(response.data.file_ext) ?? undefined,
+        );
       } else {
         toast.error("Document URL not available");
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to view document"
+        error instanceof Error ? error.message : "Failed to view document",
       );
     }
   };
@@ -179,7 +193,7 @@ export function OrganizationDocumentsView() {
 
   // Filter handlers
   const handleStatusFilter = (
-    status: "pending" | "approved" | "rejected" | "all" | null
+    status: "pending" | "approved" | "rejected" | "all" | null,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -189,7 +203,12 @@ export function OrganizationDocumentsView() {
   };
 
   const handleDocumentTypeFilter = (
-    type: "TRADE_LICENCE" | "AUTHORISED_CONTACT_PERSON_COMPANY_ID" | "OTHER" | "all" | null
+    type:
+      | "TRADE_LICENCE"
+      | "AUTHORISED_CONTACT_PERSON_COMPANY_ID"
+      | "OTHER"
+      | "all"
+      | null,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -215,7 +234,10 @@ export function OrganizationDocumentsView() {
   const filteredDocuments = (documents || []).filter((doc) => {
     if (filters.status && doc.status !== filters.status) return false;
     // Compare case-insensitively since backend may return lowercase
-    if (filters.document_type && doc.document_type?.toLowerCase() !== filters.document_type.toLowerCase())
+    if (
+      filters.document_type &&
+      doc.document_type?.toLowerCase() !== filters.document_type.toLowerCase()
+    )
       return false;
     if (filters.entity_type && doc.entity_type !== filters.entity_type)
       return false;
@@ -240,9 +262,9 @@ export function OrganizationDocumentsView() {
   }, [filteredDocuments.length, perPage]);
 
   return (
-    <div className="flex flex-col h-full space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden overflow-y-hidden overscroll-none touch-none md:touch-auto">
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+    <div className="flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-500 w-full overflow-x-hidden min-h-0">
+      {/* Breadcrumb - desktop only */}
+      <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground shrink-0">
         <button
           onClick={() => router.push("/dashboard")}
           className="hover:text-foreground transition-colors"
@@ -250,15 +272,18 @@ export function OrganizationDocumentsView() {
           Dashboard
         </button>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground font-medium">Organization Documents</span>
+        <span className="text-foreground font-medium">
+          Organization Documents
+        </span>
       </div>
 
-      {/* Header */}
+      {/* Header: mobile = "Documents" only, desktop = title + subtitle */}
       <div className="space-y-3 pb-2 border-b shrink-0 touch-none md:touch-auto">
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-primary">
-              Organization Documents
+            <h2 className="text-xl sm:text-xl font-bold tracking-tight text-primary">
+              <span className="sm:hidden">Documents</span>
+              <span className="hidden sm:inline">Organization Documents</span>
             </h2>
             <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
               Upload and manage organization-related documents securely
@@ -267,66 +292,59 @@ export function OrganizationDocumentsView() {
         </div>
       </div>
 
-      {/* Stats Cards - Hide on mobile when scrolled, on last page, or search is focused */}
-      <div
-        className={`shrink-0 touch-none md:touch-auto transition-all duration-300 md:block ${
-          isScrolled || (pageCount > 0 && page === pageCount) || isSearchFocused
-            ? "hidden md:block"
-            : "block"
-        }`}
-      >
+      {/* Search bar */}
+      <div className="flex flex-col gap-3 mb-2 sm:mb-4 shrink-0">
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 min-w-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary sm:text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by document type..."
+                className="pl-9 h-10 sm:h-9 rounded-lg bg-muted/50 sm:bg-background focus-visible:ring-0 focus-visible:ring-offset-0 border-border"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+              />
+            </div>
+          </div>
+          <Button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="hidden sm:flex h-9 text-xs bg-primary hover:bg-primary/90 text-white shrink-0"
+          >
+            <Upload className="h-3.5 w-3.5 mr-1.5" />
+            Upload Document
+          </Button>
+        </div>
+        <DocumentFilterControls
+          filters={filters}
+          onStatusFilter={handleStatusFilter}
+          onDocumentTypeFilter={handleDocumentTypeFilter}
+          onEntityTypeFilter={handleEntityTypeFilter}
+          onClearFilters={clearFilters}
+        />
+      </div>
+
+      {/* Stats Cards - always visible on mobile */}
+      <div className="shrink-0 touch-none md:touch-auto">
         <DocumentStatsCards documents={filteredDocuments} />
       </div>
 
-      {/* Main Content - Table and Cards - Takes remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden shrink-0 flex flex-col">
-        {/* Search and Filters Header */}
-        <div className="flex flex-col gap-3 mb-4 shrink-0">
-          <div className="flex items-center gap-2 w-full">
-            <div className="flex-1 max-w-sm">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search documents by type..."
-                  className="pl-9 h-9 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setPage(1); // Reset to first page on search
-                  }}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                />
-              </div>
-            </div>
-            <Button
-              onClick={() => setIsUploadModalOpen(true)}
-              className="h-9 text-xs bg-primary hover:bg-primary/90 text-white sm:h-8 shrink-0"
-            >
-              <Upload className="h-3.5 w-3.5 mr-1.5" />
-              <span className="sm:hidden">Upload</span>
-              <span className="hidden sm:inline">Upload Document</span>
-            </Button>
-          </div>
-          <DocumentFilterControls
-            filters={filters}
-            onStatusFilter={handleStatusFilter}
-            onDocumentTypeFilter={handleDocumentTypeFilter}
-            onEntityTypeFilter={handleEntityTypeFilter}
-            onClearFilters={clearFilters}
-          />
-        </div>
-
+      {/* Main Content - Table and Cards */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
         {/* Desktop Table View */}
-        <div className="hidden sm:block flex-1 min-h-0 overflow-hidden">
+        <div className="hidden sm:block flex-1 min-h-0 overflow-y-auto">
           <DataTable
             columns={organizationDocumentColumns(
               handleViewDocument,
               handleEditDocument,
               handleDeleteDocument,
               deleteDocumentMutation.isPending,
-              handleEntityClick
+              handleEntityClick,
             )}
             data={filteredDocuments as OrganizationDocumentTableRow[]}
             searchKey={undefined}
@@ -368,6 +386,15 @@ export function OrganizationDocumentsView() {
           )}
         </div>
       </div>
+
+      {/* Mobile FAB - Upload */}
+      <Button
+        onClick={() => setIsUploadModalOpen(true)}
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-4 z-30 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg sm:hidden flex items-center justify-center p-0"
+        aria-label="Upload document"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
 
       {/* Upload Document Modal */}
       <UploadDocumentModal

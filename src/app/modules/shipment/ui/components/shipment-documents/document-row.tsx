@@ -18,14 +18,14 @@ import {
 
 import { MoreVertical, Trash2, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
+import { extToMimeType } from "@/lib/utils/document-utils";
 
 import type { ShipItemDocument } from "@/app/modules/shipment/server/types/ship-item-document";
 import { useDeleteShipItemDocument } from "@/app/modules/shipment/server/hooks/use-delete-ship-item-document";
 import { useUpdateShipItemDocument } from "@/app/modules/shipment/server/hooks/use-update-ship-item-document";
-import { useShipItemDocumentPreview } from
-  "@/app/modules/shipment/server/hooks/use-ship-item-document-preview";
-
+import { useShipItemDocumentPreview } from "@/app/modules/shipment/server/hooks/use-ship-item-document-preview";
 
 export function DocumentRow({
   shipItemId,
@@ -38,10 +38,9 @@ export function DocumentRow({
 
   const [docType, setDocType] = useState(doc.document_type);
   const [shouldFetchPreview, setShouldFetchPreview] = useState(false);
-  const [isViewing, setIsViewing] = useState(false);
 
-  const { mutate: deleteDoc } =
-    useDeleteShipItemDocument(shipItemId);
+  const { openDocument } = useDocumentPreviewContext();
+  const { mutate: deleteDoc } = useDeleteShipItemDocument(shipItemId);
 
   const { mutate: updateDoc, isPending: isUpdating } =
     useUpdateShipItemDocument(shipItemId, doc.id);
@@ -50,7 +49,7 @@ export function DocumentRow({
     shipItemId,
     doc.id,
     shouldFetchPreview,
-    doc.container_id
+    doc.container_id,
   );
 
   // Handle viewing the document
@@ -60,31 +59,14 @@ export function DocumentRow({
 
   useEffect(() => {
     if (data?.presigned_url && shouldFetchPreview) {
-      setIsViewing(true);
+      openDocument(
+        data.presigned_url,
+        doc.file_path.split("/").pop() ?? undefined,
+        extToMimeType(doc.file_ext),
+      );
+      setShouldFetchPreview(false);
     }
-  }, [data, shouldFetchPreview]);
-
-  const closeViewer = () => {
-    setIsViewing(false);
-    setShouldFetchPreview(false);
-  };
-
-
-  const handleOpenInNewTab = () => {
-    console.log("Opening URL:", data?.presigned_url);
-    if (data?.presigned_url) {
-      window.open(data.presigned_url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const getFileExtension = () => {
-    const filename = doc.file_path.split("/").pop() || "";
-    return filename.split('.').pop()?.toLowerCase();
-  };
-
-  const fileExtension = getFileExtension();
-  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExtension || '');
-  const isPdf = fileExtension === 'pdf';
+  }, [data, shouldFetchPreview, openDocument, doc.file_path, doc.file_ext]);
 
   return (
     <>
@@ -115,9 +97,7 @@ export function DocumentRow({
                   Proof of Delivery
                 </SelectItem>
 
-                <SelectItem value="bill_of_lading">
-                  Bill of Lading
-                </SelectItem>
+                <SelectItem value="bill_of_lading">Bill of Lading</SelectItem>
 
                 <SelectItem value="commercial_invoice">
                   Commercial Invoice
@@ -128,7 +108,6 @@ export function DocumentRow({
                 </SelectItem>
               </SelectContent>
             </Select>
-
           </div>
 
           {/* 3-dot menu */}
@@ -193,95 +172,12 @@ export function DocumentRow({
                     toast.success("Document updated successfully"),
                   onError: (e: Error) =>
                     toast.error(e.message || "Update failed"),
-                }
+                },
               );
             }}
           />
         </div>
       </div>
-
-      {/* Document Viewer Modal/Overlay */}
-      {isViewing && data?.presigned_url && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh] flex flex-col bg-white rounded-lg overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-white">
-              <div>
-                <h3 className="font-medium capitalize">
-                  {docType.replace(/_/g, " ")}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {doc.file_path.split("/").pop()}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenInNewTab}
-                  disabled={!data?.presigned_url}
-                >
-                  Open in New Tab
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeViewer}
-                  className="h-8 w-8"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Document Content - Responsive */}
-            <div className="flex-1 overflow-auto p-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-              ) : isImage ? (
-                <div className="flex items-center justify-center h-full">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={data.presigned_url}
-                    alt={docType.replace(/_/g, " ")}
-                    className="max-w-full max-h-full object-contain"
-                    style={{
-                      width: "auto",
-                      height: "auto",
-                      maxWidth: "100%",
-                      maxHeight: "calc(90vh - 120px)",
-                    }}
-                  />
-                </div>
-              ) : isPdf ? (
-                <div className="w-full h-full">
-                  <iframe
-                    src={data.presigned_url}
-                    className="w-full h-full min-h-[500px]"
-                    title={docType.replace(/_/g, " ")}
-                    style={{
-                      minHeight: "calc(90vh - 120px)",
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full">
-                  <iframe
-                    src={data.presigned_url}
-                    className="w-full h-full min-h-[500px]"
-                    title={docType.replace(/_/g, " ")}
-                    style={{
-                      minHeight: "calc(90vh - 120px)",
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

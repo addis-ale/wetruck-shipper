@@ -7,14 +7,10 @@ import {
   LayoutDashboard,
   Package,
   MapPin,
-  Menu,
-  User,
-  Settings,
   LogOut,
   Upload,
   Lock,
   Boxes,
-  CheckCircle2,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -45,16 +41,36 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { PasswordResetDialog } from "@/components/profile/password-reset-dialog";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
   {
-    name: "Priced Shipments",
-    href: "/dashboard/shipments/priced",
-    icon: CheckCircle2,
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    label: "Dashboard",
   },
-  { name: "Containers", href: "/dashboard/containers", icon: Boxes },
-  // { name: "Order History", href: "/history", icon: Clock },
-  { name: "Live Tracking", href: "/tracking", icon: MapPin },
+  {
+    name: "My Shipments",
+    href: "/dashboard/shipments",
+    icon: Package,
+    label: "Shipments",
+  },
+  {
+    name: "Documents",
+    href: "/dashboard/organazation/documents",
+    icon: Upload,
+    label: "Documents",
+  },
+  {
+    name: "Containers",
+    href: "/dashboard/containers",
+    icon: Boxes,
+    label: "Containers",
+  },
+  {
+    name: "Live Tracking",
+    href: "/dashboard/tracking",
+    icon: MapPin,
+    label: "Tracking",
+  },
 ];
 
 export default function DashboardLayout({
@@ -129,98 +145,77 @@ export default function DashboardLayout({
               isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72",
             )}
           >
-            <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/95 px-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 sm:gap-x-6 sm:px-6 lg:px-8">
-              <button
-                type="button"
-                className="-m-2.5 p-2.5 text-foreground lg:hidden hover:bg-accent rounded-full transition-colors"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-6 w-6" aria-hidden="true" />
-                <span className="sr-only">Open sidebar</span>
-              </button>
+            <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/95 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 safe-area-top">
+              <div className="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+                <button
+                  type="button"
+                  className="hidden lg:flex -ml-2 p-2 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-all"
+                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                >
+                  {isSidebarCollapsed ? (
+                    <PanelLeftOpen className="h-5 w-5" />
+                  ) : (
+                    <PanelLeftClose className="h-5 w-5" />
+                  )}
+                  <span className="sr-only">Toggle Sidebar</span>
+                </button>
 
-              <button
-                type="button"
-                className="hidden lg:flex -ml-2 p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-all"
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              >
-                {isSidebarCollapsed ? (
-                  <PanelLeftOpen className="h-5 w-5" />
-                ) : (
-                  <PanelLeftClose className="h-5 w-5" />
-                )}
-                <span className="sr-only">Toggle Sidebar</span>
-              </button>
+                <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                  <div className="flex items-center flex-1 min-w-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="https://www.wetruck.ai/images/logo.png"
+                      alt="WeTruck"
+                      className="h-7 w-auto lg:hidden"
+                    />
+                  </div>
+                  <div className="flex items-center gap-x-3 sm:gap-x-6">
+                    <ModeToggle />
 
-              <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                <div className="flex items-center flex-1 min-w-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://www.wetruck.ai/images/logo.png"
-                    alt="WeTruck"
-                    className="h-7 w-auto lg:hidden"
-                  />
-                </div>
-                <div className="flex items-center gap-x-3 sm:gap-x-6">
-                  <ModeToggle />
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-x-2 text-sm font-medium hover:text-primary transition-colors outline-none cursor-pointer group p-1 sm:p-1.5 rounded-full sm:rounded-lg hover:bg-accent/50">
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-primary flex items-center justify-center text-white font-bold uppercase text-xs shadow-sm ring-2 ring-background group-hover:ring-accent transition-all">
-                          {user?.name?.[0] || "S"}
-                        </div>
-                        <span className="hidden sm:inline-flex items-center gap-1">
-                          <span className="max-w-[100px] truncate">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-x-2 text-sm font-medium hover:text-primary transition-colors outline-none cursor-pointer group p-1 sm:p-1.5 rounded-full sm:rounded-lg hover:bg-accent/50">
+                          <div className="h-8 w-8 shrink-0 rounded-full bg-primary flex items-center justify-center text-white font-bold uppercase text-xs shadow-sm ring-2 ring-background group-hover:ring-accent transition-all">
+                            {user?.name?.[0] || "S"}
+                          </div>
+                          <span className="hidden sm:inline-flex max-w-[100px] truncate">
                             {user?.name?.split(" ")[0] || "Shipper"}
                           </span>
-                          <Settings className="h-3.5 w-3.5 text-muted-foreground group-hover:rotate-45 transition-transform" />
-                        </span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-64 p-2 shadow-xl border-border/50"
-                    >
-                      <DropdownMenuLabel className="font-normal px-2 pb-2">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-bold leading-none">
-                            {user?.name || "Shipper Admin"}
-                          </p>
-                          <p className="text-xs leading-none text-muted-foreground italic">
-                            {user?.email || "admin@shipper.com"}
-                          </p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="-mx-2" />
-                      <DropdownMenuItem className="cursor-pointer rounded-md py-2 px-3">
-                        <User className="mr-3 h-4 w-4 text-muted-foreground" />
-                        <span className="flex-1">My Profile</span>
-                        <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded uppercase font-bold tracking-wider opacity-60">
-                          Admin
-                        </span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="cursor-pointer rounded-md py-2 px-3"
-                        onClick={() => setPasswordDialogOpen(true)}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-64 p-2 shadow-xl border-border/50"
                       >
-                        <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
-                        <span>Change Password</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer rounded-md py-2 px-3">
-                        <Settings className="mr-3 h-4 w-4 text-muted-foreground" />
-                        <span>Account Settings</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="-mx-2" />
-                      <DropdownMenuItem
-                        onClick={handleLogoutClick}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer rounded-md py-2 px-3 font-medium"
-                      >
-                        <LogOut className="mr-3 h-4 w-4" />
-                        <span>Sign out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <DropdownMenuLabel className="font-normal px-2 pb-2">
+                          <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-bold leading-none">
+                              {user?.name || "Shipper Admin"}
+                            </p>
+                            <p className="text-xs leading-none text-muted-foreground italic">
+                              {user?.email || "admin@shipper.com"}
+                            </p>
+                          </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator className="-mx-2" />
+                        <DropdownMenuItem
+                          className="cursor-pointer rounded-md py-2 px-3"
+                          onClick={() => setPasswordDialogOpen(true)}
+                        >
+                          <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
+                          <span>Change Password</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="-mx-2" />
+                        <DropdownMenuItem
+                          onClick={handleLogoutClick}
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer rounded-md py-2 px-3 font-medium"
+                        >
+                          <LogOut className="mr-3 h-4 w-4" />
+                          <span>Sign out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
             </header>
@@ -253,7 +248,7 @@ export default function DashboardLayout({
               onOpenChange={setPasswordDialogOpen}
             />
 
-            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 mb-20 lg:mb-0 bg-background/50">
+            <main className="flex-1 min-h-0 overflow-auto px-4 py-6 sm:px-6 lg:px-8 bg-background/50 mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0">
               <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {children}
               </div>
@@ -261,7 +256,7 @@ export default function DashboardLayout({
 
             {/* Mobile Bottom Navigation - Enhanced for Mobile First */}
             <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden safe-area-bottom shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-              <div className="flex justify-around items-center h-18 px-2 max-w-md mx-auto">
+              <div className="flex justify-around items-center h-16 px-2 max-w-md mx-auto">
                 {navigation.map((item) => {
                   // Check if this is an exact match
                   const isExactMatch = pathname === item.href;
@@ -304,10 +299,10 @@ export default function DashboardLayout({
                       <span
                         className={cn(
                           "text-[10px] font-bold leading-none tracking-tight transition-all",
-                          isActive ? "opacity-100" : "opacity-0 invisible h-0",
+                          isActive ? "opacity-100" : "opacity-70",
                         )}
                       >
-                        {item.name.split(" ")[0]}
+                        {item.label}
                       </span>
                     </Link>
                   );

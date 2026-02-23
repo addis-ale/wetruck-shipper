@@ -9,6 +9,7 @@ import type {
   ShipItem,
   ShipperShipItemsItem,
 } from "@/lib/zod/shipment.schema";
+import { getAuthToken } from "@/lib/auth-token";
 
 type ShipItemsListResponse = {
   status: boolean;
@@ -39,30 +40,6 @@ type ShipperShipItemsListResponse = {
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 const API_PREFIX = "/api/v1";
 const API_PATH = "/ship";
-
-// Helper to get auth token from localStorage or cookies
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-
-  // First try localStorage (most reliable for cross-origin requests)
-  const localStorageToken = localStorage.getItem("wetruck_access_token");
-  if (localStorageToken) {
-    return localStorageToken;
-  }
-
-  // Fallback to cookie
-  if (typeof document !== "undefined") {
-    const cookies = document.cookie.split(";");
-    const tokenCookie = cookies.find((c) =>
-      c.trim().startsWith("access_token="),
-    );
-    if (tokenCookie) {
-      return tokenCookie.split("=")[1];
-    }
-  }
-
-  return null;
-}
 
 async function apiRequest<T>(
   endpoint: string,

@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { shipItemDocumentsApi } from "@/app/modules/shipment/server/api/ship-item-documents.api";
 import type { ShipItemDocument } from "@/app/modules/shipment/server/types/ship-item-document";
 import { FileText, ExternalLink, Download, Loader2, Eye } from "lucide-react";
+import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
+import { extToMimeType } from "@/lib/utils/document-utils";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   proof_of_delivery: "Proof of Delivery (POD)",
@@ -46,7 +48,11 @@ function UploadedDocumentsModal({
   containerId,
 }: UploadedDocumentsModalProps) {
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
-  const [downloadLoadingId, setDownloadLoadingId] = useState<string | null>(null);
+  const [downloadLoadingId, setDownloadLoadingId] = useState<string | null>(
+    null,
+  );
+
+  const { openDocument } = useDocumentPreviewContext();
 
   const handlePreview = async (shipItemId: number, doc: ShipItemDocument) => {
     const key = `${shipItemId}-${doc.id}`;
@@ -57,8 +63,13 @@ function UploadedDocumentsModal({
         doc.id,
         containerId,
       );
-      if (presigned_url)
-        window.open(presigned_url, "_blank", "noopener,noreferrer");
+      if (presigned_url) {
+        openDocument(
+          presigned_url,
+          getFileName(doc.file_path) || undefined,
+          extToMimeType(doc.file_ext),
+        );
+      }
     } catch {
       // Error already surfaced by API
     } finally {
@@ -98,8 +109,8 @@ function UploadedDocumentsModal({
         <DialogHeader>
           <DialogTitle>Uploaded documents</DialogTitle>
           <DialogDescription>
-            Preview or download documents. Click Preview to open in a new tab,
-            or Download to save the file.
+            Preview or download documents. Click Preview to view in the app, or
+            Download to save the file.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto border rounded-md divide-y">
@@ -180,20 +191,29 @@ export function UploadedDocsCell({
   shipItems,
   containerId,
 }: UploadedDocsCellProps) {
-  console.log(`[UploadedDocsCell] shipItems: ${JSON.stringify(shipItems)}, containerId: ${containerId}`);
+  console.log(
+    `[UploadedDocsCell] shipItems: ${JSON.stringify(shipItems)}, containerId: ${containerId}`,
+  );
   const [modalOpen, setModalOpen] = useState(false);
 
   const documentQueries = useQueries({
     queries: shipItems.map((si) => ({
       queryKey: ["ship-item-documents", si.id, containerId],
       queryFn: async () => {
-        console.log(`[UploadedDocsCell] Querying docs for shipItemId: ${si.id}, containerId: ${containerId}`);
+        console.log(
+          `[UploadedDocsCell] Querying docs for shipItemId: ${si.id}, containerId: ${containerId}`,
+        );
         try {
           const result = await shipItemDocumentsApi.list(si.id, containerId);
-          console.log(`[UploadedDocsCell] Successfully fetched ${result.length} docs for shipItemId: ${si.id}`);
+          console.log(
+            `[UploadedDocsCell] Successfully fetched ${result.length} docs for shipItemId: ${si.id}`,
+          );
           return result;
         } catch (error) {
-          console.error(`[UploadedDocsCell] Error fetching docs for shipItemId: ${si.id}:`, error);
+          console.error(
+            `[UploadedDocsCell] Error fetching docs for shipItemId: ${si.id}:`,
+            error,
+          );
           throw error;
         }
       },

@@ -1,9 +1,11 @@
-// Support both NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_BASE_URL for compatibility
-const envApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-// If the env var includes /api/v1, use it as-is, otherwise add /api/v1
-const baseUrl = envApiUrl || 'http://127.0.0.1:8000';
-const apiBaseUrl = baseUrl.includes('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
+import { getAuthHeaders } from "@/lib/auth-token";
 
+// Support both NEXT_PUBLIC_API_URL and NEXT_PUBLIC_API_BASE_URL for compatibility
+const envApiUrl =
+  process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+// If the env var includes /api/v1, use it as-is, otherwise add /api/v1
+const baseUrl = envApiUrl || "http://127.0.0.1:8000";
+const apiBaseUrl = baseUrl.includes("/api/v1") ? baseUrl : `${baseUrl}/api/v1`;
 const API_URL = apiBaseUrl;
 
 // Debug: Log the API URL in development
@@ -11,56 +13,31 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   console.log("🔗 Organization API URL:", API_URL);
 }
 
-// Helper to get auth token from localStorage or cookies
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  
-  // First try localStorage (most reliable for cross-origin requests)
-  const localStorageToken = localStorage.getItem("wetruck_access_token");
-  if (localStorageToken) {
-    return localStorageToken;
-  }
-  
-  // Fallback to cookie
-  if (typeof document !== "undefined") {
-    const cookies = document.cookie.split(";");
-    const tokenCookie = cookies.find((c) => c.trim().startsWith("access_token="));
-    if (tokenCookie) {
-      return tokenCookie.split("=")[1];
-    }
-  }
-  
-  return null;
-}
-
-// Helper to get auth headers
-function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {};
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  return headers;
-}
-
 // Helper to parse response text and handle HTML errors
 function parseResponse(text: string, endpoint: string): unknown {
   // Check if response is HTML (404 page) instead of JSON
-  if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-    throw new Error(`API endpoint not found. Check if backend is running and URL is correct: ${API_URL}${endpoint}`);
+  if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
+    throw new Error(
+      `API endpoint not found. Check if backend is running and URL is correct: ${API_URL}${endpoint}`,
+    );
   }
-  
+
   if (!text) return undefined;
-  
+
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`Invalid JSON response from ${endpoint}: ${text.substring(0, 100)}...`);
+    throw new Error(
+      `Invalid JSON response from ${endpoint}: ${text.substring(0, 100)}...`,
+    );
   }
 }
 
 type ApiErrorResponse = {
-  detail?: string | { message?: string } | Array<{ msg?: string; message?: string }>;
+  detail?:
+    | string
+    | { message?: string }
+    | Array<{ msg?: string; message?: string }>;
   message?: string;
   error_message?: string;
 };
@@ -71,6 +48,7 @@ export interface OrganizationDocument {
   id: number;
   document_type: string;
   file_path: string;
+  file_ext?: string | null;
   presigned_url?: string; // Pre-signed URL when fetched via GET /{id}/get
   truck_id?: number | null;
   driver_id?: number | null;
@@ -117,14 +95,15 @@ export const organizationApi = {
 
     const status = response.status;
     const text = await response.text();
-    const result = parseResponse(text, '/organization/documents');
+    const result = parseResponse(text, "/organization/documents");
 
     if (!response.ok) {
       const errorResult = result as ApiErrorResponse;
       return {
-        error: typeof errorResult?.detail === "string" 
-          ? errorResult.detail 
-          : errorResult?.message || "Failed to upload document",
+        error:
+          typeof errorResult?.detail === "string"
+            ? errorResult.detail
+            : errorResult?.message || "Failed to upload document",
         status,
       };
     }
@@ -145,23 +124,26 @@ export const organizationApi = {
 
     const status = response.status;
     const text = await response.text();
-    const result = parseResponse(text, '/organization/documents/list');
+    const result = parseResponse(text, "/organization/documents/list");
 
     if (!response.ok) {
       const errorResult = result as ApiErrorResponse;
       return {
-        error: typeof errorResult?.detail === "string" 
-          ? errorResult.detail 
-          : errorResult?.message || "Failed to get documents",
+        error:
+          typeof errorResult?.detail === "string"
+            ? errorResult.detail
+            : errorResult?.message || "Failed to get documents",
         status,
       };
     }
 
     // API might return array directly or wrapped in object
     const successResult = result as ApiSuccessResponse<OrganizationDocument>;
-    const items = Array.isArray(successResult) 
-      ? successResult 
-      : (successResult && typeof successResult === "object" && "items" in successResult)
+    const items = Array.isArray(successResult)
+      ? successResult
+      : successResult &&
+          typeof successResult === "object" &&
+          "items" in successResult
         ? (successResult as { items: OrganizationDocument[] }).items
         : [];
     return { data: items as OrganizationDocument[], status };
@@ -178,19 +160,23 @@ export const organizationApi = {
         method: "GET",
         headers: getAuthHeaders(),
         credentials: "include",
-      }
+      },
     );
 
     const status = response.status;
     const text = await response.text();
-    const result = parseResponse(text, `/organization/documents/${documentId}/get`);
+    const result = parseResponse(
+      text,
+      `/organization/documents/${documentId}/get`,
+    );
 
     if (!response.ok) {
       const errorResult = result as ApiErrorResponse;
       return {
-        error: typeof errorResult?.detail === "string" 
-          ? errorResult.detail 
-          : errorResult?.message || "Failed to get document",
+        error:
+          typeof errorResult?.detail === "string"
+            ? errorResult.detail
+            : errorResult?.message || "Failed to get document",
         status,
       };
     }
@@ -204,7 +190,7 @@ export const organizationApi = {
    */
   updateDocument: async (
     documentId: string | number,
-    data: UpdateOrganizationDocumentRequest
+    data: UpdateOrganizationDocumentRequest,
   ) => {
     const formData = new FormData();
 
@@ -223,19 +209,23 @@ export const organizationApi = {
         headers: getAuthHeaders(),
         body: formData,
         credentials: "include",
-      }
+      },
     );
 
     const status = response.status;
     const text = await response.text();
-    const result = parseResponse(text, `/organization/documents/${documentId}/update`);
+    const result = parseResponse(
+      text,
+      `/organization/documents/${documentId}/update`,
+    );
 
     if (!response.ok) {
       const errorResult = result as ApiErrorResponse;
       return {
-        error: typeof errorResult?.detail === "string" 
-          ? errorResult.detail 
-          : errorResult?.message || "Failed to update document",
+        error:
+          typeof errorResult?.detail === "string"
+            ? errorResult.detail
+            : errorResult?.message || "Failed to update document",
         status,
       };
     }
@@ -254,19 +244,23 @@ export const organizationApi = {
         method: "DELETE",
         headers: getAuthHeaders(),
         credentials: "include",
-      }
+      },
     );
 
     const status = response.status;
 
     if (!response.ok) {
       const text = await response.text();
-      const result = parseResponse(text, `/organization/documents/${documentId}/delete`);
+      const result = parseResponse(
+        text,
+        `/organization/documents/${documentId}/delete`,
+      );
       const errorResult = result as ApiErrorResponse;
       return {
-        error: typeof errorResult?.detail === "string" 
-          ? errorResult.detail 
-          : errorResult?.message || "Failed to delete document",
+        error:
+          typeof errorResult?.detail === "string"
+            ? errorResult.detail
+            : errorResult?.message || "Failed to delete document",
         status,
       };
     }
