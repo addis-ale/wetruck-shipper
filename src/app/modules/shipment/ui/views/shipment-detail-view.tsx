@@ -43,6 +43,7 @@ import {
   Container as ContainerIcon,
   ArrowRight,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useShipment } from "@/app/modules/shipment/server/hooks/use-shipment";
@@ -163,7 +164,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const { mutate: removeContainer } = useRemoveContainer();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for Get price action
   const { mutate: getPrice } = useGetPrice();
-  const { mutate: requestPrice, isPending: isRequestingPrice } =
+  const { mutate: requestPrice, isPending: isRequestingPrice, error: priceRequestError, reset: resetPriceRequestError } =
     useRequestPrice();
 
   // Priced shipment: fetch transporter quotes
@@ -513,10 +514,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       key={group.transporter_id}
                       className={`
                         rounded-xl border overflow-hidden transition-all
-                        ${
-                          isSelected
-                            ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/30"
-                            : "border-border bg-card"
+                        ${isSelected
+                          ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/30"
+                          : "border-border bg-card"
                         }
                       `}
                     >
@@ -1168,7 +1168,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           {shipment.status === "created" && assignedContainers.length > 0 && (
             <Button
               variant="default"
-              onClick={() => requestPrice(shipmentId)}
+              onClick={() => {
+                resetPriceRequestError();
+                requestPrice(shipmentId);
+              }}
               disabled={isRequestingPrice}
               className="shrink-0"
             >
@@ -1200,6 +1203,36 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           </Button>
         </div>
       </div>
+
+      {/* Price Request Error Alert - Shows when request fails (e.g. missing documents) */}
+      {priceRequestError && (
+        <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+                  <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
+                  Unable to Request Price
+                </h3>
+                <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
+                  {priceRequestError?.message || "Failed to request price"}
+                </p>
+              </div>
+              <button
+                onClick={() => resetPriceRequestError()}
+                className="flex-shrink-0 rounded-md p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                aria-label="Dismiss error"
+              >
+                <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Price Request Confirmation Message Box - Shows when status is price_requested */}
       {shouldShowPriceRequestAlert && (

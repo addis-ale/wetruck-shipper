@@ -145,7 +145,7 @@ export function ShipmentsView() {
   const { mutate: removeContainer } = useRemoveContainer();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for Get price action
   const { mutate: getPrice } = useGetPrice();
-  const { mutate: requestPrice, isPending: isRequestingPrice } =
+  const { mutate: requestPrice, isPending: isRequestingPrice, error: priceRequestError, reset: resetPriceRequestError } =
     useRequestPrice();
 
   // Get active shipment status
@@ -187,8 +187,14 @@ export function ShipmentsView() {
     setActiveShipmentId(shipmentId);
   };
 
-  // Handle request price
+  // Handle get price
+  const handleGetPrice = (containerIds: number[]) => {
+    if (!activeShipmentId || containerIds.length === 0) return;
+    getPrice({ shipmentId: activeShipmentId, containerIds });
+  };
+
   const handleRequestPrice = (shipmentId: number) => {
+    resetPriceRequestError();
     requestPrice(shipmentId);
   };
 
@@ -589,6 +595,8 @@ export function ShipmentsView() {
                           onRequestPrice={handleRequestPrice}
                           shipmentStatus={activeShipment?.status}
                           isRequestingPrice={isRequestingPrice}
+                          priceRequestError={priceRequestError?.message || null}
+                          onDismissError={() => resetPriceRequestError()}
                         />
                       </CardContent>
                     </Card>

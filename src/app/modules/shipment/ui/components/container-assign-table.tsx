@@ -36,7 +36,7 @@ import {
   PopoverContent,
   PopoverAnchor,
 } from "@/components/ui/popover";
-import { Search, Loader2, CheckCircle, X, Plus, List } from "lucide-react";
+import { Search, Loader2, CheckCircle, X, Plus, List, AlertTriangle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import { CreateContainerDialog } from "@/app/modules/container/ui/components/dialogs/create-container-dialog";
@@ -60,6 +60,8 @@ interface ContainerAssignTableProps<TData, TValue> {
   shipmentStatus?: string;
   isRequestingPrice?: boolean;
   hideMessageBox?: boolean; // Hide the persistent message box (used on detail page)
+  priceRequestError?: string | null;
+  onDismissError?: () => void;
 }
 
 export function ContainerAssignTable<TData, TValue>({
@@ -72,6 +74,8 @@ export function ContainerAssignTable<TData, TValue>({
   shipmentStatus,
   isRequestingPrice = false,
   hideMessageBox = false,
+  priceRequestError,
+  onDismissError,
 }: ContainerAssignTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -509,6 +513,36 @@ export function ContainerAssignTable<TData, TValue>({
         {/* Request Price Button - Show when status is "created" and has containers */}
         {data.length > 0 && activeShipmentId && (
           <div className="space-y-4 pt-2 border-t">
+            {/* Price Request Error Alert - Shows when request fails (e.g. missing documents) */}
+            {priceRequestError && (
+              <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+                        <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
+                        Unable to Request Price
+                      </h3>
+                      <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
+                        {priceRequestError}
+                      </p>
+                    </div>
+                    <button
+                      onClick={onDismissError}
+                      className="flex-shrink-0 rounded-md p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                      aria-label="Dismiss error"
+                    >
+                      <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Persistent Message Box - Shows when status is price_requested */}
             {!hideMessageBox &&
               shipmentStatus === "price_requested" &&
