@@ -389,10 +389,15 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 Selected Shipment
               </span>
             </div>
-            <Badge variant="secondary" className="shrink-0 font-mono text-xs">
-              BOL #
-              {shipment.shipment_details?.bill_of_lading_number ?? shipment.id}
-            </Badge>
+            <div className="flex flex-col items-end gap-1">
+              <Badge variant="secondary" className="shrink-0 font-mono text-xs">
+                BOL #
+                {shipment.shipment_details?.bill_of_lading_number ?? shipment.id}
+              </Badge>
+              <span className="text-[10px] font-mono font-medium text-primary">
+                {shipment.tracking_number ?? "No Tracking Number"}
+              </span>
+            </div>
           </div>
           <div className="p-4 space-y-4">
             <div className="rounded-lg bg-muted/40 p-3">
@@ -1145,7 +1150,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
 
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="flex flex-col">
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-3xl font-bold">Shipment #{shipment.id}</h1>
 
@@ -1158,6 +1163,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 .replace(/\b\w/g, (l) => l.toUpperCase())}
             </Badge>
           </div>
+          <span className="text-sm font-mono font-medium text-primary">
+            {shipment.tracking_number ?? "No Tracking Number"}
+          </span>
 
           <p className="text-sm text-muted-foreground">
             Created on {formatDate(shipment.pickup_date)}
@@ -1545,6 +1553,15 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   </p>
                   <p className="text-sm font-mono font-semibold">
                     #{shipment.id}
+                  </p>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    Tracking Number
+                  </p>
+                  <p className="text-sm font-mono font-semibold text-primary">
+                    {shipment.tracking_number ?? "N/A"}
                   </p>
                 </div>
                 <Separator />
