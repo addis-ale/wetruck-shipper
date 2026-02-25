@@ -159,8 +159,13 @@ export function ShipmentSidebar({
                           </span>
                         </div>
 
+                        {/* Tracking Number */}
+                        <div className="text-[10px] font-mono font-medium text-primary truncate">
+                          TN: {shipment.tracking_number ?? "N/A"}
+                        </div>
+
                         {/* BOL Number */}
-                        <div className="text-xs text-muted-foreground truncate">
+                        <div className="text-[10px] text-muted-foreground truncate">
                           BOL:{" "}
                           {shipment.shipment_details?.bill_of_lading_number ??
                             "N/A"}

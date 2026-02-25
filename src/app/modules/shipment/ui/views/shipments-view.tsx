@@ -145,7 +145,7 @@ export function ShipmentsView() {
   const { mutate: removeContainer } = useRemoveContainer();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for Get price action
   const { mutate: getPrice } = useGetPrice();
-  const { mutate: requestPrice, isPending: isRequestingPrice } =
+  const { mutate: requestPrice, isPending: isRequestingPrice, error: priceRequestError, reset: resetPriceRequestError } =
     useRequestPrice();
 
   // Get active shipment status
@@ -187,8 +187,14 @@ export function ShipmentsView() {
     setActiveShipmentId(shipmentId);
   };
 
-  // Handle request price
+  // Handle get price
+  const handleGetPrice = (containerIds: number[]) => {
+    if (!activeShipmentId || containerIds.length === 0) return;
+    getPrice({ shipmentId: activeShipmentId, containerIds });
+  };
+
   const handleRequestPrice = (shipmentId: number) => {
+    resetPriceRequestError();
     requestPrice(shipmentId);
   };
 
@@ -320,11 +326,16 @@ export function ShipmentsView() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-mono font-medium text-muted-foreground">
-                            BOL #
-                            {shipment.shipment_details?.bill_of_lading_number ??
-                              shipment.id}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-mono font-medium text-primary">
+                              {shipment.tracking_number ?? "No Tracking Number"}
+                            </span>
+                            <span className="text-xs font-mono font-medium text-muted-foreground">
+                              BOL #
+                              {shipment.shipment_details?.bill_of_lading_number ??
+                                shipment.id}
+                            </span>
+                          </div>
                           <Badge
                             variant={
                               shipment.status === "accepted_by_shipper"
@@ -589,6 +600,8 @@ export function ShipmentsView() {
                           onRequestPrice={handleRequestPrice}
                           shipmentStatus={activeShipment?.status}
                           isRequestingPrice={isRequestingPrice}
+                          priceRequestError={priceRequestError?.message || null}
+                          onDismissError={() => resetPriceRequestError()}
                         />
                       </CardContent>
                     </Card>

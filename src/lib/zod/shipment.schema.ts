@@ -99,6 +99,7 @@ export const updateShipmentSchema = baseShipmentSchema.partial();
 
 export const shipmentSchema = baseShipmentSchema.extend({
   id: z.number(),
+  tracking_number: z.string().optional(),
   shipper_id: z.number(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),

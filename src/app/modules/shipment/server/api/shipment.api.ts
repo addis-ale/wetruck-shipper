@@ -239,8 +239,8 @@ async function apiRequest<T>(
       errorData.message ||
       errorData.error_message ||
       (typeof errorData.detail === "object" &&
-      errorData.detail &&
-      "message" in errorData.detail
+        errorData.detail &&
+        "message" in errorData.detail
         ? (errorData.detail as { message?: string }).message
         : null) ||
       (typeof errorData.detail === "string" ? errorData.detail : null) ||
@@ -422,7 +422,7 @@ export const shipmentApi = {
       );
     }
 
-    return apiRequest<{
+    const result = await apiRequest<{
       status: boolean;
       error_message: string | null;
       success_message: string | null;
@@ -430,6 +430,14 @@ export const shipmentApi = {
     }>(endpoint, {
       method: "POST",
     });
+
+    // The backend may return HTTP 200 with status: false and an error_message
+    // (e.g., MISSING_DOCUMENTS). We need to throw so the mutation's onError fires.
+    if (result.status === false && result.error_message) {
+      throw new Error(result.error_message);
+    }
+
+    return result;
   },
 
   // Get ship items (priced items)
