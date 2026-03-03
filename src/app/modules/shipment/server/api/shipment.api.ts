@@ -542,4 +542,11 @@ export const shipmentApi = {
       method: "PATCH",
     });
   },
+
+  // Track shipment for shipper (GET /api/v1/ship/track-for-shipper/{ship_id})
+  async trackForShipper(shipId: number) {
+    return apiRequest<Record<string, unknown>>(
+      `${API_PATH}/track-for-shipper/${shipId}`,
+    );
+  },
 };

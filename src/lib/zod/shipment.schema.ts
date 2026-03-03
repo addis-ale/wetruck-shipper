@@ -123,6 +123,41 @@ export const shipmentListResponseSchema = z.object({
 });
 
 /* -------------------------------------------------------------------------- */
+/* Shipment Tracking                                                           */
+/* -------------------------------------------------------------------------- */
+
+export const trackingEventSchema = z.object({
+  status: shipmentStatusEnum,
+  timestamp: z.string(),
+  location: z.string().optional(),
+  description: z.string().optional(),
+});
+
+export const shipmentTrackingSchema = z
+  .object({
+    id: z.number(),
+    tracking_number: z.string().optional(),
+    origin: z.string(),
+    destination: z.string(),
+    pickup_date: z.string(),
+    delivery_date: z.string(),
+    status: shipmentStatusEnum,
+    current_location: z.string().optional(),
+    estimated_delivery: z.string().optional(),
+    tracking_events: z.array(trackingEventSchema).default([]),
+    shipper_id: z.number().optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
+  })
+  .passthrough();
+
+export const shipmentTrackingResponseSchema = z.object({
+  status: z.boolean(),
+  message: z.string().optional(),
+  result: shipmentTrackingSchema,
+});
+
+/* -------------------------------------------------------------------------- */
 /* Ship Items                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -174,3 +209,8 @@ export type ShipmentListResponse = z.infer<
 export type Facility = z.infer<typeof facilitySchema>;
 export type ShipmentDetails = z.infer<typeof shipmentDetailsSchema>;
 export type ShipItem = z.infer<typeof shipItemSchema>;
+export type TrackingEvent = z.infer<typeof trackingEventSchema>;
+export type ShipmentTracking = z.infer<typeof shipmentTrackingSchema>;
+export type ShipmentTrackingResponse = z.infer<
+  typeof shipmentTrackingResponseSchema
+>;

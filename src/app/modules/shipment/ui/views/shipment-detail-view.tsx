@@ -354,28 +354,41 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             <ArrowLeft className="h-4 w-4" />
             Shipments
           </Link>
-          {shipment.status === "created" && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setShowUpdateDrawer(true)}
-                aria-label="Update shipment"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setShowDeleteDialog(true)}
-                aria-label="Delete shipment"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-1.5 text-primary hover:text-primary hover:bg-primary/10"
+              asChild
+            >
+              <Link href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}>
+                <Navigation className="h-4 w-4" />
+                Track
+              </Link>
+            </Button>
+            {shipment.status === "created" && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setShowUpdateDrawer(true)}
+                  aria-label="Update shipment"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setShowDeleteDialog(true)}
+                  aria-label="Delete shipment"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
         </header>
 
         {/* Selected Shipment card — improved UI */}
@@ -1172,6 +1185,17 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Track Shipment button */}
+          <Button
+            variant="outline"
+            className="shrink-0 gap-2"
+            asChild
+          >
+            <Link href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}>
+              <Navigation className="h-4 w-4" />
+              Track Shipment
+            </Link>
+          </Button>
           {/* Request Price Button - Only show when status is "created" and has containers */}
           {shipment.status === "created" && assignedContainers.length > 0 && (
             <Button
