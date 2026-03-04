@@ -11,7 +11,6 @@ import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments"
 import { useContainers } from "@/app/modules/container/server/hooks/use-containers";
 import { useAssignContainers } from "@/app/modules/shipment/server/hooks/use-assign-container";
 import { useRemoveContainer } from "@/app/modules/shipment/server/hooks/use-remove-container";
-import { useGetPrice } from "@/app/modules/shipment/server/hooks/use-get-price";
 import { useRequestPrice } from "@/app/modules/shipment/server/hooks/use-request-price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
@@ -143,8 +142,6 @@ export function ShipmentsView() {
   // Mutations
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for Get price action
-  const { mutate: getPrice } = useGetPrice();
   const { mutate: requestPrice, isPending: isRequestingPrice, error: priceRequestError, reset: resetPriceRequestError } =
     useRequestPrice();
 
@@ -187,11 +184,6 @@ export function ShipmentsView() {
     setActiveShipmentId(shipmentId);
   };
 
-  // Handle get price
-  const handleGetPrice = (containerIds: number[]) => {
-    if (!activeShipmentId || containerIds.length === 0) return;
-    getPrice({ shipmentId: activeShipmentId, containerIds });
-  };
 
   const handleRequestPrice = (shipmentId: number) => {
     resetPriceRequestError();
