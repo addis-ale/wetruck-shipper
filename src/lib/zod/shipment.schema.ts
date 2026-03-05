@@ -14,7 +14,6 @@ export const originDestinationEnum = z.enum([
   "hawassa",
   "shashemene",
   "djibouti",
-  "djibouti_port",
 ]);
 
 

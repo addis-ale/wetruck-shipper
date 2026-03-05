@@ -62,7 +62,6 @@ const LOCATION_TO_BACKEND: Record<OriginDestination, string> = {
   hawassa: "Hawassa",
   shashemene: "Shashemene",
   djibouti: "Djibouti",
-  djibouti_port: "Djibouti Port",
 };
 
 const LOCATION_FROM_BACKEND: Record<string, OriginDestination> = {
@@ -74,7 +73,6 @@ const LOCATION_FROM_BACKEND: Record<string, OriginDestination> = {
   Hawassa: "hawassa",
   Shashemene: "shashemene",
   Djibouti: "djibouti",
-  "Djibouti Port": "djibouti_port",
 };
 
 function toUiLocation(value: string): OriginDestination {
@@ -177,15 +175,15 @@ export function UpdateShipmentDrawer({
 
   const pickupRegions = pickupCountry
     ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
   const deliveryRegions = deliveryCountry
     ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
   const countryOptions = COUNTRIES.map((c) => ({
     value: c.code,
@@ -348,8 +346,8 @@ export function UpdateShipmentDrawer({
         : undefined,
       destination: destinationKey
         ? (LOCATION_TO_BACKEND[
-            destinationKey
-          ] as UpdateShipmentPayload["destination"])
+          destinationKey
+        ] as UpdateShipmentPayload["destination"])
         : undefined,
       pickup_date: values.pickup_date
         ? new Date(values.pickup_date).toISOString()
@@ -359,9 +357,9 @@ export function UpdateShipmentDrawer({
         : undefined,
       shipment_details: values.shipment_details?.bill_of_lading_number
         ? {
-            bill_of_lading_number:
-              values.shipment_details.bill_of_lading_number,
-          }
+          bill_of_lading_number:
+            values.shipment_details.bill_of_lading_number,
+        }
         : undefined,
     };
     mutate(payload);
@@ -473,11 +471,11 @@ export function UpdateShipmentDrawer({
                             >
                               {field.value
                                 ? format(
-                                    (field.value as unknown) instanceof Date
-                                      ? (field.value as unknown as Date)
-                                      : new Date(field.value),
-                                    "PPP",
-                                  )
+                                  (field.value as unknown) instanceof Date
+                                    ? (field.value as unknown as Date)
+                                    : new Date(field.value),
+                                  "PPP",
+                                )
                                 : "Select date"}
                             </Button>
                           </PopoverTrigger>
@@ -526,11 +524,11 @@ export function UpdateShipmentDrawer({
                             >
                               {field.value
                                 ? format(
-                                    (field.value as unknown) instanceof Date
-                                      ? (field.value as unknown as Date)
-                                      : new Date(field.value),
-                                    "PPP",
-                                  )
+                                  (field.value as unknown) instanceof Date
+                                    ? (field.value as unknown as Date)
+                                    : new Date(field.value),
+                                  "PPP",
+                                )
                                 : "Select date"}
                             </Button>
                           </PopoverTrigger>

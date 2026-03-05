@@ -27,6 +27,7 @@ import { Combobox } from "@/components/ui/combobox";
 import {
   createShipmentSchema,
   CreateShipmentInput,
+  originDestinationEnum,
 } from "@/lib/zod/shipment.schema";
 import { useCreateShipment } from "@/app/modules/shipment/server/hooks/use-create-shipment";
 import { Package } from "lucide-react";
@@ -41,6 +42,13 @@ type CreateShipmentFormValues = z.input<typeof createShipmentSchema>;
 interface CreateShipmentFormProps {
   onSuccess?: (shipmentId: string) => void;
 }
+
+const formatLocation = (location: string) => {
+  return location
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
   const defaultValues = useMemo<CreateShipmentInput>(
@@ -175,18 +183,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 name="origin"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value as string}>
                     <SelectTrigger id="origin" className="w-full">
                       <SelectValue placeholder="Select origin" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="addis_ababa">Addis Ababa</SelectItem>
-                      <SelectItem value="adama">Adama</SelectItem>
-                      <SelectItem value="dukem">Dukem</SelectItem>
-                      <SelectItem value="debre_zeit">Debre Zeit</SelectItem>
-                      <SelectItem value="hawassa">Hawassa</SelectItem>
-                      <SelectItem value="shashemene">Shashemene</SelectItem>
-                      <SelectItem value="djibouti">Djibouti</SelectItem>
+                      {originDestinationEnum.options.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {formatLocation(option)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
@@ -204,17 +210,16 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                 name="destination"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value as string}>
                     <SelectTrigger id="destination" className="w-full">
                       <SelectValue placeholder="Select destination" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="addis_ababa">Addis Ababa</SelectItem>
-                      <SelectItem value="adama">Adama</SelectItem>
-                      <SelectItem value="dukem">Dukem</SelectItem>
-                      <SelectItem value="debre_zeit">Debre Zeit</SelectItem>
-                      <SelectItem value="hawassa">Hawassa</SelectItem>
-                      <SelectItem value="shashemene">Shashemene</SelectItem>
+                      {originDestinationEnum.options.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {formatLocation(option)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
