@@ -101,9 +101,17 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
     }
   }, [hookError, onError]);
 
-  // Focus input after loading new captcha
+  const hasInitiallyFocused = useRef(false);
+
+  // Focus input only on first captcha load, not on auto-refresh
   useEffect(() => {
-    if (captchaData?.imageUrl && !isLoading && !isVerified) {
+    if (
+      captchaData?.imageUrl &&
+      !isLoading &&
+      !isVerified &&
+      !hasInitiallyFocused.current
+    ) {
+      hasInitiallyFocused.current = true;
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [captchaData, isLoading, isVerified]);
