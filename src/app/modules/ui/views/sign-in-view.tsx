@@ -17,6 +17,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -38,6 +48,8 @@ export const SignInView = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaId, setCaptchaId] = useState<string>("");
   const [captchaSolution, setCaptchaSolution] = useState<string>("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
   const refreshCaptchaRef = useRef<(() => void) | null>(null);
 
   // Redirect to dashboard if already logged in (only on mount, not after login)
@@ -331,13 +343,41 @@ export const SignInView = () => {
                     </Alert>
                   )}
 
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="terms-accept"
+                      checked={termsAccepted}
+                      onCheckedChange={(checked) =>
+                        setTermsAccepted(checked === true)
+                      }
+                      className="mt-0.5"
+                    />
+                    <label
+                      htmlFor="terms-accept"
+                      className="text-xs text-gray-500 leading-snug cursor-pointer select-none"
+                    >
+                      I have read and accept the{" "}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowTermsDialog(true);
+                        }}
+                        className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
+                      >
+                        Terms &amp; Conditions
+                      </button>
+                    </label>
+                  </div>
+
                   <Button
                     type="submit"
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-white transition-all shadow-md active:scale-[0.98]"
                     disabled={
                       pending ||
                       !captchaId ||
-                      captchaSolution.trim().length === 0
+                      captchaSolution.trim().length === 0 ||
+                      !termsAccepted
                     }
                   >
                     {pending ? (
@@ -397,21 +437,180 @@ export const SignInView = () => {
           &copy; {new Date().getFullYear()}{" "}
           <span className="text-primary font-medium">WeTruck</span> TechEnable
           Solutions PLC.
-          <a
-            href="#"
-            className="ml-2 text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
-          >
-            Terms
-          </a>
-          <span className="mx-2 text-primary">•</span>
-          <a
-            href="#"
-            className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
-          >
-            Privacy
-          </a>
         </p>
       </div>
+
+      {/* Terms & Conditions Dialog */}
+      <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-primary">
+              WeTruck Platform &ndash; Terms &amp; Conditions
+            </DialogTitle>
+            <DialogDescription>
+              Please read these terms carefully before using the platform.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-sm text-gray-700 leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base text-gray-900 mb-2">
+                1. For Transporters &amp; Freight Forwarders
+              </h3>
+              <p>
+                By clicking &ldquo;I Accept&rdquo;, you confirm that you have
+                read, understood, and agree to be bound by the following
+                responsibilities as a Transporter (Multimodal Transport
+                Operator) or Freight Forwarder (acting as Shipper/Consignor) on
+                the WeTruck Platform. These terms align with Ethiopian laws,
+                including the Multimodal Transport Proclamation No. 548/2007,
+                which governs international multimodal transport contracts,
+                liabilities, and exemptions.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base text-gray-900 mb-2">
+                2. Transporter Responsibilities
+              </h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>
+                  All GPS devices installed on trucks and integrated with the
+                  WeTruck Platform remain the exclusive property of the Company.
+                  You must keep them active, functional, and completely
+                  unaltered throughout every shipment (per Proclamation Art. 15
+                  on period of responsibility).
+                </li>
+                <li>
+                  If you, the truck owner, or your transport association ceases,
+                  suspends, or terminates your relationship with the Company,
+                  the Company has the full right to immediately remove,
+                  retrieve, or deactivate the GPS device without any objection.
+                </li>
+                <li>
+                  You bear full responsibility for the care, custody, and
+                  control of the cargo from the moment of taking charge
+                  (handover and acceptance) until delivery to the consignee or
+                  authorized person at the agreed destination.
+                </li>
+                <li>
+                  In case of theft, loss, damage, or delay to the cargo during
+                  transit, you will be held liable according to this Agreement
+                  and Ethiopian law, except when proven that: all reasonable
+                  measures were taken to avoid the event, or the loss results
+                  from force majeure (extraordinary, unforeseeable circumstances
+                  beyond control, such as natural disasters, war, pandemics, or
+                  government actions), inherent vice of the goods, or the
+                  consignor&apos;s (shipper&apos;s) wrongful
+                  act/neglect/instructions.
+                </li>
+                <li>
+                  Liability is limited to 835 Special Drawing Rights (SDR) per
+                  package or 2.5 SDR per kg of gross weight (whichever is
+                  higher), unless otherwise agreed or the stage of loss is
+                  identified under specific laws. For delay, liability is
+                  limited to 2.5 times the freight, not exceeding total freight.
+                </li>
+                <li>
+                  You must perform duties with due diligence and are liable for
+                  acts/omissions of servants, agents, or others used in
+                  performance (Proclamation Art. 16; Regulations No. 37/1998
+                  Art. 12).
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base text-gray-900 mb-2">
+                3. Freight Forwarder / Shipper Responsibilities
+              </h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>
+                  You must provide accurate, complete, and truthful information
+                  about the cargo (general nature, marks, number of packages,
+                  weight/quantity, dangerous character if applicable, container
+                  details, destination) as required by the WeTruck Platform. You
+                  guarantee the accuracy of these particulars and indemnify the
+                  Company/Transporter for any losses from inaccuracies.
+                </li>
+                <li>
+                  For dangerous goods, you must mark/label them and inform the
+                  Transporter of their character and necessary precautions
+                  (Proclamation Art. 29-31).
+                </li>
+                <li>
+                  Upon arrival of the container at the destination, you must
+                  complete offloading within the agreed free days specified in
+                  the shipment terms.
+                </li>
+                <li>
+                  If offloading exceeds the agreed free time, you will be liable
+                  for detention charges calculated at the applicable rates.
+                </li>
+                <li>
+                  You are liable for losses to the Transporter caused by your
+                  fault/neglect or that of your servants/agents (Proclamation
+                  Art. 28; Regulations No. 37/1998 Art. 12 on due diligence).
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base text-gray-900 mb-2">
+                4. Important Notes
+              </h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>
+                  These terms form part of the full WeTruck User Agreement and
+                  comply with Ethiopian laws.
+                </li>
+                <li>
+                  Any stipulations derogating from the Multimodal Transport
+                  Proclamation are null and void.
+                </li>
+                <li>
+                  Continued use of the platform constitutes ongoing acceptance.
+                </li>
+                <li>Notices for loss/damage must be given in writing.</li>
+                <li>
+                  For apparent damage, the notice should be provided the next
+                  working day; for non-apparent damage, within 7 days.
+                </li>
+                <li>
+                  In no case when notice is delayed for more than 60 days shall
+                  compensation be paid.
+                </li>
+                <li>
+                  When court actions are instituted within 2 years, the right is
+                  barred by the period of limitation.
+                </li>
+                <li>
+                  Disputes shall be resolved by courts at the place of contract,
+                  taking charge, or delivery which has jurisdiction to entertain
+                  as per pertinent law.
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <DialogFooter className="flex-row gap-2 pt-4 border-t">
+            <DialogClose asChild>
+              <Button variant="outline" className="flex-1">
+                Close
+              </Button>
+            </DialogClose>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setTermsAccepted(true);
+                setShowTermsDialog(false);
+              }}
+            >
+              I Accept
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
