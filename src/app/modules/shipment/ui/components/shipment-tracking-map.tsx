@@ -64,12 +64,6 @@ const getTruckIcon = (color: string) => new L.DivIcon({
     iconAnchor: [20, 20],
 });
 
-const getPointIcon = (color: string) => new L.DivIcon({
-    className: "point-marker-icon",
-    html: `<div style="width: 8px; height: 8px; background-color: ${color}; border: 1.5px solid white; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>`,
-    iconSize: [8, 8],
-    iconAnchor: [4, 4],
-});
 
 const getOriginIcon = () => new L.DivIcon({
     className: "origin-marker-icon",
@@ -196,7 +190,6 @@ export function ShipmentTrackingMap({ items }: ShipmentTrackingMapProps) {
                                 <Marker
                                     position={[latestLog.latitude!, latestLog.longitude!]}
                                     icon={getTruckIcon(color)}
-                                    // @ts-ignore
                                     rotationAngle={latestLog.direction || 0}
                                     rotationOrigin="center"
                                 >

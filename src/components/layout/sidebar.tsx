@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, MapPin, Boxes, Upload } from "lucide-react";
+import { LayoutDashboard, Package, Boxes, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -19,8 +19,6 @@ const navigation = [
   },
   { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
   { name: "Containers", href: "/dashboard/containers", icon: Boxes },
-  // { name: "Order History", href: "/history", icon: Clock },
-  { name: "Live Tracking", href: "/dashboard/tracking", icon: MapPin },
 ];
 
 export function Sidebar({

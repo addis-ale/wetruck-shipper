@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
-  MapPin,
   LogOut,
   Upload,
   Lock,
@@ -64,12 +63,6 @@ const navigation = [
     href: "/dashboard/containers",
     icon: Boxes,
     label: "Containers",
-  },
-  {
-    name: "Live Tracking",
-    href: "/dashboard/tracking",
-    icon: MapPin,
-    label: "Tracking",
   },
 ];
 
