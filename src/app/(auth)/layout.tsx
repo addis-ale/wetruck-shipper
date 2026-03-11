@@ -15,7 +15,7 @@ export default function AuthLayout({
   }, []);
 
   return (
-    <div className="light min-h-screen bg-background text-foreground transition-none">
+    <div className="light min-h-dvh bg-background text-foreground transition-none safe-area-inset">
       {children}
     </div>
   );

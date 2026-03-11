@@ -313,7 +313,7 @@ export function DocumentPreviewModal({
         </div>
 
         {/* ── Content area ── */}
-        <div className="relative flex-1 overflow-auto min-h-0 flex flex-col items-center justify-center p-4">
+        <div className="relative flex-1 overflow-auto min-h-0 flex flex-col items-center justify-center p-4 safe-area-bottom safe-area-left safe-area-right">
           {showFallback ? (
             <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-white/10 bg-white/5 p-8 text-center">
               <FileQuestion className="h-12 w-12 text-white/50" />
@@ -321,8 +321,8 @@ export function DocumentPreviewModal({
                 {documentType === "unsupported"
                   ? "Preview not available for this file type."
                   : error || (documentType === "image" && imageError)
-                    ? "Could not load preview."
-                    : "Preview failed."}
+                  ? "Could not load preview."
+                  : "Preview failed."}
               </p>
               {error && (
                 <p className="text-xs text-white/40 font-mono break-all">

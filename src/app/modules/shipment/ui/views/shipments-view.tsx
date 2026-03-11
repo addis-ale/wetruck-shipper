@@ -142,8 +142,12 @@ export function ShipmentsView() {
   // Mutations
   const { mutate: assignContainers } = useAssignContainers();
   const { mutate: removeContainer } = useRemoveContainer();
-  const { mutate: requestPrice, isPending: isRequestingPrice, error: priceRequestError, reset: resetPriceRequestError } =
-    useRequestPrice();
+  const {
+    mutate: requestPrice,
+    isPending: isRequestingPrice,
+    error: priceRequestError,
+    reset: resetPriceRequestError,
+  } = useRequestPrice();
 
   // Get active shipment status
   const activeShipment = allShipments.find((s) => s.id === activeShipmentId);
@@ -183,7 +187,6 @@ export function ShipmentsView() {
   const handleSelectShipment = (shipmentId: number) => {
     setActiveShipmentId(shipmentId);
   };
-
 
   const handleRequestPrice = (shipmentId: number) => {
     resetPriceRequestError();
@@ -252,7 +255,7 @@ export function ShipmentsView() {
           onSuccess={handleShipmentCreated}
           onCancel={() => setShowCreateForm(false)}
         />
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-4 gap-1">
           {(
             [
               "created",
@@ -271,12 +274,13 @@ export function ShipmentsView() {
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={`
-                    relative min-w-0 rounded-lg border p-2 text-center transition-colors
+                    relative min-w-0 rounded-lg border p-1.5 sm:p-2 text-center transition-colors
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
-                    ${isActive
-                    ? "border-primary bg-primary/10 shadow-sm"
-                    : "border-border bg-card hover:bg-muted/30 active:bg-muted/50"
-                  }
+                    ${
+                      isActive
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-border bg-card hover:bg-muted/30 active:bg-muted/50"
+                    }
                   `}
               >
                 {showNotification && (
@@ -285,10 +289,10 @@ export function ShipmentsView() {
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
                   </span>
                 )}
-                <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight">
+                <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground truncate leading-tight">
                   {tabLabels[tab]}
                 </p>
-                <p className="text-lg font-bold text-foreground tabular-nums mt-0.5">
+                <p className="text-base sm:text-lg font-bold text-foreground tabular-nums mt-0.5">
                   {count}
                 </p>
               </button>
@@ -324,8 +328,8 @@ export function ShipmentsView() {
                             </span>
                             <span className="text-xs font-mono font-medium text-muted-foreground">
                               BOL #
-                              {shipment.shipment_details?.bill_of_lading_number ??
-                                shipment.id}
+                              {shipment.shipment_details
+                                ?.bill_of_lading_number ?? shipment.id}
                             </span>
                           </div>
                           <Badge
@@ -339,8 +343,8 @@ export function ShipmentsView() {
                             {shipment.status?.replace("_", " ") ?? ""}
                           </Badge>
                         </div>
-                        <div className="mt-2 rounded-md bg-muted/40 px-2.5 py-2">
-                          <div className="flex items-center gap-2 text-sm">
+                        <div className="mt-2 rounded-md bg-muted/40 px-2 sm:px-2.5 py-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
                             <span className="truncate font-semibold text-foreground">
                               {formatLocation(shipment.origin)}
                             </span>
@@ -441,7 +445,7 @@ export function ShipmentsView() {
             >
               <div className="px-2 sm:px-4 py-3">
                 <h2 className="text-lg font-semibold mb-3">Shipment Status</h2>
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1 bg-muted/30 border">
+                <TabsList className="flex flex-wrap sm:grid sm:w-full sm:grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1 bg-muted/30 border w-full">
                   <TabsTrigger
                     value="created"
                     className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
@@ -484,7 +488,7 @@ export function ShipmentsView() {
                         className={cn(
                           "h-6 min-w-6 justify-center px-1.5 font-medium",
                           pricedShipmentsCount > 0 &&
-                          "bg-red-50 text-red-600 border border-red-200",
+                            "bg-red-50 text-red-600 border border-red-200",
                         )}
                       >
                         {pricedShipmentsCount}
@@ -537,19 +541,19 @@ export function ShipmentsView() {
                             {activeTab === "created"
                               ? "No shipments created"
                               : activeTab === "price_requested"
-                                ? "No price requests"
-                                : activeTab === "priced"
-                                  ? "No quotes received"
-                                  : "No shipments accepted"}
+                              ? "No price requests"
+                              : activeTab === "priced"
+                              ? "No quotes received"
+                              : "No shipments accepted"}
                           </h3>
                           <p className="text-muted-foreground max-w-sm text-sm sm:text-base mb-6">
                             {activeTab === "created"
                               ? "Get started by creating your first shipment using the form above."
                               : activeTab === "price_requested"
-                                ? "Once you request pricing for a shipment, it will appear here."
-                                : activeTab === "priced"
-                                  ? "Shipments awaiting transporter quotes will appear here once priced."
-                                  : "Your accepted shipments and their final quotes will be listed here."}
+                              ? "Once you request pricing for a shipment, it will appear here."
+                              : activeTab === "priced"
+                              ? "Shipments awaiting transporter quotes will appear here once priced."
+                              : "Your accepted shipments and their final quotes will be listed here."}
                           </p>
                           {activeTab === "created" && (
                             <Button

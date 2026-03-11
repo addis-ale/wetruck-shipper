@@ -344,9 +344,9 @@ export function CreateShipmentDrawer({
           >
             {step === 1 && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div className="space-y-2">
-                    <Label>Origin</Label>
+                    <Label className="text-xs sm:text-sm">Origin</Label>
                     <Controller
                       name="origin"
                       control={control}
@@ -375,7 +375,7 @@ export function CreateShipmentDrawer({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Destination</Label>
+                    <Label className="text-xs sm:text-sm">Destination</Label>
                     <Controller
                       name="destination"
                       control={control}
@@ -404,9 +404,9 @@ export function CreateShipmentDrawer({
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div className="space-y-2">
-                    <Label>Pickup date</Label>
+                    <Label className="text-xs sm:text-sm">Pickup date</Label>
                     <Controller
                       name="pickup_date"
                       control={control}
@@ -415,7 +415,7 @@ export function CreateShipmentDrawer({
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal"
+                              className="w-full justify-start text-left font-normal text-xs sm:text-sm truncate"
                             >
                               {field.value
                                 ? format(
@@ -453,13 +453,13 @@ export function CreateShipmentDrawer({
                       )}
                     />
                     {errors.pickup_date && (
-                      <p className="text-sm text-destructive">
+                      <p className="text-xs text-destructive">
                         {errors.pickup_date.message}
                       </p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Delivery date</Label>
+                    <Label className="text-xs sm:text-sm">Delivery date</Label>
                     <Controller
                       name="delivery_date"
                       control={control}
@@ -531,9 +531,9 @@ export function CreateShipmentDrawer({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold">Pickup address</h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-2">
-                      <Label>Country</Label>
+                      <Label className="text-xs sm:text-sm">Country</Label>
                       <Controller
                         name="pickup_facility.country"
                         control={control}
@@ -599,7 +599,7 @@ export function CreateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-2">
                       <Label>Clearance agent name</Label>
                       <Input
@@ -622,7 +622,7 @@ export function CreateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-2">
                       <Label>Contact phone</Label>
                       <Input
@@ -664,7 +664,7 @@ export function CreateShipmentDrawer({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold">Delivery address</h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-2">
                       <Label>Country</Label>
                       <Controller
@@ -735,7 +735,7 @@ export function CreateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-2">
                       <Label>Clearance agent name</Label>
                       <Input
@@ -758,7 +758,7 @@ export function CreateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-2">
                       <Label>Contact phone</Label>
                       <Input

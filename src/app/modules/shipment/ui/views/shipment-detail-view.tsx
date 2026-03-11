@@ -164,8 +164,12 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const { mutate: removeContainer } = useRemoveContainer();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for Get price action
   const { mutate: getPrice } = useGetPrice();
-  const { mutate: requestPrice, isPending: isRequestingPrice, error: priceRequestError, reset: resetPriceRequestError } =
-    useRequestPrice();
+  const {
+    mutate: requestPrice,
+    isPending: isRequestingPrice,
+    error: priceRequestError,
+    reset: resetPriceRequestError,
+  } = useRequestPrice();
 
   // Priced shipment: fetch transporter quotes
   const { data: shipItemsData, isLoading: isLoadingQuotes } =
@@ -314,12 +318,12 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
     type === "dry"
       ? "Dry Van"
       : type === "reefer"
-        ? "Reefer"
-        : type === "open_top"
-          ? "Open Top"
-          : type === "tank"
-            ? "Tank"
-            : type;
+      ? "Reefer"
+      : type === "open_top"
+      ? "Open Top"
+      : type === "tank"
+      ? "Tank"
+      : type;
 
   const containerStatusLabel = (status: string | undefined) => {
     if (!status) return "ASSIGNED";
@@ -361,7 +365,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               className="h-9 gap-1.5 text-primary hover:text-primary hover:bg-primary/10"
               asChild
             >
-              <Link href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}>
+              <Link
+                href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}
+              >
                 <Navigation className="h-4 w-4" />
                 Track
               </Link>
@@ -405,7 +411,8 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             <div className="flex flex-col items-end gap-1">
               <Badge variant="secondary" className="shrink-0 font-mono text-xs">
                 BOL #
-                {shipment.shipment_details?.bill_of_lading_number ?? shipment.id}
+                {shipment.shipment_details?.bill_of_lading_number ??
+                  shipment.id}
               </Badge>
               <span className="text-[10px] font-mono font-medium text-primary">
                 {shipment.tracking_number ?? "No Tracking Number"}
@@ -532,9 +539,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       key={group.transporter_id}
                       className={`
                         rounded-xl border overflow-hidden transition-all
-                        ${isSelected
-                          ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/30"
-                          : "border-border bg-card"
+                        ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/30"
+                            : "border-border bg-card"
                         }
                       `}
                     >
@@ -753,7 +761,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             Pickup & delivery
           </h3>
           <div className="space-y-2">
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
+            <div className="rounded-xl border bg-card p-3 sm:p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                   <Building2 className="h-4 w-4 text-primary" />
@@ -762,18 +770,18 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   Pickup address
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-w-0">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-x-4 xs:gap-y-2 min-w-0">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Address
                   </p>
                   <p
-                    className="text-sm font-medium text-foreground"
+                    className="text-sm font-medium text-foreground wrap-break-word"
                     title={shipment.pickup_facility?.name}
                   >
                     {shipment.pickup_facility?.name ?? "—"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5 wrap-break-word">
                     {shipment.pickup_facility?.address ?? "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -783,7 +791,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       : ""}
                   </p>
                 </div>
-                <div className="min-w-0 border-l border-border pl-3">
+                <div className="min-w-0 xs:border-l xs:border-border xs:pl-3 border-t xs:border-t-0 pt-2 xs:pt-0">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Contact
                   </p>
@@ -792,7 +800,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                     <Phone className="h-3 w-3 shrink-0" />
-                    <span>
+                    <span className="break-all">
                       {shipment.pickup_facility?.contact_phone_number ?? "—"}
                     </span>
                   </div>
@@ -805,7 +813,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
+            <div className="rounded-xl border bg-card p-3 sm:p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -814,18 +822,18 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   Delivery address
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-w-0">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-x-4 xs:gap-y-2 min-w-0">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Address
                   </p>
                   <p
-                    className="text-sm font-medium text-foreground"
+                    className="text-sm font-medium text-foreground wrap-break-word"
                     title={shipment.delivery_facility?.name}
                   >
                     {shipment.delivery_facility?.name ?? "—"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5 wrap-break-word">
                     {shipment.delivery_facility?.address ?? "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -835,7 +843,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       : ""}
                   </p>
                 </div>
-                <div className="min-w-0 border-l border-border pl-3">
+                <div className="min-w-0 xs:border-l xs:border-border xs:pl-3 border-t xs:border-t-0 pt-2 xs:pt-0">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Contact
                   </p>
@@ -844,7 +852,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                     <Phone className="h-3 w-3 shrink-0" />
-                    <span>
+                    <span className="break-all">
                       {shipment.delivery_facility?.contact_phone_number ?? "—"}
                     </span>
                   </div>
@@ -1131,7 +1139,11 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                         </p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
                           {container.gross_weight
-                            ? `${Number(container.gross_weight).toLocaleString()} ${container.gross_weight_unit || "kg"}`
+                            ? `${Number(
+                                container.gross_weight,
+                              ).toLocaleString()} ${
+                                container.gross_weight_unit || "kg"
+                              }`
                             : "N/A"}
                         </p>
                       </div>
@@ -1162,10 +1174,12 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
       </div>
 
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-3xl font-bold">Shipment #{shipment.id}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-3 mb-1 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              Shipment #{shipment.id}
+            </h1>
 
             <Badge
               variant={getStatusVariant(shipment.status ?? "created")}
@@ -1184,22 +1198,24 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             Created on {formatDate(shipment.pickup_date)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Track Shipment button */}
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             className="shrink-0 gap-2"
+            size="sm"
             asChild
           >
-            <Link href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}>
+            <Link
+              href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}
+            >
               <Navigation className="h-4 w-4" />
-              Track Shipment
+              Track
             </Link>
           </Button>
-          {/* Request Price Button - Only show when status is "created" and has containers */}
           {shipment.status === "created" && assignedContainers.length > 0 && (
             <Button
               variant="default"
+              size="sm"
               onClick={() => {
                 resetPriceRequestError();
                 requestPrice(shipmentId);
@@ -1219,14 +1235,16 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           )}
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setIsEditMode(!isEditMode)}
             className="shrink-0"
           >
             <Edit className="h-4 w-4 mr-2" />
-            {isEditMode ? "Cancel Edit" : "Edit Shipment"}
+            {isEditMode ? "Cancel" : "Edit"}
           </Button>
           <Button
             variant="destructive"
+            size="sm"
             onClick={() => setShowDeleteDialog(true)}
             className="shrink-0"
           >
@@ -1435,8 +1453,8 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               </CardContent>
             </Card>
 
-            {/* Facilities and Shipment Details - 3 columns side by side */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Facilities and Shipment Details */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {/* Pickup Facility */}
               <Card>
                 <CardHeader>
@@ -1469,15 +1487,15 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                     </p>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Phone className="h-3 w-3" />
-                      <span>
+                      <Phone className="h-3 w-3 shrink-0" />
+                      <span className="break-all">
                         {shipment.pickup_facility?.contact_phone_number ?? "—"}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Mail className="h-3 w-3" />
-                      <span>
+                      <Mail className="h-3 w-3 shrink-0" />
+                      <span className="break-all">
                         {shipment.pickup_facility?.contact_email ?? "—"}
                       </span>
                     </div>
@@ -1518,16 +1536,16 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       </p>
 
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        <span>
+                        <Phone className="h-3 w-3 shrink-0" />
+                        <span className="break-all">
                           {shipment.delivery_facility?.contact_phone_number ??
                             "—"}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Mail className="h-3 w-3" />
-                        <span>
+                        <Mail className="h-3 w-3 shrink-0" />
+                        <span className="break-all">
                           {shipment.delivery_facility?.contact_email ?? "—"}
                         </span>
                       </div>

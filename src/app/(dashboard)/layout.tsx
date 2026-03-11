@@ -97,7 +97,7 @@ export default function DashboardLayout({
         enableSystem
         disableTransitionOnChange
       >
-        <div className="flex min-h-screen bg-background flex-col lg:flex-row">
+        <div className="flex min-h-dvh bg-background flex-col lg:flex-row overflow-x-hidden">
           {/* Mobile sidebar overlay & drawer */}
           <div
             className={cn(
@@ -114,7 +114,7 @@ export default function DashboardLayout({
             />
             <div
               className={cn(
-                "fixed inset-y-0 left-0 w-[280px] sm:w-80 bg-sidebar shadow-2xl transform transition-transform duration-300 ease-in-out z-50",
+                "fixed inset-y-0 left-0 w-[280px] sm:w-80 bg-sidebar shadow-2xl transform transition-transform duration-300 ease-in-out z-50 safe-area-top safe-area-left",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full",
               )}
             >
@@ -138,7 +138,7 @@ export default function DashboardLayout({
               isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72",
             )}
           >
-            <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/95 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 safe-area-top">
+            <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/95 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 safe-area-top safe-area-left safe-area-right">
               <div className="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
                 <button
                   type="button"
@@ -178,7 +178,7 @@ export default function DashboardLayout({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
-                        className="w-64 p-2 shadow-xl border-border/50"
+                        className="w-56 sm:w-64 p-2 shadow-xl border-border/50"
                       >
                         <DropdownMenuLabel className="font-normal px-2 pb-2">
                           <div className="flex flex-col space-y-1">
@@ -241,15 +241,15 @@ export default function DashboardLayout({
               onOpenChange={setPasswordDialogOpen}
             />
 
-            <main className="flex-1 min-h-0 overflow-auto px-4 py-6 sm:px-6 lg:px-8 bg-background/50 mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6 lg:px-8 bg-background/50 mb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] sm:mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0 safe-area-left safe-area-right">
               <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {children}
               </div>
             </main>
 
             {/* Mobile Bottom Navigation - Enhanced for Mobile First */}
-            <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden safe-area-bottom shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-              <div className="flex justify-around items-center h-16 px-2 max-w-md mx-auto">
+            <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden safe-area-bottom safe-area-left safe-area-right shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+              <div className="flex justify-around items-center h-14 sm:h-16 px-1 sm:px-2 max-w-md mx-auto">
                 {navigation.map((item) => {
                   // Check if this is an exact match
                   const isExactMatch = pathname === item.href;
@@ -285,13 +285,13 @@ export default function DashboardLayout({
                       )}
                       <item.icon
                         className={cn(
-                          "h-6 w-6",
+                          "h-5 w-5 sm:h-6 sm:w-6",
                           isActive ? "stroke-[2.5px]" : "stroke-[2px]",
                         )}
                       />
                       <span
                         className={cn(
-                          "text-[10px] font-bold leading-none tracking-tight transition-all",
+                          "text-[9px] sm:text-[10px] font-bold leading-none tracking-tight transition-all",
                           isActive ? "opacity-100" : "opacity-70",
                         )}
                       >

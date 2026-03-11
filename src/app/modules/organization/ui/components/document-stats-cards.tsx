@@ -13,11 +13,10 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
   const approved = documents.filter((doc) => doc.status === "approved").length;
   const rejected = documents.filter((doc) => doc.status === "rejected").length;
 
-  const cardClass =
-    "p-3 bg-card border border-border rounded-xl shadow-sm shrink-0 min-w-[calc(50%-0.25rem)] sm:min-w-0 sm:shrink lg:shrink";
+  const cardClass = "p-3 bg-card border border-border rounded-xl shadow-sm";
 
   return (
-    <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4 lg:gap-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
       {/* Total Documents */}
       <div className={cardClass}>
         <div className="flex items-center justify-between">

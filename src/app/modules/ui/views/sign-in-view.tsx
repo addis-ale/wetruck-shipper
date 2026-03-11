@@ -200,7 +200,7 @@ export const SignInView = () => {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -212,7 +212,7 @@ export const SignInView = () => {
   // Don't render login form if already authenticated (will redirect)
   if (isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
@@ -224,10 +224,10 @@ export const SignInView = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
+    <div className="min-h-dvh flex items-center justify-center bg-background p-0 sm:p-4 sm:px-6 sm:py-8">
       <div className="flex flex-col gap-6 w-full max-w-[450px] md:max-w-[900px] mx-auto">
         <Card className="overflow-hidden border-none shadow-none sm:shadow-sm bg-white p-0 gap-0">
-          <CardContent className="grid p-0 md:grid-cols-2 min-h-[500px] md:min-h-[550px]">
+          <CardContent className="grid p-0 md:grid-cols-2 md:min-h-[550px]">
             {/* Left Side: Form */}
             <div className="p-6 sm:p-8 md:p-12 flex flex-col justify-center">
               <Form {...form}>
@@ -442,7 +442,7 @@ export const SignInView = () => {
 
       {/* Terms & Conditions Dialog */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+        <DialogContent className="sm:max-w-2xl max-h-[85dvh] flex flex-col w-[calc(100%-2rem)]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-primary">
               WeTruck Platform &ndash; Terms &amp; Conditions

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { request } from "@/lib/api-client";
+import { useCapacitorInit } from "@/hooks/use-capacitor-init";
 
 type User = {
   id: string;
@@ -22,7 +23,12 @@ interface AuthContextType {
   user: User;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, captchaId?: string, captchaSolution?: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    captchaId?: string,
+    captchaSolution?: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -68,13 +74,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string, captchaId?: string, captchaSolution?: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    captchaId?: string,
+    captchaSolution?: string,
+  ) => {
     const { data, error } = await request<LoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({
         email,
         password,
-      role: "shipper",
+        role: "shipper",
         captcha_id: captchaId,
         captcha_solution: captchaSolution,
       }),
@@ -94,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set user state and localStorage synchronously
       setUser(user);
       localStorage.setItem("wetruck_user", JSON.stringify(user));
-      
+
       // Store access token in localStorage if provided (for cross-origin requests)
       if (data.access_token) {
         localStorage.setItem("wetruck_access_token", data.access_token);
@@ -122,6 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("wetruck_refresh_token");
     }
   };
+
+  useCapacitorInit();
 
   return (
     <AuthContext.Provider

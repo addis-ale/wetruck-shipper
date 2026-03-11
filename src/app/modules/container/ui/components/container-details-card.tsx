@@ -19,23 +19,24 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
   return (
     <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       {/* ===== Header ===== */}
-      <div className="border-b p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md border bg-muted">
+      <div className="border-b p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-md border bg-muted shrink-0">
               <Package className="h-5 w-5" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Container
-              </p>
-              <h1 className="text-xl font-semibold tracking-tight">
+            <div className="min-w-0">
+              <p className="text-sm text-muted-foreground">Container</p>
+              <h1 className="text-lg sm:text-xl font-semibold tracking-tight truncate">
                 {container.container_number}
               </h1>
             </div>
           </div>
 
-          <Badge variant="outline" className="capitalize">
+          <Badge
+            variant="outline"
+            className="capitalize shrink-0 self-start sm:self-auto"
+          >
             {container.status}
           </Badge>
         </div>
@@ -50,10 +51,7 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
               label="Container Size"
               value={container.container_size.replace("_", " ")}
             />
-            <InfoCard
-              label="Container Type"
-              value={container.container_type}
-            />
+            <InfoCard label="Container Type" value={container.container_type} />
             <InfoCard
               label="Sequencing Priority"
               value={container.sequencing_priority}
@@ -79,22 +77,26 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         </Section>
 
         {/* Cargo */}
-        {((details?.commodity && details.commodity.length > 0) || details?.instruction) && (
-          <Section title="Cargo Information" icon={<Package className="h-4 w-4" />}>
+        {((details?.commodity && details.commodity.length > 0) ||
+          details?.instruction) && (
+          <Section
+            title="Cargo Information"
+            icon={<Package className="h-4 w-4" />}
+          >
             <div className="space-y-4">
               {details?.commodity && details.commodity.length > 0 && (
-              <div className="space-y-2">
-  <p className="text-sm text-muted-foreground">
-    Cargo Description
-  </p>
-  <div className="flex flex-wrap gap-2">
-    {details.commodity.map((item: string, index: number) => (
-      <Badge key={index} variant="secondary">
-        {item}
-      </Badge>
-    ))}
-  </div>
-</div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Cargo Description
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {details.commodity.map((item: string, index: number) => (
+                      <Badge key={index} variant="secondary">
+                        {item}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {details?.instruction && (
@@ -110,7 +112,10 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
 
         {/* Return Location */}
         {container.is_returning && returnInfo && (
-          <Section title="Return Location" icon={<MapPin className="h-4 w-4" />}>
+          <Section
+            title="Return Location"
+            icon={<MapPin className="h-4 w-4" />}
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <InfoCard label="Country" value={returnInfo.country} />
               <InfoCard label="City" value={returnInfo.city} />
@@ -128,19 +133,22 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         {/* Recommendations */}
         {(container.recommended_truck_type ||
           container.recommended_axle_type) && (
-            <Section title="System Recommendations" icon={<Truck className="h-4 w-4" />}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoCard
-                  label="Recommended Truck Type"
-                  value={container.recommended_truck_type ?? "—"}
-                />
-                <InfoCard
-                  label="Recommended Axle Type"
-                  value={container.recommended_axle_type ?? "—"}
-                />
-              </div>
-            </Section>
-          )}
+          <Section
+            title="System Recommendations"
+            icon={<Truck className="h-4 w-4" />}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InfoCard
+                label="Recommended Truck Type"
+                value={container.recommended_truck_type ?? "—"}
+              />
+              <InfoCard
+                label="Recommended Axle Type"
+                value={container.recommended_axle_type ?? "—"}
+              />
+            </div>
+          </Section>
+        )}
       </div>
     </div>
   );
@@ -160,16 +168,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="p-6 space-y-4">
+    <section className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center gap-2">
-        {icon && (
-          <span className="text-muted-foreground">
-            {icon}
-          </span>
-        )}
-        <h3 className="font-medium">
-          {title}
-        </h3>
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <h3 className="font-medium">{title}</h3>
       </div>
       {children}
     </section>
@@ -193,9 +195,7 @@ function InfoCard({
           <span>{label}</span>
         </div>
         <p className="font-medium truncate">
-          {value !== null && value !== undefined && value !== ""
-            ? value
-            : "—"}
+          {value !== null && value !== undefined && value !== "" ? value : "—"}
         </p>
       </div>
     </div>
@@ -213,18 +213,10 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <div className="flex items-baseline gap-2">
-        <span className="text-lg font-semibold">
-          {value}
-        </span>
-        {unit && (
-          <span className="text-sm text-muted-foreground">
-            {unit}
-          </span>
-        )}
+        <span className="text-lg font-semibold">{value}</span>
+        {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
       </div>
     </div>
   );

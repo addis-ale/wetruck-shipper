@@ -18,11 +18,11 @@
 /out/
 
 # Capacitor (Android, iOS, native builds)
-/android
-/ios
-/capacitor.config.ts
+# /android
+# /ios
+# /capacitor.config.ts
 # production
-/build
+# /build
 
 # misc
 .DS_Store
@@ -44,3 +44,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 config.bat
+
+# Signing keys
+*.keystore
+*.jks
+keystore.properties

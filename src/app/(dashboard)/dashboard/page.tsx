@@ -153,25 +153,27 @@ export default function ShipperDashboard() {
       </div>
 
       {/* Stats cards - horizontal scroll on mobile (scrollbar hidden), grid on desktop */}
-      <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-2 sm:overflow-visible sm:pb-0 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:gap-4 scrollbar-hide">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:overflow-visible lg:grid-cols-4 lg:gap-4 scrollbar-hide">
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="min-w-[calc(50%-0.375rem)] xs:min-w-[140px] sm:min-w-0 shrink-0 snap-start overflow-hidden transition-all hover:shadow-md border-border/60 lg:shrink"
+            className="overflow-hidden transition-all hover:shadow-md border-border/60"
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2.5 pb-1 sm:p-3 sm:pb-1">
+              <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <div className={cn("p-1.5 rounded-md", stat.bgColor)}>
-                <stat.icon className={cn("h-3.5 w-3.5", stat.color)} />
+              <div className={cn("p-1 sm:p-1.5 rounded-md", stat.bgColor)}>
+                <stat.icon
+                  className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5", stat.color)}
+                />
               </div>
             </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <div className="text-lg font-bold tracking-tight">
+            <CardContent className="p-2.5 pt-0 sm:p-3 sm:pt-0">
+              <div className="text-base sm:text-lg font-bold tracking-tight">
                 {stat.value}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 leading-tight">
                 {stat.description}
               </p>
             </CardContent>
@@ -179,7 +181,7 @@ export default function ShipperDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-7">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-7">
         {/* Recent Shipments */}
         <Card className="lg:col-span-4 border-border/60 shadow-sm overflow-hidden min-w-0">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -212,10 +214,7 @@ export default function ShipperDashboard() {
             ) : (
               <div className="flex flex-col gap-3">
                 {recentShipments.map((shipment) => (
-                  <ShipmentCard
-                    key={shipment.id}
-                    shipment={shipment}
-                  />
+                  <ShipmentCard key={shipment.id} shipment={shipment} />
                 ))}
               </div>
             )}
@@ -274,36 +273,31 @@ export default function ShipperDashboard() {
   );
 }
 
-function ShipmentCard({
-  shipment,
-}: {
-  shipment: Shipment;
-}) {
+function ShipmentCard({ shipment }: { shipment: Shipment }) {
   const status = shipment.status ?? "created";
   const href =
     status === "priced"
       ? `/dashboard/shipments/priced/placeholder?shipId=${shipment.id}`
       : status === "accepted_by_shipper"
-        ? `/dashboard/shipments/accepted/placeholder?shipId=${shipment.id}`
-        : `/dashboard/shipments/placeholder?id=${shipment.id}`;
+      ? `/dashboard/shipments/accepted/placeholder?shipId=${shipment.id}`
+      : `/dashboard/shipments/placeholder?id=${shipment.id}`;
 
   return (
     <Link href={href}>
-      <div className="flex items-stretch gap-4 rounded-xl border border-border/50 bg-background p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md group">
-        {/* Top row: #ID + date (left) | Status pill + arrow (right) */}
+      <div className="flex items-stretch gap-3 sm:gap-4 rounded-xl border border-border/50 bg-background p-3 sm:p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md group">
         <div className="flex flex-1 min-w-0 flex-col">
           <div className="flex justify-between items-start gap-2">
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-xs sm:text-sm font-medium text-foreground truncate">
               #{shipment.id} {formatDate(shipment.pickup_date)}
             </span>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               <Badge
                 variant="outline"
-                className="font-semibold text-[10px] uppercase tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/10"
+                className="font-semibold text-[9px] sm:text-[10px] uppercase tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/10 max-w-[100px] truncate"
               >
                 {getStatusLabel(status)}
               </Badge>
-              <ChevronRight className="h-4 w-4 text-primary opacity-70 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight className="h-4 w-4 text-primary opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
             </div>
           </div>
           {/* Origin → Destination with vertical dashed line and green dots */}
