@@ -17,12 +17,11 @@
 /.next/
 /out/
 
-# Capacitor (Android, iOS, native builds)
+# Mobile app (Capacitor) – do not push to GitHub
 /android
 /ios
-/capacitor.config.ts
-# production
-/build
+/icons
+/assets
 
 # misc
 .DS_Store
@@ -44,3 +43,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 config.bat
+
+# Signing keys
+*.keystore
+*.jks
+keystore.properties

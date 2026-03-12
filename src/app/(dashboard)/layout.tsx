@@ -138,7 +138,7 @@ export default function DashboardLayout({
               isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72",
             )}
           >
-            <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/95 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60 safe-area-top">
+            <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/95 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60">
               <div className="flex h-16 items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
                 <button
                   type="button"
@@ -241,14 +241,14 @@ export default function DashboardLayout({
               onOpenChange={setPasswordDialogOpen}
             />
 
-            <main className="flex-1 min-h-0 overflow-auto px-4 py-6 sm:px-6 lg:px-8 bg-background/50 mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0">
+            <main className="flex-1 min-h-0 overflow-auto px-4 py-6 sm:px-6 lg:px-8 bg-background/50 mb-16 lg:mb-0">
               <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {children}
               </div>
             </main>
 
             {/* Mobile Bottom Navigation - Enhanced for Mobile First */}
-            <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden safe-area-bottom shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+            <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
               <div className="flex justify-around items-center h-16 px-2 max-w-md mx-auto">
                 {navigation.map((item) => {
                   // Check if this is an exact match
