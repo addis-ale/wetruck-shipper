@@ -108,9 +108,8 @@ export function ContainersView() {
             className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => setAddOpen(true)}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden xs:inline">Add Container</span>
-            <span className="xs:hidden">Add</span>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Container
           </Button>
         </header>
         <CreateContainerDrawer open={addOpen} onOpenChange={setAddOpen} />
@@ -214,9 +213,7 @@ export function ContainersView() {
                       {formatType(container.container_type)}
                     </p>
                     <span
-                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium mt-2 ${statusClassName(
-                        container.status,
-                      )}`}
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium mt-2 ${statusClassName(container.status)}`}
                     >
                       {formatStatus(container.status)}
                     </span>

@@ -326,7 +326,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
           }
         }}
       >
-        <DialogContent className="create-container-dialog sm:max-w-2xl max-h-[90dvh] overflow-hidden flex flex-col w-[calc(100%-2rem)]">
+        <DialogContent className="create-container-dialog sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Add Container</DialogTitle>
             <DialogDescription>

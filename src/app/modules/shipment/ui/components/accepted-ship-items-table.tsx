@@ -74,9 +74,7 @@ export function AcceptedShipItemsTable({
     item.containers?.some((c) => c.is_returning === true) ?? false;
 
   const handleOpenContainersModal = (item: ShipItem) => {
-    console.log(
-      `[AcceptedShipItemsTable] Opening containers modal for shipItem: ${item.id}`,
-    );
+    console.log(`[AcceptedShipItemsTable] Opening containers modal for shipItem: ${item.id}`);
     setSelectedShipItem(item);
     setContainersModalOpen(true);
   };
@@ -233,8 +231,8 @@ export function AcceptedShipItemsTable({
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-2 sm:p-6">
-          <div className="rounded-md border overflow-x-auto">
+        <CardContent>
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -338,7 +336,7 @@ export function AcceptedShipItemsTable({
 
       {/* Containers Detail Modal */}
       <Dialog open={containersModalOpen} onOpenChange={setContainersModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80dvh] overflow-y-auto w-[calc(100%-2rem)]">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Container Details</DialogTitle>
             <DialogDescription>
@@ -354,7 +352,7 @@ export function AcceptedShipItemsTable({
           <div className="py-4">
             {selectedShipItem && (
               <div className="space-y-4">
-                <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -377,22 +375,20 @@ export function AcceptedShipItemsTable({
                             {container.container_size === "twenty_feet"
                               ? "20ft"
                               : container.container_size === "forty_feet"
-                              ? "40ft"
-                              : container.container_size || "-"}
+                                ? "40ft"
+                                : container.container_size || "-"}
                           </TableCell>
                           <TableCell>
                             {container.container_type
                               ? container.container_type
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                container.container_type.slice(1)
+                                .charAt(0)
+                                .toUpperCase() +
+                              container.container_type.slice(1)
                               : "-"}
                           </TableCell>
                           <TableCell>
                             {container.gross_weight
-                              ? `${container.gross_weight} ${
-                                  container.gross_weight_unit || "kg"
-                                }`
+                              ? `${container.gross_weight} ${container.gross_weight_unit || "kg"}`
                               : "-"}
                           </TableCell>
                           <TableCell>
@@ -414,14 +410,9 @@ export function AcceptedShipItemsTable({
                           </TableCell>
                           <TableCell>
                             {(() => {
-                              console.log(
-                                `[AcceptedShipItemsTable] Rendering row for container: ${container.id} (shipItem: ${selectedShipItem.id})`,
-                              );
+                              console.log(`[AcceptedShipItemsTable] Rendering row for container: ${container.id} (shipItem: ${selectedShipItem.id})`);
                               return (
-                                <Badge
-                                  variant="outline"
-                                  className="w-fit text-xs"
-                                >
+                                <Badge variant="outline" className="w-fit text-xs">
                                   {container.status || "N/A"}
                                 </Badge>
                               );

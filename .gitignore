@@ -17,12 +17,11 @@
 /.next/
 /out/
 
-# Capacitor (Android, iOS, native builds)
-# /android
-# /ios
-# /capacitor.config.ts
-# production
-# /build
+# Mobile app (Capacitor) – do not push to GitHub
+/android
+/ios
+/icons
+/assets
 
 # misc
 .DS_Store

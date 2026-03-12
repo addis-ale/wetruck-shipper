@@ -175,15 +175,15 @@ export function UpdateShipmentDrawer({
 
   const pickupRegions = pickupCountry
     ? getRegionsByCountryCode(pickupCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
   const deliveryRegions = deliveryCountry
     ? getRegionsByCountryCode(deliveryCountry).map((r: Region) => ({
-        value: r.code,
-        label: r.name,
-      }))
+      value: r.code,
+      label: r.name,
+    }))
     : [];
   const countryOptions = COUNTRIES.map((c) => ({
     value: c.code,
@@ -346,8 +346,8 @@ export function UpdateShipmentDrawer({
         : undefined,
       destination: destinationKey
         ? (LOCATION_TO_BACKEND[
-            destinationKey
-          ] as UpdateShipmentPayload["destination"])
+          destinationKey
+        ] as UpdateShipmentPayload["destination"])
         : undefined,
       pickup_date: values.pickup_date
         ? new Date(values.pickup_date).toISOString()
@@ -357,9 +357,9 @@ export function UpdateShipmentDrawer({
         : undefined,
       shipment_details: values.shipment_details?.bill_of_lading_number
         ? {
-            bill_of_lading_number:
-              values.shipment_details.bill_of_lading_number,
-          }
+          bill_of_lading_number:
+            values.shipment_details.bill_of_lading_number,
+        }
         : undefined,
     };
     mutate(payload);
@@ -379,9 +379,7 @@ export function UpdateShipmentDrawer({
             {STEPS.map((s) => (
               <div
                 key={s.id}
-                className={`h-1 flex-1 rounded-full ${
-                  s.id <= step ? "bg-primary" : "bg-muted"
-                }`}
+                className={`h-1 flex-1 rounded-full ${s.id <= step ? "bg-primary" : "bg-muted"}`}
               />
             ))}
           </div>
@@ -398,7 +396,7 @@ export function UpdateShipmentDrawer({
           >
             {step === 1 && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Origin</Label>
                     <Controller
@@ -458,7 +456,7 @@ export function UpdateShipmentDrawer({
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Pickup date</Label>
                     <Controller
@@ -473,11 +471,11 @@ export function UpdateShipmentDrawer({
                             >
                               {field.value
                                 ? format(
-                                    (field.value as unknown) instanceof Date
-                                      ? (field.value as unknown as Date)
-                                      : new Date(field.value),
-                                    "PPP",
-                                  )
+                                  (field.value as unknown) instanceof Date
+                                    ? (field.value as unknown as Date)
+                                    : new Date(field.value),
+                                  "PPP",
+                                )
                                 : "Select date"}
                             </Button>
                           </PopoverTrigger>
@@ -526,11 +524,11 @@ export function UpdateShipmentDrawer({
                             >
                               {field.value
                                 ? format(
-                                    (field.value as unknown) instanceof Date
-                                      ? (field.value as unknown as Date)
-                                      : new Date(field.value),
-                                    "PPP",
-                                  )
+                                  (field.value as unknown) instanceof Date
+                                    ? (field.value as unknown as Date)
+                                    : new Date(field.value),
+                                  "PPP",
+                                )
                                 : "Select date"}
                             </Button>
                           </PopoverTrigger>
@@ -585,7 +583,7 @@ export function UpdateShipmentDrawer({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold">Pickup address</h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Country</Label>
                       <Controller
@@ -653,7 +651,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Clearance agent name</Label>
                       <Input
@@ -676,7 +674,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Contact phone</Label>
                       <Input
@@ -718,7 +716,7 @@ export function UpdateShipmentDrawer({
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold">Delivery address</h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Country</Label>
                       <Controller
@@ -789,7 +787,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Clearance agent name</Label>
                       <Input
@@ -812,7 +810,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Contact phone</Label>
                       <Input

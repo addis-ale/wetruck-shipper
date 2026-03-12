@@ -38,6 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  useCapacitorInit();
+
   useEffect(() => {
     const initAuth = async () => {
       // Load user from localStorage
@@ -133,8 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("wetruck_refresh_token");
     }
   };
-
-  useCapacitorInit();
 
   return (
     <AuthContext.Provider

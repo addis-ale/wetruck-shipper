@@ -346,7 +346,7 @@ export function UpdateContainerDrawer({
           >
             {step === 1 && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Container number</Label>
                     <Input {...register("container_number")} />
@@ -366,9 +366,9 @@ export function UpdateContainerDrawer({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-2 min-w-0">
-                    <Label className="text-xs sm:text-sm truncate">Size</Label>
+                    <Label>Size</Label>
                     <Controller
                       name="container_size"
                       control={control}
@@ -389,9 +389,7 @@ export function UpdateContainerDrawer({
                     />
                   </div>
                   <div className="space-y-2 min-w-0">
-                    <Label className="text-xs sm:text-sm truncate block">
-                      Type
-                    </Label>
+                    <Label>Container type</Label>
                     <Controller
                       name="container_type"
                       control={control}
@@ -414,9 +412,7 @@ export function UpdateContainerDrawer({
                     />
                   </div>
                   <div className="space-y-2 min-w-0">
-                    <Label className="text-xs sm:text-sm truncate block">
-                      Truck type
-                    </Label>
+                    <Label>Truck type</Label>
                     <Controller
                       name="recommended_truck_type"
                       control={control}
@@ -437,7 +433,7 @@ export function UpdateContainerDrawer({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Gross weight (kg)</Label>
                     <Input
@@ -564,7 +560,7 @@ export function UpdateContainerDrawer({
 
             {step === 3 && isReturning && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2 min-w-0">
                     <Label>Country</Label>
                     <Controller

@@ -10,9 +10,9 @@ export function useCapacitorInit() {
         if (!Capacitor.isNativePlatform()) return;
 
         const { StatusBar, Style } = await import("@capacitor/status-bar");
-        await StatusBar.setOverlaysWebView({ overlay: true });
-        await StatusBar.setStyle({ style: Style.Light });
-        await StatusBar.setBackgroundColor({ color: "#00000000" });
+        await StatusBar.setOverlaysWebView({ overlay: false });
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: "#FFFFFF" });
       } catch {
         // Not running in Capacitor or plugin unavailable
       }

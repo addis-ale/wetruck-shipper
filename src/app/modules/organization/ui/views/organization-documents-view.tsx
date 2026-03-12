@@ -390,7 +390,7 @@ export function OrganizationDocumentsView() {
       {/* Mobile FAB - Upload */}
       <Button
         onClick={() => setIsUploadModalOpen(true)}
-        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-3 sm:right-4 z-30 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg sm:hidden flex items-center justify-center p-0"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-4 z-30 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg sm:hidden flex items-center justify-center p-0"
         aria-label="Upload document"
       >
         <Plus className="h-6 w-6" />

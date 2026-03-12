@@ -105,7 +105,7 @@ function UploadedDocumentsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85dvh] overflow-hidden flex flex-col w-[calc(100%-2rem)]">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Uploaded documents</DialogTitle>
           <DialogDescription>
@@ -192,9 +192,7 @@ export function UploadedDocsCell({
   containerId,
 }: UploadedDocsCellProps) {
   console.log(
-    `[UploadedDocsCell] shipItems: ${JSON.stringify(
-      shipItems,
-    )}, containerId: ${containerId}`,
+    `[UploadedDocsCell] shipItems: ${JSON.stringify(shipItems)}, containerId: ${containerId}`,
   );
   const [modalOpen, setModalOpen] = useState(false);
 

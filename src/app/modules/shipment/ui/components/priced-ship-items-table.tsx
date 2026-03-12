@@ -165,10 +165,10 @@ export function PricedShipItemsTable({
     }> = [];
     group.ship_items.forEach((shipItem: ShipItem) => {
       if (Array.isArray(shipItem.containers)) {
-        shipItem.containers.forEach((container) => {
+        shipItem.containers.forEach(container => {
           containers.push({
             ...container,
-            ship_item_id: shipItem.id,
+            ship_item_id: shipItem.id
           });
         });
       }
@@ -331,8 +331,8 @@ export function PricedShipItemsTable({
             {activeShipmentId}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-2 sm:p-6">
-          <div className="rounded-md border overflow-x-auto">
+        <CardContent>
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -341,11 +341,11 @@ export function PricedShipItemsTable({
                       checked={
                         selectedTransporterIds.size > 0 &&
                         selectedTransporterIds.size ===
-                          filteredTransporterGroups.filter(
-                            () =>
-                              !acceptedShipIds.has(activeShipmentId ?? 0) &&
-                              !acceptedShipmentIds.has(activeShipmentId ?? 0),
-                          ).length
+                        filteredTransporterGroups.filter(
+                          () =>
+                            !acceptedShipIds.has(activeShipmentId ?? 0) &&
+                            !acceptedShipmentIds.has(activeShipmentId ?? 0),
+                        ).length
                       }
                       onCheckedChange={handleSelectAll}
                     />
@@ -628,7 +628,7 @@ export function PricedShipItemsTable({
 
       {/* Containers Detail Modal */}
       <Dialog open={containersModalOpen} onOpenChange={setContainersModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80dvh] overflow-y-auto w-[calc(100%-2rem)]">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Container Details</DialogTitle>
             <DialogDescription>
@@ -649,7 +649,7 @@ export function PricedShipItemsTable({
           <div className="py-4">
             {selectedTransporterGroup && (
               <div className="space-y-4">
-                <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -673,22 +673,20 @@ export function PricedShipItemsTable({
                               {container.container_size === "twenty_feet"
                                 ? "20ft"
                                 : container.container_size === "forty_feet"
-                                ? "40ft"
-                                : container.container_size || "-"}
+                                  ? "40ft"
+                                  : container.container_size || "-"}
                             </TableCell>
                             <TableCell>
                               {container.container_type
                                 ? container.container_type
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                  container.container_type.slice(1)
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                container.container_type.slice(1)
                                 : "-"}
                             </TableCell>
                             <TableCell>
                               {container.gross_weight
-                                ? `${container.gross_weight} ${
-                                    container.gross_weight_unit || "kg"
-                                  }`
+                                ? `${container.gross_weight} ${container.gross_weight_unit || "kg"}`
                                 : "-"}
                             </TableCell>
                             <TableCell>
