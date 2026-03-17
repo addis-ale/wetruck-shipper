@@ -4,8 +4,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ForgotPasswordForm } from "../components/forgot-password-form";
+import { useTranslation } from "react-i18next";
 
 export function ForgotPasswordView() {
+  const { t } = useTranslation("auth");
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 sm:px-6 py-6 sm:py-8">
       <div className="w-full max-w-[400px] sm:max-w-md mx-auto">
@@ -14,18 +17,17 @@ export function ForgotPasswordView() {
             <Link
               href="/sign-in"
               className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium -ml-0.5"
-              aria-label="Back to Sign In"
+              aria-label={t("forgot_password.back_to_sign_in")}
             >
               <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-              Back to Sign In
+              {t("forgot_password.back_to_sign_in")}
             </Link>
             <div className="space-y-1">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
-                Forgot Password
+                {t("forgot_password.title")}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Enter your email and we&apos;ll send you a link to reset your
-                password.
+                {t("forgot_password.subtitle")}
               </p>
             </div>
             <ForgotPasswordForm />

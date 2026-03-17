@@ -11,12 +11,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRequestPasswordReset } from "../../server/hooks/use-request-password-reset";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 type FormData = z.infer<typeof forgotPasswordSchema>;
 
 export function ForgotPasswordForm() {
   const mutation = useRequestPasswordReset();
   const router = useRouter();
+  const { t } = useTranslation("auth");
 
   const form = useForm<FormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -43,7 +45,7 @@ export function ForgotPasswordForm() {
       <Alert className="bg-green-50 border-green-200">
         <CheckCircle className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-sm text-green-700">
-          OTP has been sent to your email. Redirecting…
+          {t("forgot_password.success")}
         </AlertDescription>
       </Alert>
     );
@@ -53,12 +55,12 @@ export function ForgotPasswordForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-          Email Address <span className="text-destructive">*</span>
+          {t("forgot_password.email_label")} <span className="text-destructive">*</span>
         </label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           <Input
-            placeholder="Enter your registered email"
+            placeholder={t("forgot_password.email_placeholder")}
             {...form.register("email")}
             className="pl-9"
           />
@@ -82,10 +84,10 @@ export function ForgotPasswordForm() {
         {mutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending OTP...
+            {t("forgot_password.sending")}
           </>
         ) : (
-          "Send OTP"
+          t("forgot_password.send_otp")
         )}
       </Button>
     </form>

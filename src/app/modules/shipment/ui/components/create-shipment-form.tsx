@@ -31,6 +31,7 @@ import {
 } from "@/lib/zod/shipment.schema";
 import { useCreateShipment } from "@/app/modules/shipment/server/hooks/use-create-shipment";
 import { Package } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   COUNTRIES,
   getRegionsByCountryCode,
@@ -51,6 +52,7 @@ const formatLocation = (location: string) => {
 };
 
 export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
+  const { t } = useTranslation(["shipment", "common"]);
   const defaultValues = useMemo<CreateShipmentInput>(
     () => ({
       origin: "" as unknown as CreateShipmentInput["origin"],
@@ -167,10 +169,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary" />
-          <CardTitle>Create New Shipment</CardTitle>
+          <CardTitle>{t("shipment:create_form.title")}</CardTitle>
         </div>
         <CardDescription>
-          Fill in the shipment details to create a new shipment
+          {t("shipment:create_form.subtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -178,14 +180,14 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
           {/* Basic Info and Shipment Details in one row */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
-              <Label htmlFor="origin">Origin</Label>
+              <Label htmlFor="origin">{t("shipment:create_form.origin")}</Label>
               <Controller
                 name="origin"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value as string}>
                     <SelectTrigger id="origin" className="w-full">
-                      <SelectValue placeholder="Select origin" />
+                      <SelectValue placeholder={t("shipment:create_form.select_origin")} />
                     </SelectTrigger>
                     <SelectContent>
                       {originDestinationEnum.options.map((option) => (
@@ -205,14 +207,14 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="destination">Destination</Label>
+              <Label htmlFor="destination">{t("shipment:create_form.destination")}</Label>
               <Controller
                 name="destination"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value as string}>
                     <SelectTrigger id="destination" className="w-full">
-                      <SelectValue placeholder="Select destination" />
+                      <SelectValue placeholder={t("shipment:create_form.select_destination")} />
                     </SelectTrigger>
                     <SelectContent>
                       {originDestinationEnum.options.map((option) => (
@@ -232,7 +234,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pickup_date">Pickup Date</Label>
+              <Label htmlFor="pickup_date">{t("shipment:create_form.pickup_date")}</Label>
               <Input
                 id="pickup_date"
                 type="date"
@@ -246,7 +248,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="delivery_date">Delivery Date</Label>
+              <Label htmlFor="delivery_date">{t("shipment:create_form.delivery_date")}</Label>
               <Input
                 id="delivery_date"
                 type="date"
@@ -261,7 +263,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="bill_of_lading_number">
-                Bill of Lading Number
+                {t("shipment:create_form.bill_of_lading")}
               </Label>
               <Input
                 id="bill_of_lading_number"
@@ -280,11 +282,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Pickup Facility */}
             <div className="rounded-md border p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Pickup Address</h3>
+              <h3 className="text-sm font-semibold">{t("shipment:create_form.pickup_address")}</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_country">Country</Label>
+                    <Label htmlFor="pickup_country">{t("common:labels.country")}</Label>
                     <Controller
                       name="pickup_facility.country"
                       control={control}
@@ -309,7 +311,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           value={field.value}
                         >
                           <SelectTrigger id="pickup_country" className="w-full">
-                            <SelectValue placeholder="Select country" />
+                            <SelectValue placeholder={t("common:labels.select_country")} />
                           </SelectTrigger>
                           <SelectContent>
                             {countryOptions.map((option) => (
@@ -332,7 +334,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_region">Region</Label>
+                    <Label htmlFor="pickup_region">{t("common:labels.region")}</Label>
                     <Controller
                       name="pickup_facility.region"
                       control={control}
@@ -344,11 +346,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           onValueChange={field.onChange}
                           placeholder={
                             pickupCountry
-                              ? "Select region"
-                              : "Select country first"
+                              ? t("common:labels.select_region")
+                              : t("common:labels.select_country_first")
                           }
-                          searchPlaceholder="Search region..."
-                          emptyMessage="No region found."
+                          searchPlaceholder={t("common:labels.search_region")}
+                          emptyMessage={t("common:labels.no_region_found")}
                           disabled={
                             !pickupCountry || pickupRegions.length === 0
                           }
@@ -364,10 +366,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_name">Clearance Agent Name</Label>
+                    <Label htmlFor="pickup_name">{t("common:labels.clearance_agent_name")}</Label>
                     <Input
                       id="pickup_name"
-                      placeholder="Enter clearance agent name"
+                      placeholder={t("common:labels.clearance_agent_name")}
                       {...register("pickup_facility.name")}
                     />
                     {errors.pickup_facility?.name && (
@@ -378,7 +380,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_address">Loading Address</Label>
+                    <Label htmlFor="pickup_address">{t("common:labels.loading_address")}</Label>
                     <Input
                       id="pickup_address"
                       {...register("pickup_facility.address")}
@@ -391,7 +393,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_contact_name">Contact Name</Label>
+                    <Label htmlFor="pickup_contact_name">{t("common:labels.contact_name")}</Label>
                     <Input
                       id="pickup_contact_name"
                       {...register("pickup_facility.contact_name")}
@@ -404,7 +406,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_contact_phone">Contact Phone</Label>
+                    <Label htmlFor="pickup_contact_phone">{t("common:labels.contact_phone")}</Label>
                     <Input
                       id="pickup_contact_phone"
                       {...register("pickup_facility.contact_phone_number")}
@@ -417,7 +419,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pickup_contact_email">Contact Email</Label>
+                    <Label htmlFor="pickup_contact_email">{t("common:labels.contact_email")}</Label>
                     <Input
                       id="pickup_contact_email"
                       type="email"
@@ -435,11 +437,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
             {/* Delivery Facility */}
             <div className="rounded-md border p-4 space-y-4">
-              <h3 className="text-sm font-semibold">Delivery Address</h3>
+              <h3 className="text-sm font-semibold">{t("shipment:create_form.delivery_address")}</h3>
               <div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_country">Country</Label>
+                    <Label htmlFor="delivery_country">{t("common:labels.country")}</Label>
                     <Controller
                       name="delivery_facility.country"
                       control={control}
@@ -467,7 +469,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                             id="delivery_country"
                             className="w-full"
                           >
-                            <SelectValue placeholder="Select country" />
+                            <SelectValue placeholder={t("common:labels.select_country")} />
                           </SelectTrigger>
                           <SelectContent>
                             {countryOptions.map((option) => (
@@ -490,7 +492,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_region">Region</Label>
+                    <Label htmlFor="delivery_region">{t("common:labels.region")}</Label>
                     <Controller
                       name="delivery_facility.region"
                       control={control}
@@ -502,11 +504,11 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                           onValueChange={field.onChange}
                           placeholder={
                             deliveryCountry
-                              ? "Select region"
-                              : "Select country first"
+                              ? t("common:labels.select_region")
+                              : t("common:labels.select_country_first")
                           }
-                          searchPlaceholder="Search region..."
-                          emptyMessage="No region found."
+                          searchPlaceholder={t("common:labels.search_region")}
+                          emptyMessage={t("common:labels.no_region_found")}
                           disabled={
                             !deliveryCountry || deliveryRegions.length === 0
                           }
@@ -522,10 +524,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_name">Clearance Agent Name</Label>
+                    <Label htmlFor="delivery_name">{t("common:labels.clearance_agent_name")}</Label>
                     <Input
                       id="delivery_name"
-                      placeholder="Enter clearance agent name "
+                      placeholder={t("common:labels.clearance_agent_name")}
                       {...register("delivery_facility.name")}
                     />
                     {errors.delivery_facility?.name && (
@@ -537,7 +539,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="delivery_address">
-                      Off Loading Address
+                      {t("common:labels.off_loading_address")}
                     </Label>
                     <Input
                       id="delivery_address"
@@ -551,7 +553,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="delivery_contact_name">Contact Name</Label>
+                    <Label htmlFor="delivery_contact_name">{t("common:labels.contact_name")}</Label>
                     <Input
                       id="delivery_contact_name"
                       {...register("delivery_facility.contact_name")}
@@ -565,7 +567,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="delivery_contact_phone">
-                      Contact Phone
+                      {t("common:labels.contact_phone")}
                     </Label>
                     <Input
                       id="delivery_contact_phone"
@@ -580,7 +582,7 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="delivery_contact_email">
-                      Contact Email
+                      {t("common:labels.contact_email")}
                     </Label>
                     <Input
                       id="delivery_contact_email"
@@ -606,10 +608,10 @@ export function CreateShipmentForm({ onSuccess }: CreateShipmentFormProps) {
               onClick={() => reset(defaultValues)}
               disabled={submitting}
             >
-              Reset
+              {t("common:buttons.reset")}
             </Button>
             <Button type="submit" disabled={submitting || !isValid}>
-              {submitting ? "Creating..." : "Create Shipment"}
+              {submitting ? t("common:buttons.creating") : t("shipment:create_form.create_shipment")}
             </Button>
           </div>
         </form>

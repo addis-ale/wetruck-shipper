@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { useShipments } from "@/app/modules/shipment/server/hooks/use-shipments";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { formatDate } from "@/lib/format";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
 
 function formatLocation(location: string) {
@@ -27,23 +29,12 @@ function formatLocation(location: string) {
     .join(" ");
 }
 
-function formatDate(dateString: string) {
-  try {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return "N/A";
-  }
-}
-
 function getStatusLabel(status: string) {
   return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 export default function ShipperDashboard() {
+  const { t } = useTranslation(["dashboard", "common"]);
   const { user } = useAuth();
   const { data: shipmentsData, isLoading: shipmentsLoading } = useShipments({
     per_page: 100,
@@ -64,39 +55,39 @@ export default function ShipperDashboard() {
     const drafts = shipments.filter((s) => s.status === "created").length;
     return [
       {
-        title: "Active Shipments",
+        title: t("dashboard:stats.active_shipments"),
         value: String(active),
         icon: Truck,
-        description: "In transit or ready for pickup",
+        description: t("dashboard:stats.active_description"),
         color: "text-green-800 dark:text-green-300",
         bgColor: "bg-green-100 dark:bg-green-900/50",
       },
       {
-        title: "Pending Quotes",
+        title: t("dashboard:stats.pending_quotes"),
         value: String(pendingQuotes),
         icon: Clock,
-        description: "Awaiting price or your acceptance",
+        description: t("dashboard:stats.pending_description"),
         color: "text-green-800 dark:text-green-300",
         bgColor: "bg-green-100 dark:bg-green-900/50",
       },
       {
-        title: "Completed",
+        title: t("dashboard:stats.completed"),
         value: String(completed),
         icon: CheckCircle2,
-        description: "Successfully delivered",
+        description: t("dashboard:stats.completed_description"),
         color: "text-green-800 dark:text-green-300",
         bgColor: "bg-green-100 dark:bg-green-900/50",
       },
       {
-        title: "Drafts",
+        title: t("dashboard:stats.drafts"),
         value: String(drafts),
         icon: Package,
-        description: "Incomplete order requests",
+        description: t("dashboard:stats.drafts_description"),
         color: "text-green-800 dark:text-green-300",
         bgColor: "bg-green-100 dark:bg-green-900/50",
       },
     ];
-  }, [shipments]);
+  }, [shipments, t]);
 
   const recentShipments = useMemo(() => {
     return [...shipments]
@@ -114,11 +105,11 @@ export default function ShipperDashboard() {
       .filter((s) => s.status === "priced")
       .map((s) => ({
         shipment: s,
-        title: `Price requested for shipment #${s.id}`,
-        description: "Review the latest quotes from carriers.",
+        title: t("dashboard:price_requested_for", { id: s.id }),
+        description: t("dashboard:review_quotes"),
         href: `/dashboard/shipments/priced/placeholder?shipId=${s.id}`,
       }));
-  }, [shipments]);
+  }, [shipments, t]);
 
   if (shipmentsLoading) {
     return (
@@ -145,10 +136,10 @@ export default function ShipperDashboard() {
       {/* Welcome header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
-          Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
+          {t("dashboard:welcome")}{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Here&apos;s an overview of your shipments and activity.
+          {t("dashboard:overview")}
         </p>
       </div>
 
@@ -183,13 +174,13 @@ export default function ShipperDashboard() {
         {/* Recent Shipments */}
         <Card className="lg:col-span-4 border-border/60 shadow-sm overflow-hidden min-w-0">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Recent Shipments</CardTitle>
+            <CardTitle>{t("dashboard:recent_shipments")}</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link
                 href="/dashboard/shipments"
                 className="text-primary font-medium flex items-center gap-1"
               >
-                View All
+                {t("common:buttons.view_all")}
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -198,14 +189,14 @@ export default function ShipperDashboard() {
             {recentShipments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-sm font-medium">No shipments yet</p>
+                <p className="text-sm font-medium">{t("dashboard:no_shipments")}</p>
                 <p className="text-xs text-muted-foreground mt-1 mb-4">
-                  Create your first shipment to get started
+                  {t("dashboard:create_first")}
                 </p>
                 <Button asChild>
                   <Link href="/dashboard/shipments" className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Create Shipment
+                    {t("dashboard:create_shipment")}
                   </Link>
                 </Button>
               </div>
@@ -225,15 +216,15 @@ export default function ShipperDashboard() {
         {/* Action Required */}
         <Card className="lg:col-span-3 border-border/60 shadow-sm">
           <CardHeader>
-            <CardTitle>Action Required</CardTitle>
+            <CardTitle>{t("dashboard:action_required")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {actionRequired.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 px-4 text-center rounded-lg border border-dashed border-border/60">
                 <CheckCircle2 className="h-10 w-10 text-emerald-500/60 mb-3" />
-                <p className="text-sm font-medium">All caught up</p>
+                <p className="text-sm font-medium">{t("dashboard:all_caught_up")}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  No actions required at the moment
+                  {t("dashboard:no_actions")}
                 </p>
               </div>
             ) : (
@@ -254,7 +245,7 @@ export default function ShipperDashboard() {
                       {item.description}
                     </p>
                     <span className="inline-block mt-2 text-primary font-semibold text-xs uppercase tracking-wide group-hover:underline">
-                      Review now &gt;
+                      {t("dashboard:review_now")}
                     </span>
                   </div>
                 </Link>
@@ -263,7 +254,7 @@ export default function ShipperDashboard() {
             {actionRequired.length > 0 && (
               <Button variant="outline" className="w-full mt-2" asChild>
                 <Link href="/dashboard/shipments/priced">
-                  View all priced shipments
+                  {t("dashboard:view_all_priced")}
                 </Link>
               </Button>
             )}

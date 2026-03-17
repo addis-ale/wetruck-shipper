@@ -11,8 +11,10 @@ import {
 import { FileText, Upload, X } from "lucide-react";
 import { useUploadShipItemDocument } from "@/app/modules/shipment/server/hooks/use-upload-ship-item-document";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("container_return_receipt");
@@ -29,7 +31,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
           setUploadError(null);
         }}
       >
-        Upload Document
+        {t("shipment:documents.upload_document")}
       </Button>
 
       <Dialog
@@ -44,7 +46,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
       >
         <DialogContent className="overflow-hidden max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
+            <DialogTitle>{t("shipment:documents.upload_document")}</DialogTitle>
           </DialogHeader>
 
           {/* Document type */}
@@ -53,9 +55,9 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
-            <option value="proof_of_delivery">Proof of Delivery</option>
+            <option value="proof_of_delivery">{t("common:document_types.proof_of_delivery")}</option>
             <option value="container_return_receipt">
-              Container Return Receipt
+              {t("common:document_types.container_return_receipt")}
             </option>
           </select>
 
@@ -79,7 +81,7 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-4 w-4" />
-              Choose file
+              {t("shipment:documents.choose_file_btn")}
             </Button>
 
             {/* Selected file display */}
@@ -122,20 +124,20 @@ export function UploadDocumentDialog({ shipItemId }: { shipItemId: number }) {
                 { document_type: type, file },
                 {
                   onSuccess: () => {
-                    toast.success("Document uploaded successfully");
+                    toast.success(t("shipment:documents.upload_success"));
                     setOpen(false);
                     setFile(null);
                     setUploadError(null);
                   },
                   onError: (err: Error) => {
                     setUploadError(err.message);
-                    toast.error(err.message || "Upload failed");
+                    toast.error(err.message || t("shipment:documents.upload_failed"));
                   },
                 },
               );
             }}
           >
-            {isPending ? "Uploading..." : "Upload"}
+            {isPending ? t("shipment:documents.uploading") : t("common:buttons.upload")}
           </Button>
         </DialogContent>
       </Dialog>

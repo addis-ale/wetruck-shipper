@@ -15,6 +15,7 @@ import type { ShipItemDocument } from "@/app/modules/shipment/server/types/ship-
 import { FileText, ExternalLink, Download, Loader2, Eye } from "lucide-react";
 import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
 import { extToMimeType } from "@/lib/utils/document-utils";
+import { useTranslation } from "react-i18next";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   proof_of_delivery: "Proof of Delivery (POD)",
@@ -47,6 +48,7 @@ function UploadedDocumentsModal({
   documents,
   containerId,
 }: UploadedDocumentsModalProps) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
   const [downloadLoadingId, setDownloadLoadingId] = useState<string | null>(
     null,
@@ -107,16 +109,15 @@ function UploadedDocumentsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Uploaded documents</DialogTitle>
+          <DialogTitle>{t("shipment:uploaded_docs.title")}</DialogTitle>
           <DialogDescription>
-            Preview or download documents. Click Preview to view in the app, or
-            Download to save the file.
+            {t("shipment:uploaded_docs.hint")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto border rounded-md divide-y">
           {documents.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
-              No documents uploaded yet.
+              {t("shipment:uploaded_docs.no_docs")}
             </div>
           ) : (
             documents.map(({ shipItemId, document: doc }) => {
@@ -151,7 +152,7 @@ function UploadedDocumentsModal({
                       ) : (
                         <>
                           <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                          Preview
+                          {t("common:buttons.preview")}
                         </>
                       )}
                     </Button>
@@ -160,14 +161,14 @@ function UploadedDocumentsModal({
                       size="sm"
                       onClick={() => handleDownload(shipItemId, doc)}
                       disabled={isPreviewLoading || isDownloadLoading}
-                      title="Download document"
+                      title={t("shipment:uploaded_docs.download_document")}
                     >
                       {isDownloadLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <>
                           <Download className="h-3.5 w-3.5 mr-1" />
-                          Download
+                          {t("common:buttons.download")}
                         </>
                       )}
                     </Button>

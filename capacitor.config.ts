@@ -3,6 +3,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.wetruck.shipper",
   appName: "Wetruck Shipper",
+  appId: "com.wetruck.shipper",
+  appName: "Wetruck Shipper",
   webDir: "out",
   server: {
     androidScheme: "https",
@@ -24,7 +26,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       overlaysWebView: false,
-      style: "LIGHT",
+      style: "DARK",
       backgroundColor: "#FFFFFF",
     },
   },

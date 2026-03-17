@@ -1,5 +1,8 @@
+"use client";
+
 import { Container } from "../../server/types/container.types";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 import {
   Package,
   Scale,
@@ -13,6 +16,7 @@ import {
 /* ===================================================== */
 
 export function ContainerDetailsCard({ container }: { container: Container }) {
+  const { t } = useTranslation(["container", "common"]);
   const details = container.container_details;
   const returnInfo = container.return_location_info;
 
@@ -27,7 +31,7 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">
-                Container
+                {t("container:container")}
               </p>
               <h1 className="text-xl font-semibold tracking-tight">
                 {container.container_number}
@@ -44,18 +48,25 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
       {/* ===== Content ===== */}
       <div className="divide-y">
         {/* Specifications */}
-        <Section title="Specifications" icon={<Ruler className="h-4 w-4" />}>
+        <Section
+          title={t("container:specifications")}
+          icon={<Ruler className="h-4 w-4" />}
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InfoCard
-              label="Container Size"
-              value={container.container_size.replace("_", " ")}
+              label={t("container:container_size")}
+              value={t(`common:container_sizes.${container.container_size}`, {
+                defaultValue: container.container_size.replace(/_/g, " "),
+              })}
             />
             <InfoCard
-              label="Container Type"
-              value={container.container_type}
+              label={t("container:container_type")}
+              value={t(`common:container_types.${container.container_type}`, {
+                defaultValue: container.container_type.replace(/_/g, " "),
+              })}
             />
             <InfoCard
-              label="Sequencing Priority"
+              label={t("container:sequencing_priority")}
               value={container.sequencing_priority}
               icon={<AlertCircle className="h-4 w-4" />}
             />
@@ -63,15 +74,18 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         </Section>
 
         {/* Weight */}
-        <Section title="Weight Details" icon={<Scale className="h-4 w-4" />}>
+        <Section
+          title={t("container:weight_details")}
+          icon={<Scale className="h-4 w-4" />}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <MetricCard
-              label="Gross Weight"
+              label={t("container:gross_weight")}
               value={container.gross_weight}
               unit={container.gross_weight_unit}
             />
             <MetricCard
-              label="Tare Weight"
+              label={t("container:tare_weight")}
               value={container.tare_weight ?? 0}
               unit={container.gross_weight_unit}
             />
@@ -79,27 +93,31 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         </Section>
 
         {/* Cargo */}
-        {((details?.commodity && details.commodity.length > 0) || details?.instruction) && (
-          <Section title="Cargo Information" icon={<Package className="h-4 w-4" />}>
+        {((details?.commodity && details.commodity.length > 0) ||
+          details?.instruction) && (
+          <Section
+            title={t("container:cargo_info")}
+            icon={<Package className="h-4 w-4" />}
+          >
             <div className="space-y-4">
               {details?.commodity && details.commodity.length > 0 && (
-              <div className="space-y-2">
-  <p className="text-sm text-muted-foreground">
-    Cargo Description
-  </p>
-  <div className="flex flex-wrap gap-2">
-    {details.commodity.map((item: string, index: number) => (
-      <Badge key={index} variant="secondary">
-        {item}
-      </Badge>
-    ))}
-  </div>
-</div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {t("container:cargo_description")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {details.commodity.map((item: string, index: number) => (
+                      <Badge key={index} variant="secondary">
+                        {item}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {details?.instruction && (
                 <InfoCard
-                  label="Handling Instructions"
+                  label={t("container:handling_instructions")}
                   value={details.instruction}
                   icon={<InfoIcon className="h-4 w-4" />}
                 />
@@ -110,16 +128,31 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
 
         {/* Return Location */}
         {container.is_returning && returnInfo && (
-          <Section title="Return Location" icon={<MapPin className="h-4 w-4" />}>
+          <Section
+            title={t("container:return_location")}
+            icon={<MapPin className="h-4 w-4" />}
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InfoCard label="Country" value={returnInfo.country} />
-              <InfoCard label="City" value={returnInfo.city} />
-              <InfoCard label="Port" value={returnInfo.port} />
+              <InfoCard
+                label={t("common:labels.country")}
+                value={returnInfo.country}
+              />
+              <InfoCard
+                label={t("common:labels.city")}
+                value={returnInfo.city}
+              />
+              <InfoCard
+                label={t("common:labels.port")}
+                value={returnInfo.port}
+              />
             </div>
 
             {returnInfo.address && (
               <div className="pt-4">
-                <InfoCard label="Address" value={returnInfo.address} />
+                <InfoCard
+                  label={t("common:labels.address")}
+                  value={returnInfo.address}
+                />
               </div>
             )}
           </Section>
@@ -128,19 +161,22 @@ export function ContainerDetailsCard({ container }: { container: Container }) {
         {/* Recommendations */}
         {(container.recommended_truck_type ||
           container.recommended_axle_type) && (
-            <Section title="System Recommendations" icon={<Truck className="h-4 w-4" />}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoCard
-                  label="Recommended Truck Type"
-                  value={container.recommended_truck_type ?? "—"}
-                />
-                <InfoCard
-                  label="Recommended Axle Type"
-                  value={container.recommended_axle_type ?? "—"}
-                />
-              </div>
-            </Section>
-          )}
+          <Section
+            title={t("container:system_recommendations")}
+            icon={<Truck className="h-4 w-4" />}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InfoCard
+                label={t("container:recommended_truck_type")}
+                value={container.recommended_truck_type ?? "—"}
+              />
+              <InfoCard
+                label={t("container:recommended_axle_type")}
+                value={container.recommended_axle_type ?? "—"}
+              />
+            </div>
+          </Section>
+        )}
       </div>
     </div>
   );
@@ -162,14 +198,8 @@ function Section({
   return (
     <section className="p-6 space-y-4">
       <div className="flex items-center gap-2">
-        {icon && (
-          <span className="text-muted-foreground">
-            {icon}
-          </span>
-        )}
-        <h3 className="font-medium">
-          {title}
-        </h3>
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <h3 className="font-medium">{title}</h3>
       </div>
       {children}
     </section>
@@ -193,9 +223,7 @@ function InfoCard({
           <span>{label}</span>
         </div>
         <p className="font-medium truncate">
-          {value !== null && value !== undefined && value !== ""
-            ? value
-            : "—"}
+          {value !== null && value !== undefined && value !== "" ? value : "—"}
         </p>
       </div>
     </div>
@@ -213,18 +241,10 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <div className="flex items-baseline gap-2">
-        <span className="text-lg font-semibold">
-          {value}
-        </span>
-        {unit && (
-          <span className="text-sm text-muted-foreground">
-            {unit}
-          </span>
-        )}
+        <span className="text-lg font-semibold">{value}</span>
+        {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
       </div>
     </div>
   );

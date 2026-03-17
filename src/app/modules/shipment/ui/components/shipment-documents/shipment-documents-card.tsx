@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FolderOpen, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useShipmentDocuments } from "../../../server/hooks/use-shipment-documents";
@@ -15,6 +16,7 @@ export function ShipmentDocumentsCard({
   shipId: number | null;
   variant?: "default" | "mobile";
 }) {
+  const { t } = useTranslation(["shipment"]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const { data, isLoading } = useShipmentDocuments(shipId as number);
 
@@ -26,7 +28,7 @@ export function ShipmentDocumentsCard({
         <div className="flex items-center justify-between mb-3">
           <span className="flex items-center gap-2 font-semibold text-foreground">
             <FolderOpen className="h-5 w-5 text-primary" />
-            Documents
+            {t("shipment:documents.title")}
           </span>
           <Button
             size="sm"
@@ -35,7 +37,7 @@ export function ShipmentDocumentsCard({
             onClick={() => setUploadOpen(true)}
           >
             <Upload className="h-4 w-4 mr-1" />
-            Upload
+            {t("shipment:documents.upload")}
           </Button>
         </div>
         <UploadShipmentDocumentDialog
@@ -45,12 +47,12 @@ export function ShipmentDocumentsCard({
         />
         {isLoading && (
           <p className="text-sm text-muted-foreground py-2">
-            Loading documents…
+            {t("shipment:documents.loading")}
           </p>
         )}
         {!isLoading && documents.length === 0 && (
           <p className="text-sm text-muted-foreground py-2">
-            No documents uploaded yet
+            {t("shipment:documents.no_documents")}
           </p>
         )}
         {!isLoading && documents.length > 0 && (
@@ -76,18 +78,18 @@ export function ShipmentDocumentsCard({
       {!shipId && (
         <div className="border border-dashed rounded-md p-8 text-center bg-muted/20">
           <p className="text-sm text-muted-foreground">
-            Select a shipment from the sidebar to view or upload documents
+            {t("shipment:documents.select_hint")}
           </p>
         </div>
       )}
 
       {shipId && isLoading && (
-        <div className="text-sm text-muted-foreground">Loading documents…</div>
+        <div className="text-sm text-muted-foreground">{t("shipment:documents.loading")}</div>
       )}
 
       {shipId && !isLoading && documents.length === 0 && (
         <div className="text-sm text-muted-foreground">
-          No documents uploaded yet
+          {t("shipment:documents.no_documents")}
         </div>
       )}
 

@@ -31,6 +31,7 @@ import {
 } from "@/lib/zod/shipment.schema";
 import { useUpdateShipment } from "@/app/modules/shipment/server/hooks/use-update-shipment";
 import { Package } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type {
   Shipment,
   UpdateShipmentPayload,
@@ -94,6 +95,7 @@ export function UpdateShipmentForm({
   onSuccess,
   variant = "card",
 }: UpdateShipmentFormProps) {
+  const { t } = useTranslation(["shipment", "common"]);
   const formatDateForInput = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -232,7 +234,7 @@ export function UpdateShipmentForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="origin">Origin *</Label>
+          <Label htmlFor="origin">{t("shipment:create_form.origin")} *</Label>
           <Controller
             name="origin"
             control={control}
@@ -242,7 +244,7 @@ export function UpdateShipmentForm({
                 value={field.value as string}
               >
                 <SelectTrigger id="origin" className="w-full">
-                  <SelectValue placeholder="Select origin" />
+                  <SelectValue placeholder={t("shipment:create_form.select_origin")} />
                 </SelectTrigger>
                 <SelectContent>
                   {originDestinationEnum.options.map((option) => (
@@ -260,7 +262,7 @@ export function UpdateShipmentForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="destination">Destination *</Label>
+          <Label htmlFor="destination">{t("shipment:create_form.destination")} *</Label>
           <Controller
             name="destination"
             control={control}
@@ -270,7 +272,7 @@ export function UpdateShipmentForm({
                 value={field.value as string}
               >
                 <SelectTrigger id="destination" className="w-full">
-                  <SelectValue placeholder="Select destination" />
+                  <SelectValue placeholder={t("shipment:create_form.select_destination")} />
                 </SelectTrigger>
                 <SelectContent>
                   {originDestinationEnum.options.map((option) => (
@@ -292,7 +294,7 @@ export function UpdateShipmentForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="pickup_date">Pickup Date *</Label>
+          <Label htmlFor="pickup_date">{t("shipment:create_form.pickup_date")} *</Label>
           <Input id="pickup_date" type="date" {...register("pickup_date")} />
           {errors.pickup_date && (
             <p className="text-sm text-destructive">
@@ -301,7 +303,7 @@ export function UpdateShipmentForm({
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="delivery_date">Delivery Date *</Label>
+          <Label htmlFor="delivery_date">{t("shipment:create_form.delivery_date")} *</Label>
           <Input
             id="delivery_date"
             type="date"
@@ -319,11 +321,11 @@ export function UpdateShipmentForm({
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            <h3 className="text-sm font-semibold">Pickup Address</h3>
+            <h3 className="text-sm font-semibold">{t("shipment:create_form.steps.pickup_address")}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2">
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>{t("common:labels.country")} *</Label>
               <Controller
                 name="pickup_facility.country"
                 control={control}
@@ -336,7 +338,7 @@ export function UpdateShipmentForm({
                     value={field.value}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Country" />
+                      <SelectValue placeholder={t("common:select_country")} />
                     </SelectTrigger>
                     <SelectContent>
                       {countryOptions.map((opt) => (
@@ -350,7 +352,7 @@ export function UpdateShipmentForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>Region *</Label>
+              <Label>{t("common:labels.region")} *</Label>
               <Controller
                 name="pickup_facility.region"
                 control={control}
@@ -360,25 +362,25 @@ export function UpdateShipmentForm({
                     value={field.value || ""}
                     onValueChange={field.onChange}
                     disabled={!pickupCountry}
-                    placeholder="Select region"
+                    placeholder={t("common:select_region")}
                   />
                 )}
               />
             </div>
             <div className="space-y-2">
-              <Label>Clearance Agent Name</Label>
+              <Label>{t("shipment:create_form.clearance_agent")}</Label>
               <Input {...register("pickup_facility.name")} />
             </div>
             <div className="space-y-2">
-              <Label>Address</Label>
+              <Label>{t("common:labels.address")}</Label>
               <Input {...register("pickup_facility.address")} />
             </div>
             <div className="space-y-2">
-              <Label>Contact Name</Label>
+              <Label>{t("common:labels.contact_name")}</Label>
               <Input {...register("pickup_facility.contact_name")} />
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>{t("common:labels.contact_phone")}</Label>
               <Input {...register("pickup_facility.contact_phone_number")} />
             </div>
           </div>
@@ -387,11 +389,11 @@ export function UpdateShipmentForm({
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            <h3 className="text-sm font-semibold">Delivery Address</h3>
+            <h3 className="text-sm font-semibold">{t("shipment:create_form.steps.delivery_address")}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2">
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>{t("common:labels.country")} *</Label>
               <Controller
                 name="delivery_facility.country"
                 control={control}
@@ -404,7 +406,7 @@ export function UpdateShipmentForm({
                     value={field.value}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Country" />
+                      <SelectValue placeholder={t("common:select_country")} />
                     </SelectTrigger>
                     <SelectContent>
                       {countryOptions.map((opt) => (
@@ -418,7 +420,7 @@ export function UpdateShipmentForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>Region *</Label>
+              <Label>{t("common:labels.region")} *</Label>
               <Controller
                 name="delivery_facility.region"
                 control={control}
@@ -428,25 +430,25 @@ export function UpdateShipmentForm({
                     value={field.value || ""}
                     onValueChange={field.onChange}
                     disabled={!deliveryCountry}
-                    placeholder="Select region"
+                    placeholder={t("common:select_region")}
                   />
                 )}
               />
             </div>
             <div className="space-y-2">
-              <Label>Clearance Agent Name</Label>
+              <Label>{t("shipment:create_form.clearance_agent")}</Label>
               <Input {...register("delivery_facility.name")} />
             </div>
             <div className="space-y-2">
-              <Label>Address</Label>
+              <Label>{t("common:labels.address")}</Label>
               <Input {...register("delivery_facility.address")} />
             </div>
             <div className="space-y-2">
-              <Label>Contact Name</Label>
+              <Label>{t("common:labels.contact_name")}</Label>
               <Input {...register("delivery_facility.contact_name")} />
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>{t("common:labels.contact_phone")}</Label>
               <Input {...register("delivery_facility.contact_phone_number")} />
             </div>
           </div>
@@ -456,10 +458,10 @@ export function UpdateShipmentForm({
       <Separator />
 
       <div className="space-y-4">
-        <h3 className="font-medium">Shipment Details</h3>
+        <h3 className="font-medium">{t("shipment:detail.shipment_details")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="bol">Bill of Lading Number</Label>
+            <Label htmlFor="bol">{t("shipment:create_form.bill_of_lading")}</Label>
             <Input
               id="bol"
               {...register("shipment_details.bill_of_lading_number")}
@@ -474,10 +476,10 @@ export function UpdateShipmentForm({
           variant="outline"
           onClick={() => reset(defaultValues)}
         >
-          Reset
+          {t("common:buttons.reset")}
         </Button>
         <Button type="submit" disabled={submitting || !isValid}>
-          {submitting ? "Updating..." : "Update Shipment"}
+          {submitting ? t("shipment:update_form.updating") : t("shipment:update_form.update_shipment")}
         </Button>
       </div>
     </form>
@@ -490,9 +492,9 @@ export function UpdateShipmentForm({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Update Shipment</CardTitle>
+        <CardTitle>{t("shipment:update_form.title")}</CardTitle>
         <CardDescription>
-          Update shipment details and information
+          {t("shipment:update_form.subtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent>{formContent}</CardContent>

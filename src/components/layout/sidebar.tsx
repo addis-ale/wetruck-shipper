@@ -9,17 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  {
-    name: "Documents",
-    href: "/dashboard/organazation/documents",
-    icon: Upload,
-  },
-  { name: "My Shipments", href: "/dashboard/shipments", icon: Package },
-  { name: "Containers", href: "/dashboard/containers", icon: Boxes },
-];
+import { useTranslation } from "react-i18next";
 
 export function Sidebar({
   className,
@@ -31,6 +21,18 @@ export function Sidebar({
   collapsed?: boolean;
 }) {
   const pathname = usePathname();
+  const { t } = useTranslation("common");
+
+  const navigation = [
+    { name: t("navigation.dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    {
+      name: t("navigation.documents"),
+      href: "/dashboard/organazation/documents",
+      icon: Upload,
+    },
+    { name: t("navigation.my_shipments"), href: "/dashboard/shipments", icon: Package },
+    { name: t("navigation.containers"), href: "/dashboard/containers", icon: Boxes },
+  ];
 
   return (
     <div

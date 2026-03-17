@@ -56,6 +56,7 @@ import {
 import type { ShipperShipItemsItem, ShipItem } from "@/lib/zod/shipment.schema";
 import type { Container } from "@/lib/zod/container.schema";
 import { UploadedDocsCell } from "./uploaded-docs-cell";
+import { useTranslation } from "react-i18next";
 
 interface PricedShipItemsTableProps {
   activeShipmentId: number | null;
@@ -72,6 +73,7 @@ const formatPrice = (value: number): string => {
 export function PricedShipItemsTable({
   activeShipmentId,
 }: PricedShipItemsTableProps) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const { data, isLoading, error } = useShipperShipItems({
@@ -254,10 +256,10 @@ export function PricedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Priced Shipments
+            {t("shipment:priced.title")}
           </CardTitle>
           <CardDescription>
-            All priced shipments with transporter quotes
+            {t("shipment:priced.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -277,16 +279,16 @@ export function PricedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Priced Shipments
+            {t("shipment:priced.title")}
           </CardTitle>
           <CardDescription>
-            All priced shipments with transporter quotes
+            {t("shipment:priced.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive">
-            Error loading priced shipments:{" "}
-            {error instanceof Error ? error.message : "Unknown error"}
+            {t("shipment:priced.error_loading")}{" "}
+            {error instanceof Error ? error.message : t("common:errors.unknown")}
           </p>
         </CardContent>
       </Card>
@@ -302,15 +304,15 @@ export function PricedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Priced Shipments
+            {t("shipment:priced.title")}
           </CardTitle>
           <CardDescription>
-            All priced shipments with transporter quotes
+            {t("shipment:priced.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            No priced shipments available.
+            {t("shipment:priced.no_available")}
           </p>
         </CardContent>
       </Card>
@@ -323,12 +325,10 @@ export function PricedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Transporter Quotes
+            {t("shipment:priced.quotes_title")}
           </CardTitle>
           <CardDescription>
-            {totalTransporters} transporter quote
-            {totalTransporters !== 1 ? "s" : ""} for shipment #
-            {activeShipmentId}
+            {t("shipment:priced.quotes_for", { count: totalTransporters, id: activeShipmentId })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -350,11 +350,11 @@ export function PricedShipItemsTable({
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Number of Containers</TableHead>
-                  <TableHead>Return Status</TableHead>
-                  <TableHead className="text-right">Total Price</TableHead>
-                  <TableHead>Currency</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
+                  <TableHead>{t("shipment:priced.num_containers")}</TableHead>
+                  <TableHead>{t("shipment:priced.return_status")}</TableHead>
+                  <TableHead className="text-right">{t("shipment:priced.total_price")}</TableHead>
+                  <TableHead>{t("common:labels.currency")}</TableHead>
+                  <TableHead className="text-right">{t("common:labels.status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -428,9 +428,7 @@ export function PricedShipItemsTable({
                                       className="max-w-xs"
                                     >
                                       <p className="text-sm">
-                                        A flat fee of 10,000 ETB is added when
-                                        at least 1 container is returning. This
-                                        fee is included in the total price.
+                                        {t("shipment:priced.returning_fee")}
                                       </p>
                                     </TooltipContent>
                                   </Tooltip>
@@ -461,10 +459,10 @@ export function PricedShipItemsTable({
                             {isAccepted ? (
                               <Badge variant="secondary" className="gap-1">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Accepted
+                                {t("common:status.accepted")}
                               </Badge>
                             ) : (
-                              <Badge variant="outline">Pending</Badge>
+                              <Badge variant="outline">{t("common:status.pending")}</Badge>
                             )}
                           </TableCell>
                         </TableRow>
@@ -477,7 +475,7 @@ export function PricedShipItemsTable({
                       colSpan={6}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      No quotes found for this shipment.
+                      {t("shipment:priced.no_quotes")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -494,8 +492,7 @@ export function PricedShipItemsTable({
                 className="gap-2"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Accept Selected ({selectedTransporterIds.size} transporter
-                {selectedTransporterIds.size !== 1 ? "s" : ""})
+                {t("shipment:priced.accept_selected", { count: selectedTransporterIds.size })}
               </Button>
             </div>
           )}
@@ -505,8 +502,7 @@ export function PricedShipItemsTable({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
               <div className="flex items-center gap-2">
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Showing {(page - 1) * perPage + 1} to{" "}
-                  {Math.min(page * perPage, data.total)} of {data.total} results
+                  {t("common:pagination.showing_results", { from: (page - 1) * perPage + 1, to: Math.min(page * perPage, data.total), total: data.total })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -531,7 +527,7 @@ export function PricedShipItemsTable({
                   </Button>
                   <div className="flex items-center gap-1 px-2">
                     <span className="text-xs sm:text-sm text-muted-foreground">
-                      Page {page} of {data.pages || 1}
+                      {t("common:pagination.page_of", { page, totalPages: data.pages || 1 })}
                     </span>
                   </div>
                   <Button
@@ -581,18 +577,14 @@ export function PricedShipItemsTable({
       <Dialog open={acceptDialogOpen} onOpenChange={setAcceptDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Accept Selected Quotes</DialogTitle>
+            <DialogTitle>{t("shipment:priced.accept_dialog_title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to accept {selectedTransporterIds.size}{" "}
-              selected transporter quote
-              {selectedTransporterIds.size !== 1 ? "s" : ""}?
+              {t("shipment:priced.accept_dialog_message", { count: selectedTransporterIds.size })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
-              This action will accept all ship items from the selected
-              transporter{selectedTransporterIds.size !== 1 ? "s" : ""} for
-              shipment #{activeShipmentId}.
+              {t("shipment:priced.accept_dialog_detail", { id: activeShipmentId })}
             </p>
           </div>
           <DialogFooter>
@@ -603,7 +595,7 @@ export function PricedShipItemsTable({
               }}
               disabled={isAccepting}
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               onClick={confirmAccept}
@@ -613,12 +605,12 @@ export function PricedShipItemsTable({
               {isAccepting ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                  Accepting...
+                  {t("shipment:priced.accepting")}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4" />
-                  Accept Quote
+                  {t("shipment:priced.accept_quote")}
                 </>
               )}
             </Button>
@@ -630,18 +622,11 @@ export function PricedShipItemsTable({
       <Dialog open={containersModalOpen} onOpenChange={setContainersModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Container Details</DialogTitle>
+            <DialogTitle>{t("shipment:priced.container_details")}</DialogTitle>
             <DialogDescription>
               {selectedTransporterGroup && (
                 <>
-                  Showing{" "}
-                  {getAllContainersFromGroup(selectedTransporterGroup).length}{" "}
-                  container
-                  {getAllContainersFromGroup(selectedTransporterGroup)
-                    .length !== 1
-                    ? "s"
-                    : ""}{" "}
-                  for this transporter
+                  {t("shipment:priced.showing_containers", { count: getAllContainersFromGroup(selectedTransporterGroup).length })}
                 </>
               )}
             </DialogDescription>
@@ -653,13 +638,13 @@ export function PricedShipItemsTable({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Container Number</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Weight</TableHead>
-                        <TableHead>Return Status</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Documents</TableHead>
+                        <TableHead>{t("shipment:priced.container_number")}</TableHead>
+                        <TableHead>{t("common:labels.size")}</TableHead>
+                        <TableHead>{t("common:labels.type")}</TableHead>
+                        <TableHead>{t("common:labels.weight")}</TableHead>
+                        <TableHead>{t("shipment:priced.return_status")}</TableHead>
+                        <TableHead>{t("common:labels.status")}</TableHead>
+                        <TableHead>{t("common:labels.documents")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -695,14 +680,14 @@ export function PricedShipItemsTable({
                                   variant="secondary"
                                   className="w-fit text-xs"
                                 >
-                                  Returning
+                                  {t("common:status.returning")}
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant="outline"
                                   className="w-fit text-xs"
                                 >
-                                  One-way
+                                  {t("common:status.one_way")}
                                 </Badge>
                               )}
                             </TableCell>
@@ -711,7 +696,7 @@ export function PricedShipItemsTable({
                                 variant="outline"
                                 className="w-fit text-xs"
                               >
-                                {container.status || "N/A"}
+                                {container.status || t("common:na")}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -734,7 +719,7 @@ export function PricedShipItemsTable({
               variant="outline"
               onClick={() => setContainersModalOpen(false)}
             >
-              Close
+              {t("common:buttons.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

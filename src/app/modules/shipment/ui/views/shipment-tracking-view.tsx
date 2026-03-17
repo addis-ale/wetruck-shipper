@@ -29,6 +29,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTrackShipment } from "@/app/modules/shipment/server/hooks/use-track-shipment";
 import { useShipment } from "@/app/modules/shipment/server/hooks/use-shipment";
 import { ShipmentTrackingMap } from "../components/shipment-tracking-map";
+import { useTranslation } from "react-i18next";
+import { formatDateShort, formatDateLong } from "@/lib/format";
 
 interface ShipmentTrackingViewProps {
     shipId: number;
@@ -36,20 +38,20 @@ interface ShipmentTrackingViewProps {
 
 /* ── Status definitions ─────────────────────────────────────────────────── */
 
-const STATUS_STEPS = [
-    { key: "created", label: "Created", icon: Package },
-    { key: "price_requested", label: "Price Requested", icon: Clock },
-    { key: "priced", label: "Priced", icon: CircleDot },
-    { key: "accepted_by_shipper", label: "Accepted", icon: CheckCircle2 },
-    { key: "allocated", label: "Allocated", icon: Truck },
-    { key: "ready_for_pickup", label: "Ready for Pickup", icon: Navigation },
-    { key: "in_transit", label: "In Transit", icon: Truck },
-    { key: "delivered", label: "Delivered", icon: MapPin },
-    { key: "completed", label: "Completed", icon: CheckCircle2 },
+const STATUS_STEP_KEYS = [
+    { key: "created", labelKey: "tracking.statuses.created", icon: Package },
+    { key: "price_requested", labelKey: "tracking.statuses.price_requested", icon: Clock },
+    { key: "priced", labelKey: "tracking.statuses.priced", icon: CircleDot },
+    { key: "accepted_by_shipper", labelKey: "tracking.statuses.accepted", icon: CheckCircle2 },
+    { key: "allocated", labelKey: "tracking.statuses.allocated", icon: Truck },
+    { key: "ready_for_pickup", labelKey: "tracking.statuses.ready_for_pickup", icon: Navigation },
+    { key: "in_transit", labelKey: "tracking.statuses.in_transit", icon: Truck },
+    { key: "delivered", labelKey: "tracking.statuses.delivered", icon: MapPin },
+    { key: "completed", labelKey: "tracking.statuses.completed", icon: CheckCircle2 },
 ] as const;
 
 function getStatusIndex(status: string): number {
-    return STATUS_STEPS.findIndex((s) => s.key === status);
+    return STATUS_STEP_KEYS.findIndex((s) => s.key === status);
 }
 
 const getStatusBadgeVariant = (status: string) => {
@@ -66,21 +68,6 @@ function formatLocation(s: string) {
         .split("_")
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ");
-}
-
-function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-}
-
-function formatDateShort(dateString: string) {
-    return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-    });
 }
 
 /* ── Types for the actual API response ──────────────────────────────────── */
@@ -127,6 +114,7 @@ interface TrackingItem {
 
 export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
     const isMobile = useIsMobile();
+    const { t } = useTranslation(["shipment", "common"]);
 
     // Fetch the shipment details for origin, destination, status, dates, tracking_number
     const { data: shipment, isLoading: shipmentLoading, error: shipmentError } = useShipment(shipId);
@@ -174,15 +162,15 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                 <CardContent className="pt-6">
                     <div className="text-center py-8">
                         <p className="text-destructive text-lg font-medium mb-2">
-                            Failed to load shipment information
+                            {t("shipment:tracking.failed_to_load")}
                         </p>
                         <p className="text-muted-foreground mb-4">
-                            {shipmentError?.message || "The shipment data could not be retrieved."}
+                            {shipmentError?.message || t("shipment:tracking.could_not_retrieve")}
                         </p>
                         <Button variant="outline" asChild>
                             <Link href={`/dashboard/shipments/placeholder?id=${shipId}`}>
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to Shipment
+                                {t("shipment:tracking.back_to_shipment")}
                             </Link>
                         </Button>
                     </div>
@@ -219,7 +207,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                     >
                         <ArrowLeft className="h-4 w-4" />
-                        Shipment
+                        {t("shipment:tracking.back_to_shipment")}
                     </Link>
                 </header>
 
@@ -231,7 +219,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 <Navigation className="h-4 w-4 text-primary" />
                             </div>
                             <span className="text-sm font-semibold text-foreground truncate">
-                                Track Shipment
+                                {t("shipment:tracking.title")}
                             </span>
                         </div>
                         <Badge variant={getStatusBadgeVariant(status)} className="shrink-0 text-[10px] uppercase font-medium">
@@ -240,7 +228,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                     </div>
                     <div className="p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Tracking #</span>
+                            <span className="text-xs text-muted-foreground">{t("shipment:tracking.tracking_number")}</span>
                             <span className="text-sm font-mono font-semibold text-primary">
                                 {trackingNumber ?? "N/A"}
                             </span>
@@ -251,7 +239,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                             <div className="flex items-center gap-2">
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Origin
+                                        {t("common:labels.origin")}
                                     </p>
                                     <p className="text-sm font-semibold text-foreground mt-0.5">
                                         {origin ? formatLocation(origin) : "—"}
@@ -266,7 +254,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 <ArrowRight className="h-5 w-5 text-primary shrink-0" />
                                 <div className="min-w-0 flex-1 text-right">
                                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Destination
+                                        {t("common:labels.destination")}
                                     </p>
                                     <p className="text-sm font-semibold text-foreground mt-0.5">
                                         {destination ? formatLocation(destination) : "—"}
@@ -297,19 +285,19 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                                 <Clock className="h-4 w-4 text-primary" />
                             </div>
-                            Status Timeline
+                            {t("shipment:tracking.status_timeline")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 pt-0">
                         <div className="relative pl-6">
-                            {STATUS_STEPS.map((step, idx) => {
+                            {STATUS_STEP_KEYS.map((step, idx) => {
                                 const isCompleted = idx <= currentStepIdx;
                                 const isCurrent = idx === currentStepIdx;
                                 const StepIcon = step.icon;
 
                                 return (
                                     <div key={step.key} className="relative pb-6 last:pb-0">
-                                        {idx < STATUS_STEPS.length - 1 && (
+                                        {idx < STATUS_STEP_KEYS.length - 1 && (
                                             <div
                                                 className={`absolute left-[-14px] top-7 w-0.5 h-[calc(100%-14px)] ${idx < currentStepIdx ? "bg-primary" : "bg-border"
                                                     }`}
@@ -335,7 +323,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                             <div className="flex items-center gap-2">
                                                 <StepIcon className={`h-4 w-4 ${isCompleted ? "text-primary" : "text-muted-foreground"}`} />
                                                 <p className={`text-sm font-medium ${isCurrent ? "text-foreground font-semibold" : "text-foreground"}`}>
-                                                    {step.label}
+                                                    {t(step.labelKey)}
                                                 </p>
                                             </div>
                                         </div>
@@ -354,7 +342,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
                                     <Truck className="h-4 w-4 text-blue-500" />
                                 </div>
-                                Assigned Trucks ({trackingItems.length})
+                                {t("shipment:tracking.assigned_trucks", { count: trackingItems.length })}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 px-4 pt-0">
@@ -366,16 +354,16 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                                 <Truck className="h-3.5 w-3.5 text-blue-500" />
                                             </div>
                                             <span className="text-sm font-semibold text-foreground">
-                                                Truck #{item.truck_id}
+                                                {t("shipment:tracking.truck", { id: item.truck_id })}
                                             </span>
                                         </div>
                                         <Badge variant="outline" className="text-xs">
-                                            {item.count_location_log} GPS points
+                                            {t("shipment:tracking.gps_points", { count: item.count_location_log })}
                                         </Badge>
                                     </div>
                                     {item.ship_item?.transporter_name && (
                                         <p className="text-xs text-muted-foreground mb-2">
-                                            Transporter: {item.ship_item.transporter_name}
+                                            {t("shipment:tracking.transporter")} {item.ship_item.transporter_name}
                                         </p>
                                     )}
                                     {item.ship_item?.containers?.length > 0 && (
@@ -404,7 +392,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                     <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
                         <CardContent className="pt-4 pb-4">
                             <p className="text-sm text-amber-800 dark:text-amber-200">
-                                {trackingError.message || "Tracking data is not available yet for this shipment."}
+                                {trackingError.message || t("shipment:tracking.not_available")}
                             </p>
                         </CardContent>
                     </Card>
@@ -426,18 +414,18 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                     </Button>
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                            Track Shipment
+                            {t("shipment:tracking.title")}
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1">
                             {trackingNumber ? (
                                 <>
-                                    Tracking:{" "}
+                                    {t("shipment:tracking.tracking_label")}{" "}
                                     <span className="font-mono font-semibold text-primary">
                                         {trackingNumber}
                                     </span>
                                 </>
                             ) : (
-                                "Real-time shipment tracking"
+                                t("shipment:tracking.real_time")
                             )}
                         </p>
                     </div>
@@ -455,7 +443,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                         <div className="flex items-center gap-4">
                             <div className="flex-1">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                                    Origin
+                                    {t("common:labels.origin")}
                                 </p>
                                 <p className="text-lg font-bold text-foreground">
                                     {origin ? formatLocation(origin) : "—"}
@@ -463,7 +451,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 {pickupDate && (
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                                         <Calendar className="h-3.5 w-3.5" />
-                                        {formatDate(pickupDate)}
+                                        {formatDateLong(pickupDate)}
                                     </p>
                                 )}
                             </div>
@@ -474,7 +462,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                             </div>
                             <div className="flex-1 text-right">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                                    Destination
+                                    {t("common:labels.destination")}
                                 </p>
                                 <p className="text-lg font-bold text-foreground">
                                     {destination ? formatLocation(destination) : "—"}
@@ -482,7 +470,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 {deliveryDate && (
                                     <p className="text-sm text-muted-foreground flex items-center justify-end gap-1 mt-1">
                                         <Calendar className="h-3.5 w-3.5" />
-                                        {formatDate(deliveryDate)}
+                                        {formatDateLong(deliveryDate)}
                                     </p>
                                 )}
                             </div>
@@ -498,7 +486,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 <Package className="h-4 w-4 text-primary" />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground">Shipment ID</p>
+                                <p className="text-xs text-muted-foreground">{t("shipment:tracking.shipment_id")}</p>
                                 <p className="text-sm font-semibold text-foreground">#{shipId}</p>
                             </div>
                         </div>
@@ -507,7 +495,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                 <Truck className="h-4 w-4 text-blue-500" />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground">Trucks Assigned</p>
+                                <p className="text-xs text-muted-foreground">{t("shipment:tracking.trucks_assigned")}</p>
                                 <p className="text-sm font-semibold text-foreground">{trackingItems.length}</p>
                             </div>
                         </div>
@@ -517,7 +505,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                     <ContainerIcon className="h-4 w-4 text-emerald-500" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Containers</p>
+                                    <p className="text-xs text-muted-foreground">{t("shipment:containers.title")}</p>
                                     <p className="text-sm font-semibold text-foreground">{totalTrackedContainers}</p>
                                 </div>
                             </div>
@@ -528,7 +516,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                     <MapPin className="h-4 w-4 text-violet-500" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">GPS Points</p>
+                                    <p className="text-xs text-muted-foreground">{t("shipment:tracking.gps_label")}</p>
                                     <p className="text-sm font-semibold text-foreground">{totalLocationLogs}</p>
                                 </div>
                             </div>
@@ -549,13 +537,13 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Clock className="h-5 w-5 text-primary" />
-                        Status Timeline
+                        {t("shipment:tracking.status_timeline")}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     {/* Horizontal stepper */}
                     <div className="flex items-start justify-between gap-2 overflow-x-auto pb-2">
-                        {STATUS_STEPS.map((step, idx) => {
+                        {STATUS_STEP_KEYS.map((step, idx) => {
                             const isCompleted = idx <= currentStepIdx;
                             const isCurrent = idx === currentStepIdx;
                             const StepIcon = step.icon;
@@ -592,7 +580,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                                 : "font-normal text-muted-foreground"
                                             }`}
                                     >
-                                        {step.label}
+                                        {t(step.labelKey)}
                                     </p>
                                 </div>
                             );
@@ -607,7 +595,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Truck className="h-5 w-5 text-blue-500" />
-                            Assigned Trucks ({trackingItems.length})
+                            {t("shipment:tracking.assigned_trucks", { count: trackingItems.length })}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -621,7 +609,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-semibold text-foreground">
-                                                    Truck #{item.truck_id}
+                                                    {t("shipment:tracking.truck", { id: item.truck_id })}
                                                 </p>
                                                 {item.ship_item?.transporter_name && (
                                                     <p className="text-xs text-muted-foreground">
@@ -632,7 +620,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                         </div>
                                         <div className="text-right">
                                             <Badge variant="outline" className="text-xs">
-                                                {item.count_location_log} GPS points
+                                                {t("shipment:tracking.gps_points", { count: item.count_location_log })}
                                             </Badge>
                                         </div>
                                     </div>
@@ -641,7 +629,7 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                                     {item.ship_item?.containers?.length > 0 && (
                                         <div className="space-y-2">
                                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                                Containers ({item.ship_item.containers.length})
+                                                {t("shipment:tracking.containers_count", { count: item.ship_item.containers.length })}
                                             </p>
                                             <div className="space-y-1.5">
                                                 {item.ship_item.containers.map((c, idx) => (
@@ -677,10 +665,10 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                    Tracking data not available yet
+                                    {t("shipment:tracking.no_data")}
                                 </p>
                                 <p className="text-xs text-amber-600 dark:text-amber-300 mt-0.5">
-                                    {trackingError.message || "Live tracking will be available once the shipment is accepted and trucks are assigned."}
+                                    {trackingError.message || t("shipment:tracking.no_data_desc")}
                                 </p>
                             </div>
                         </div>
@@ -696,9 +684,9 @@ export function ShipmentTrackingView({ shipId }: ShipmentTrackingViewProps) {
                             <div className="rounded-full bg-muted/50 p-4 mb-4">
                                 <Truck className="h-10 w-10 text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-2">No trucks assigned yet</h3>
+                            <h3 className="text-lg font-semibold mb-2">{t("shipment:tracking.no_trucks")}</h3>
                             <p className="text-muted-foreground max-w-sm text-sm">
-                                Truck assignments and live GPS tracking will appear here once the shipment is accepted and trucks are dispatched.
+                                {t("shipment:tracking.no_trucks_desc")}
                             </p>
                         </div>
                     </CardContent>

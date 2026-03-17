@@ -16,18 +16,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 
 type DataTableProps<TData> = {
   columns: ColumnDef<TData, unknown>[];
   data: TData[];
   isLoading?: boolean;
+  noResultsMessage?: string;
 };
 
 export function DataTable<TData>({
   columns,
   data,
   isLoading,
+  noResultsMessage,
 }: DataTableProps<TData>) {
+  const { t } = useTranslation("container");
   const table = useReactTable({
     data,
     columns,
@@ -57,7 +61,6 @@ export function DataTable<TData>({
 
           <TableBody>
             {isLoading ? (
-              // Loading Skeleton Rows
               Array.from({ length: 5 }).map((_, rowIndex) => (
                 <TableRow key={`skeleton-row-${rowIndex}`}>
                   {columns.map((_, cellIndex) => (
@@ -86,7 +89,7 @@ export function DataTable<TData>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {noResultsMessage ?? t("container:table.no_results")}
                 </TableCell>
               </TableRow>
             )}

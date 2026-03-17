@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { CreateShipmentDrawer } from "@/app/modules/shipment/ui/components/create-shipment-drawer";
 import { CreateShipmentForm } from "@/app/modules/shipment/ui/components/create-shipment-form";
 import { ShipmentSidebar } from "@/app/modules/shipment/ui/components/shipment-sidebar";
@@ -24,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { formatDateShort } from "@/lib/format";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
 
 function formatLocation(location: string) {
@@ -33,18 +35,8 @@ function formatLocation(location: string) {
     .join(" ");
 }
 
-function formatDateShort(dateString: string) {
-  try {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return "N/A";
-  }
-}
-
 export function ShipmentsView() {
+  const { t } = useTranslation(["shipment", "common"]);
   const isMobile = useIsMobile();
   const [activeShipmentId, setActiveShipmentId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<string>("created");
@@ -224,10 +216,10 @@ export function ShipmentsView() {
 
   // Mobile: list/selection screen — tap a shipment to open detail
   const tabLabels: Record<string, string> = {
-    created: "Created",
-    price_requested: "Price requested",
-    priced: "Priced",
-    accepted_by_shipper: "Accepted",
+    created: t("shipment:tabs.created"),
+    price_requested: t("shipment:tabs.price_requested"),
+    priced: t("shipment:tabs.priced"),
+    accepted_by_shipper: t("shipment:tabs.accepted"),
   };
 
   if (isMobile) {
@@ -235,7 +227,7 @@ export function ShipmentsView() {
       <div className="space-y-4 pb-6">
         <header className="flex items-center justify-between gap-2 pb-3 border-b border-border">
           <h1 className="text-xl font-bold tracking-tight text-foreground">
-            Shipments
+            {t("shipment:title")}
           </h1>
           <Button
             onClick={() => setShowCreateForm(!showCreateForm)}
@@ -243,7 +235,7 @@ export function ShipmentsView() {
             className="shrink-0"
           >
             <Plus className="h-4 w-4 mr-1.5" />
-            Create
+            {t("common:buttons.create")}
           </Button>
         </header>
         <CreateShipmentDrawer
@@ -300,10 +292,10 @@ export function ShipmentsView() {
             <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/20 py-12 px-4 text-center">
               <Truck className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
               <p className="text-sm font-medium text-foreground mb-1">
-                No shipments in this tab
+                {t("shipment:empty.no_shipments_tab")}
               </p>
               <p className="text-xs text-muted-foreground">
-                Create a shipment or switch to another tab.
+                {t("shipment:empty.switch_tab")}
               </p>
             </div>
           ) : (
@@ -320,10 +312,10 @@ export function ShipmentsView() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-mono font-medium text-primary">
-                              {shipment.tracking_number ?? "No Tracking Number"}
+                              {shipment.tracking_number ?? t("shipment:no_tracking_number")}
                             </span>
                             <span className="text-xs font-mono font-medium text-muted-foreground">
-                              BOL #
+                              {t("shipment:bol_number")}
                               {shipment.shipment_details?.bill_of_lading_number ??
                                 shipment.id}
                             </span>
@@ -379,10 +371,10 @@ export function ShipmentsView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Shipments
+              {t("shipment:title")}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Manage and track your shipments in one place
+              {t("shipment:subtitle")}
             </p>
           </div>
           <Button
@@ -390,7 +382,7 @@ export function ShipmentsView() {
             className="sm:w-auto w-full"
           >
             {!showCreateForm && <Plus className="h-4 w-4 mr-2" />}
-            {showCreateForm ? "Cancel" : "Create Shipment"}
+            {showCreateForm ? t("common:buttons.cancel") : t("shipment:create_shipment")}
           </Button>
         </div>
 
@@ -413,9 +405,9 @@ export function ShipmentsView() {
           <Card className="border shadow-sm h-full">
             <CardContent className="p-0">
               <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold">Active Shipments</h2>
+                <h2 className="text-lg font-semibold">{t("shipment:active_shipments")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {paginatedShipments.length} shipment(s) in {activeTab} status
+                  {t("shipment:shipment_count", { count: paginatedShipments.length, status: activeTab })}
                 </p>
               </div>
               <ShipmentSidebar
@@ -440,13 +432,13 @@ export function ShipmentsView() {
               className="w-full"
             >
               <div className="px-2 sm:px-4 py-3">
-                <h2 className="text-lg font-semibold mb-3">Shipment Status</h2>
+                <h2 className="text-lg font-semibold mb-3">{t("shipment:shipment_status")}</h2>
                 <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 gap-1 bg-muted/30 border">
                   <TabsTrigger
                     value="created"
                     className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
                   >
-                    <span className="font-medium text-sm">Created</span>
+                    <span className="font-medium text-sm">{t("shipment:tabs.created")}</span>
                     <Badge
                       variant="secondary"
                       className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
@@ -461,7 +453,7 @@ export function ShipmentsView() {
                     value="price_requested"
                     className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
                   >
-                    <span className="font-medium text-sm">Price Requested</span>
+                    <span className="font-medium text-sm">{t("shipment:tabs.price_requested")}</span>
                     <Badge
                       variant="secondary"
                       className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
@@ -477,7 +469,7 @@ export function ShipmentsView() {
                     value="priced"
                     className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200 relative"
                   >
-                    <span className="font-medium text-sm">Priced</span>
+                    <span className="font-medium text-sm">{t("shipment:tabs.priced")}</span>
                     <div className="relative ml-1">
                       <Badge
                         variant="secondary"
@@ -498,7 +490,7 @@ export function ShipmentsView() {
                     value="accepted_by_shipper"
                     className="flex items-center justify-center gap-2 py-2.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border rounded-md transition-all duration-200"
                   >
-                    <span className="font-medium text-sm">Accepted</span>
+                    <span className="font-medium text-sm">{t("shipment:tabs.accepted")}</span>
                     <Badge
                       variant="secondary"
                       className="ml-1 h-6 min-w-6 justify-center px-1.5 font-medium"
@@ -535,21 +527,21 @@ export function ShipmentsView() {
                           </div>
                           <h3 className="text-lg sm:text-xl font-semibold mb-2">
                             {activeTab === "created"
-                              ? "No shipments created"
+                              ? t("shipment:empty.no_created")
                               : activeTab === "price_requested"
-                                ? "No price requests"
+                                ? t("shipment:empty.no_price_requests")
                                 : activeTab === "priced"
-                                  ? "No quotes received"
-                                  : "No shipments accepted"}
+                                  ? t("shipment:empty.no_quotes")
+                                  : t("shipment:empty.no_accepted")}
                           </h3>
                           <p className="text-muted-foreground max-w-sm text-sm sm:text-base mb-6">
                             {activeTab === "created"
-                              ? "Get started by creating your first shipment using the form above."
+                              ? t("shipment:empty.created_hint")
                               : activeTab === "price_requested"
-                                ? "Once you request pricing for a shipment, it will appear here."
+                                ? t("shipment:empty.price_requested_hint")
                                 : activeTab === "priced"
-                                  ? "Shipments awaiting transporter quotes will appear here once priced."
-                                  : "Your accepted shipments and their final quotes will be listed here."}
+                                  ? t("shipment:empty.priced_hint")
+                                  : t("shipment:empty.accepted_hint")}
                           </p>
                           {activeTab === "created" && (
                             <Button
@@ -558,7 +550,7 @@ export function ShipmentsView() {
                               className="w-full sm:w-auto"
                             >
                               <Plus className="h-4 w-4 mr-2" />
-                              Create First Shipment
+                              {t("shipment:create_first_shipment")}
                             </Button>
                           )}
                         </div>

@@ -17,15 +17,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Search } from "lucide-react";
 import type { Container } from "../../server/types/container.types";
+import { useTranslation } from "react-i18next";
 
 const PER_PAGE = 20;
 
-function formatSize(size: string) {
-  return size === "twenty_feet" ? "20ft" : "40ft";
-}
+function useFormatters() {
+  const { t } = useTranslation("common");
 
-function formatType(type: string) {
-  return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const formatSize = (size: string) =>
+    t(`common:container_sizes.${size}`, {
+      defaultValue: size.replace(/_/g, " "),
+    });
+
+  const formatType = (type: string) =>
+    t(`common:container_types.${type}`, {
+      defaultValue: type.replace(/_/g, " "),
+    });
+
+  return { formatSize, formatType };
 }
 
 export interface ViewContainersSheetProps {
@@ -42,6 +51,8 @@ export function ViewContainersSheet({
   activeShipmentId,
   onAssignContainers,
 }: ViewContainersSheetProps) {
+  const { t } = useTranslation(["container", "common"]);
+  const { formatSize, formatType } = useFormatters();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [page, setPage] = useState(1);
   const [accumulated, setAccumulated] = useState<Container[]>([]);
@@ -130,19 +141,21 @@ export function ViewContainersSheet({
       <SheetContent className="flex h-full max-h-full flex-col sm:max-w-lg">
         <SheetHeader className="shrink-0">
           <SheetTitle>
-            {showOnlyAvailable ? "Available Containers" : "All Containers"}
+            {showOnlyAvailable
+              ? t("container:view_sheet.available_title")
+              : t("container:view_sheet.all_title")}
           </SheetTitle>
           <SheetDescription>
             {showOnlyAvailable
-              ? "Containers you can assign to this shipment. Select one or more, then assign."
-              : "View and reference your existing containers"}
+              ? t("container:view_sheet.available_desc")
+              : t("container:view_sheet.all_desc")}
           </SheetDescription>
         </SheetHeader>
         <div className="shrink-0 px-4 -mt-2 mb-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search by container number..."
+              placeholder={t("container:view_sheet.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9"
@@ -161,15 +174,17 @@ export function ViewContainersSheet({
             ) : isFetching && accumulated.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3 px-1">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Searching...</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("container:view_sheet.searching")}
+                </p>
               </div>
             ) : listContainers.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 px-1">
                 {debouncedSearch
-                  ? "No containers match your search. Try a different container number."
+                  ? t("container:view_sheet.no_match")
                   : showOnlyAvailable
-                    ? 'No available containers. Create one using "Add New Container" or assign existing ones from the search above.'
-                    : 'No containers found. Create one using "Add New Container".'}
+                  ? t("container:view_sheet.no_available")
+                  : t("container:view_sheet.no_containers")}
               </p>
             ) : (
               <ul className="space-y-1 py-2 px-1">
@@ -180,15 +195,19 @@ export function ViewContainersSheet({
                         allAvailableSelected
                           ? true
                           : someAvailableSelected
-                            ? "indeterminate"
-                            : false
+                          ? "indeterminate"
+                          : false
                       }
                       onCheckedChange={(checked) =>
                         selectAllAvailable(checked === true)
                       }
-                      aria-label="Select all"
+                      aria-label={t("common:select")}
                     />
-                    <span>{listContainers.length} available to assign</span>
+                    <span>
+                      {t("container:view_sheet.available_count", {
+                        count: listContainers.length,
+                      })}
+                    </span>
                   </li>
                 )}
                 {listContainers.map((c) => {
@@ -210,7 +229,9 @@ export function ViewContainersSheet({
                           checked={isSelected}
                           onCheckedChange={() => toggleSelect(c.id)}
                           onClick={(e) => e.stopPropagation()}
-                          aria-label={`Select ${c.container_number}`}
+                          aria-label={`${t("common:select")} ${
+                            c.container_number
+                          }`}
                         />
                       ) : (
                         <span className="w-5 shrink-0" aria-hidden />
@@ -239,10 +260,10 @@ export function ViewContainersSheet({
                       {isFetching ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Loading...
+                          {t("common:buttons.loading")}
                         </>
                       ) : (
-                        <>Load more</>
+                        <>{t("container:load_more")}</>
                       )}
                     </Button>
                   </li>
@@ -254,7 +275,9 @@ export function ViewContainersSheet({
         {canAssign && selectedIds.length > 0 && (
           <div className="shrink-0 border-t pt-3 mt-3 pb-4">
             <Button className="w-full" size="sm" onClick={handleAssignSelected}>
-              Assign selected ({selectedIds.length}) to shipment
+              {t("container:view_sheet.assign_selected", {
+                count: selectedIds.length,
+              })}
             </Button>
           </div>
         )}

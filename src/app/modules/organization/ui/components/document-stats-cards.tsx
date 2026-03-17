@@ -2,12 +2,14 @@
 
 import { FileText, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import type { OrganizationDocument } from "@/lib/api/organization";
+import { useTranslation } from "react-i18next";
 
 interface DocumentStatsCardsProps {
   documents: OrganizationDocument[];
 }
 
 export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
+  const { t } = useTranslation("organization");
   const total = documents.length;
   const pending = documents.filter((doc) => doc.status === "pending").length;
   const approved = documents.filter((doc) => doc.status === "approved").length;
@@ -27,7 +29,7 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
         </div>
         <div className="mt-2">
           <h3 className="text-[10px] font-bold text-primary uppercase tracking-wider truncate">
-            Total Documents
+            {t("organization:stats.total")}
           </h3>
           <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {total}
@@ -42,12 +44,12 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
             <Clock className="h-4 w-4" />
           </div>
           <span className="sm:hidden text-[9px] font-bold text-white bg-amber-500 px-2 py-0.5 rounded-full">
-            Pending
+            {t("organization:stats.pending")}
           </span>
         </div>
         <div className="mt-2">
           <h3 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider truncate">
-            Pending
+            {t("organization:stats.pending")}
           </h3>
           <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {pending}
@@ -64,7 +66,7 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
         </div>
         <div className="mt-2">
           <h3 className="text-[10px] font-bold text-primary uppercase tracking-wider truncate">
-            Approved
+            {t("organization:stats.approved")}
           </h3>
           <p className="text-xl sm:text-2xl font-bold text-foreground mt-0.5">
             {approved}
@@ -79,12 +81,12 @@ export function DocumentStatsCards({ documents }: DocumentStatsCardsProps) {
             <AlertCircle className="h-4 w-4" />
           </div>
           <span className="sm:hidden text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">
-            Rejected
+            {t("organization:stats.rejected")}
           </span>
         </div>
         <div className="mt-2">
           <h3 className="text-[10px] font-bold text-red-600 uppercase tracking-wider truncate">
-            Rejected
+            {t("organization:stats.rejected")}
           </h3>
           <p className="text-xl sm:text-2xl font-bold text-red-500 mt-0.5">
             {rejected}

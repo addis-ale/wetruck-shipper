@@ -15,35 +15,40 @@ import { useContainersFilters } from "../../server/hooks/use-containers-filters"
 import { useContainers } from "../../server/hooks/use-containers";
 import { cn } from "@/lib/utils";
 import { Search, Plus, Box, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Container } from "../../server/types/container.types";
 
 const MOBILE_PER_PAGE = 15;
 
-const STATUS_TABS = [
-  { value: "", label: "All" },
-  { value: "created", label: "Created" },
-  { value: "price_requested", label: "Price requested" },
-  { value: "priced", label: "Priced" },
-  { value: "accepted", label: "Accepted" },
+const STATUS_TAB_VALUES = [
+  "",
+  "created",
+  "price_requested",
+  "priced",
+  "accepted",
 ] as const;
 
-function formatSize(size: string) {
-  return size === "twenty_feet" ? "20ft" : "40ft";
-}
+function useFormatters() {
+  const { t } = useTranslation(["container", "common"]);
 
-function formatType(type: string) {
-  const map: Record<string, string> = {
-    dry: "Dry",
-    reefer: "Refrigerated",
-    open_top: "Open Top",
-    tank: "Tank",
+  const formatSize = (size: string) =>
+    t(`common:container_sizes.${size}`, {
+      defaultValue: size.replace(/_/g, " "),
+    });
+
+  const formatType = (type: string) =>
+    t(`common:container_types.${type}`, {
+      defaultValue: type.replace(/_/g, " "),
+    });
+
+  const formatStatus = (status: string | undefined) => {
+    if (!status) return t("container:statuses.created");
+    return t(`container:statuses.${status}`, {
+      defaultValue: status.replace(/_/g, " ").toUpperCase(),
+    });
   };
-  return map[type] ?? type.replace(/_/g, " ");
-}
 
-function formatStatus(status: string | undefined) {
-  if (!status) return "CREATED";
-  return status.replace(/_/g, " ").toUpperCase();
+  return { formatSize, formatType, formatStatus };
 }
 
 function statusClassName(status: string | undefined) {
@@ -59,7 +64,21 @@ function statusClassName(status: string | undefined) {
 }
 
 export function ContainersView() {
+  const { t } = useTranslation(["container", "common", "shipment"]);
+  const { formatSize, formatType, formatStatus } = useFormatters();
   const isMobile = useIsMobile();
+
+  const STATUS_TABS = STATUS_TAB_VALUES.map((value) => ({
+    value,
+    label:
+      value === ""
+        ? t("common:all")
+        : t(
+            `shipment:tabs.${
+              value === "price_requested" ? "price_requested" : value
+            }`,
+          ),
+  }));
   const filtersState = useContainersFilters();
   const [addOpen, setAddOpen] = useState(false);
   const [mobilePage, setMobilePage] = useState(1);
@@ -101,7 +120,7 @@ export function ContainersView() {
         {/* Header */}
         <header className="flex items-center justify-between gap-2 pb-3 border-b border-border">
           <h1 className="text-xl font-bold tracking-tight text-foreground">
-            Containers
+            {t("container:title")}
           </h1>
           <Button
             size="sm"
@@ -109,7 +128,7 @@ export function ContainersView() {
             onClick={() => setAddOpen(true)}
           >
             <Plus className="h-4 w-4 mr-1.5" />
-            Add Container
+            {t("container:add_container")}
           </Button>
         </header>
         <CreateContainerDrawer open={addOpen} onOpenChange={setAddOpen} />
@@ -117,7 +136,9 @@ export function ContainersView() {
         {/* Total Containers card */}
         <div className="rounded-xl border border-border bg-primary/5 p-4 flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Total Containers</p>
+            <p className="text-sm text-muted-foreground">
+              {t("container:total")}
+            </p>
             <p className="text-2xl font-bold text-foreground tabular-nums mt-0.5">
               {total}
             </p>
@@ -159,7 +180,7 @@ export function ContainersView() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search container number"
+            placeholder={t("container:search_placeholder")}
             value={filters.container_number ?? ""}
             onChange={(e) =>
               setFilters({
@@ -182,10 +203,10 @@ export function ContainersView() {
             <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/20 py-12 px-4 text-center">
               <Box className="mx-auto h-10 w-10 text-muted-foreground/50 mb-2" />
               <p className="text-sm font-medium text-foreground mb-1">
-                No containers found
+                {t("container:no_found")}
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                Add a container or adjust your search.
+                {t("container:no_found_hint")}
               </p>
               <Button
                 size="sm"
@@ -193,7 +214,7 @@ export function ContainersView() {
                 onClick={() => setAddOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Container
+                {t("container:add_container")}
               </Button>
             </div>
           ) : (
@@ -213,7 +234,9 @@ export function ContainersView() {
                       {formatType(container.container_type)}
                     </p>
                     <span
-                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium mt-2 ${statusClassName(container.status)}`}
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium mt-2 ${statusClassName(
+                        container.status,
+                      )}`}
                     >
                       {formatStatus(container.status)}
                     </span>
@@ -238,10 +261,10 @@ export function ContainersView() {
               {isFetching ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
+                  {t("common:buttons.loading")}
                 </>
               ) : (
-                "Load more"
+                t("container:load_more")
               )}
             </Button>
           </div>

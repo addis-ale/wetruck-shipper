@@ -1,0 +1,66 @@
+{
+  "title": "የድርጅት ሰነዶች",
+  "subtitle": "ከድርጅት ጋር የተያያዙ ሰነዶችን በደህንነት ይስቀሉ እና ያስተዳድሩ",
+  "breadcrumb_dashboard": "ዳሽቦርድ",
+  "breadcrumb_documents": "የድርጅት ሰነዶች",
+  "documents_title": "ሰነዶች",
+  "search_placeholder": "በሰነድ ዓይነት ይፈልጉ...",
+  "upload_document": "ሰነድ ስቀል",
+  "stats": {
+    "total": "ጠቅላላ ሰነዶች",
+    "pending": "በመጠባበቅ ላይ",
+    "approved": "የፀደቀ",
+    "rejected": "ያልተቀበለ"
+  },
+  "filters": {
+    "status": "ሁኔታ:",
+    "document_type": "የሰነድ ዓይነት:",
+    "entity_type": "የአካል ዓይነት:",
+    "all": "ሁሉም",
+    "clear": "አጽዳ",
+    "truck": "መኪና",
+    "driver": "ሾፌር"
+  },
+  "card_view": {
+    "no_documents": "ምንም ሰነዶች አልተገኙም",
+    "organization": "ድርጅት",
+    "more_actions": "ተጨማሪ ድርጊቶች"
+  },
+  "upload_modal": {
+    "title": "ሰነድ ስቀል",
+    "document_type": "የሰነድ ዓይነት *",
+    "select_type": "ዓይነት ይምረጡ...",
+    "file_upload": "ፋይል ስቀል",
+    "select_file": "ፋይል ይምረጡ",
+    "uploading": "በመስቀል ላይ...",
+    "success": "ሰነድ በተሳካ ሁኔታ ተሰቅሏል",
+    "failed": "ሰነድ መስቀል አልተቻለም"
+  },
+  "edit_modal": {
+    "title": "ሰነድ አርትዕ",
+    "document_type": "የሰነድ ዓይነት",
+    "select_type": "የሰነድ ዓይነት ይምረጡ",
+    "replace_file": "ፋይል ይተኩ (አማራጭ)",
+    "select_new_file": "አዲስ ፋይል ይምረጡ (አማራጭ)",
+    "updating": "በማዘመን ላይ...",
+    "update": "ያዘምኑ",
+    "success": "ሰነድ በተሳካ ሁኔታ ተዘምኗል",
+    "failed": "ሰነድ ማዘመን አልተቻለም"
+  },
+  "delete_modal": {
+    "title": "ሰነድ ሰርዝ",
+    "confirm": "ይህን {{type}} ለመሰረዝ እርግጠኛ ነዎት? ይህ ድርጊት ሊቀለበስ አይችልም።",
+    "success": "ሰነድ በተሳካ ሁኔታ ተሰርዟል",
+    "failed": "ሰነድ መሰረዝ አልተቻለም"
+  },
+  "view": {
+    "url_not_available": "የሰነድ URL አይገኝም",
+    "view_failed": "ሰነድ መመልከት አልተቻለም"
+  },
+  "columns": {
+    "document_type": "የሰነድ ዓይነት",
+    "entity_type": "የአካል ዓይነት",
+    "status": "ሁኔታ",
+    "uploaded_date": "የተሰቀለበት ቀን"
+  }
+}

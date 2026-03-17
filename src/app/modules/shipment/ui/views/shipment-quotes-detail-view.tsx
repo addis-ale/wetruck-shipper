@@ -40,6 +40,7 @@ import {
   Box
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 // Component to render each quote card with detailed information
 function QuoteCard({ 
@@ -53,6 +54,7 @@ function QuoteCard({
   isAccepting: boolean;
   isAccepted: boolean;
 }) {
+  const { t } = useTranslation(["shipment", "common"]);
   const { data: detailedItem, isLoading: isLoadingDetail } = useShipItemDetail(quoteItem.id);
   
   // Use detailed data if available, otherwise fall back to quoteItem
@@ -70,9 +72,9 @@ function QuoteCard({
               <Truck className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-lg">Transporter #{displayItem.transporter_id}</CardTitle>
+              <CardTitle className="text-lg">{t("shipment:quotes.transporter", { id: displayItem.transporter_id })}</CardTitle>
               <CardDescription>
-                {quoteContainerCount} container{quoteContainerCount !== 1 ? "s" : ""}
+                {t("shipment:quotes.containers_count", { count: quoteContainerCount })}
               </CardDescription>
             </div>
           </div>
@@ -93,16 +95,16 @@ function QuoteCard({
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Box className="h-4 w-4" />
-                  Containers
+                  {t("shipment:containers.title")}
                 </div>
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[100px]">Number</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Weight</TableHead>
+                        <TableHead className="w-[100px]">{t("common:labels.number")}</TableHead>
+                        <TableHead>{t("common:labels.size")}</TableHead>
+                        <TableHead>{t("common:labels.type")}</TableHead>
+                        <TableHead className="text-right">{t("common:labels.weight")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -139,7 +141,7 @@ function QuoteCard({
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No containers assigned</p>
+                <p className="text-sm">{t("shipment:containers.no_assigned")}</p>
               </div>
             )}
             <Separator />
@@ -151,7 +153,7 @@ function QuoteCard({
                 size="lg"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Accepted
+                {t("common:status.accepted")}
               </Button>
             ) : (
               <Button
@@ -161,7 +163,7 @@ function QuoteCard({
                 size="lg"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                {isAccepting ? "Accepting..." : "Accept Quote"}
+                {isAccepting ? t("shipment:quotes.accepting") : t("shipment:quotes_detail.accept_quote")}
               </Button>
             )}
           </>
@@ -172,6 +174,7 @@ function QuoteCard({
 }
 
 export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
+  const { t } = useTranslation(["shipment", "common"]);
   const { data, isLoading, error } = useShipperShipItems({ ship_id: shipId });
   const { mutate: acceptShip, isPending: isAccepting } = useAcceptShip();
   const { data: shipment } = useShipment(shipId);
@@ -264,21 +267,21 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
             href="/dashboard/shipments/priced"
             className="hover:text-foreground transition-colors"
           >
-            Priced Shipments
+            {t("shipment:quotes_detail.priced_shipments")}
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium">Shipment #{shipId} - Quotes</span>
+          <span className="text-foreground font-medium">{t("shipment:quotes_detail.title", { id: shipId })}</span>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Shipment #{shipId} - Quotes</CardTitle>
+            <CardTitle>{t("shipment:quotes_detail.title", { id: shipId })}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
               {error
-                ? "Error loading quotes. Please try again."
-                : "No quotes found for this shipment."}
+                ? t("shipment:quotes_detail.error_loading")
+                : t("shipment:quotes_detail.no_quotes")}
             </p>
           </CardContent>
         </Card>
@@ -293,21 +296,21 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
         <Link
           href="/dashboard/shipments/accepted"
           className="hover:text-foreground transition-colors"
-        >
-          Accepted Shipments
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground font-medium">Shipment #{shipId} - Quotes</span>
-      </div>
+          >
+            {t("shipment:quotes_detail.accepted_shipments")}
+          </Link>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground font-medium">{t("shipment:quotes_detail.title", { id: shipId })}</span>
+        </div>
 
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Package className="h-8 w-8" />
-          Shipment #{shipId} - Quotes
+          {t("shipment:quotes_detail.title", { id: shipId })}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Review and accept quotes from transporters for this shipment
+          {t("shipment:quotes_detail.subtitle")}
         </p>
       </div>
 
@@ -316,7 +319,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Quotes
+              {t("shipment:quotes_detail.total_quotes")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -326,7 +329,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{shipGroup.items.length}</p>
-                <p className="text-xs text-muted-foreground">Available quotes</p>
+                <p className="text-xs text-muted-foreground">{t("shipment:quotes_detail.available_quotes")}</p>
               </div>
             </div>
           </CardContent>
@@ -335,7 +338,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Transporters
+              {t("shipment:quotes_detail.transporters")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -345,7 +348,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{shipGroup.transporters.length}</p>
-                <p className="text-xs text-muted-foreground">Different transporters</p>
+                <p className="text-xs text-muted-foreground">{t("shipment:quotes_detail.different_transporters")}</p>
               </div>
             </div>
           </CardContent>
@@ -354,7 +357,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Containers
+              {t("shipment:quotes_detail.total_containers")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -364,7 +367,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalContainers}</p>
-                <p className="text-xs text-muted-foreground">Containers across all quotes</p>
+                <p className="text-xs text-muted-foreground">{t("shipment:quotes_detail.containers_across")}</p>
               </div>
             </div>
           </CardContent>
@@ -374,9 +377,9 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
       {/* Quotes Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Transporter Quotes</CardTitle>
+          <CardTitle>{t("shipment:quotes_detail.transporter_quotes")}</CardTitle>
           <CardDescription>
-            Compare quotes from different transporters and accept the best offer
+            {t("shipment:quotes_detail.compare_quotes")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -400,16 +403,15 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
       <Dialog open={acceptDialogOpen} onOpenChange={setAcceptDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Accept Quote</DialogTitle>
+            <DialogTitle>{t("shipment:quotes_detail.accept_quote")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to accept this quote from Transporter #
-              {selectedItem?.transporter_id}?
+              {t("shipment:quotes_detail.accept_confirm", { id: selectedItem?.transporter_id })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Price:</span>
+                <span className="text-muted-foreground">{t("shipment:quotes_detail.price_label")}</span>
                 <span className="font-semibold text-lg">
                   {selectedItem?.computed_price?.toLocaleString() || "0"}{" "}
                   {selectedItem?.currency || "ETB"}
@@ -417,7 +419,7 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
               </div>
               <Separator />
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Containers:</span>
+                <span className="text-muted-foreground">{t("shipment:quotes_detail.containers_label")}</span>
                 <span className="font-semibold">
                   {selectedItem?.containers?.length || 0}
                 </span>
@@ -430,10 +432,10 @@ export function ShipmentQuotesDetailView({ shipId }: { shipId: number }) {
               onClick={() => setAcceptDialogOpen(false)}
               disabled={isAccepting}
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button onClick={confirmAccept} disabled={isAccepting}>
-              {isAccepting ? "Accepting..." : "Accept Quote"}
+              {isAccepting ? t("shipment:quotes.accepting") : t("shipment:quotes_detail.accept_quote")}
             </Button>
           </DialogFooter>
         </DialogContent>

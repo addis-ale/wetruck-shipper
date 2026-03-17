@@ -28,6 +28,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export function UploadDocumentModal({
   onUpload,
   isUploading,
 }: UploadDocumentModalProps) {
+  const { t } = useTranslation(["organization", "common"]);
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [documentType, setDocumentType] = useState("");
@@ -72,14 +74,14 @@ export function UploadDocumentModal({
 
     if (!validTypes.includes(file.type)) {
       setError(
-        "Invalid file type. Please upload PDF, DOC, DOCX, JPG, or PNG files.",
+        t("organization:upload_modal.invalid_file_type"),
       );
       return;
     }
 
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      setError("File size exceeds 10MB limit. Please choose a smaller file.");
+      setError(t("organization:upload_modal.file_too_large"));
       return;
     }
 
@@ -112,12 +114,12 @@ export function UploadDocumentModal({
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setError("Please select a file");
+      setError(t("organization:upload_modal.select_file_error"));
       return;
     }
 
     if (!documentType.trim()) {
-      setError("Please select a document type");
+      setError(t("organization:upload_modal.select_type_error"));
       return;
     }
 
@@ -162,7 +164,7 @@ export function UploadDocumentModal({
       <div className="space-y-6 py-2">
         <div className="space-y-2">
           <Label htmlFor="document-type" className="text-sm font-medium">
-            Document Type <span className="text-destructive">*</span>
+            {t("organization:upload_modal.document_type")}
           </Label>
           <Select
             value={documentType}
@@ -176,20 +178,20 @@ export function UploadDocumentModal({
               id="document-type"
               className="h-11 w-full rounded-lg"
             >
-              <SelectValue placeholder="Select type..." />
+              <SelectValue placeholder={t("organization:upload_modal.select_type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="TRADE_LICENCE">Trade Licence</SelectItem>
+              <SelectItem value="TRADE_LICENCE">{t("common:document_types.trade_licence")}</SelectItem>
               <SelectItem value="AUTHORISED_CONTACT_PERSON_COMPANY_ID">
-                Authorised Contact Person Company ID
+                {t("common:document_types.authorised_contact_person_company_id")}
               </SelectItem>
-              <SelectItem value="OTHER">Other</SelectItem>
+              <SelectItem value="OTHER">{t("common:document_types.other")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm font-medium">File Upload</Label>
+          <Label className="text-sm font-medium">{t("organization:upload_modal.file_upload")}</Label>
           <input
             ref={fileInputRef}
             id="file"
@@ -219,10 +221,10 @@ export function UploadDocumentModal({
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-bold text-foreground">
-                    Click to upload or drag and drop
+                    {t("organization:upload_modal.click_to_upload")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    PDF, JPG or PNG (max. 10MB)
+                    {t("organization:upload_modal.file_types")}
                   </p>
                 </div>
                 <Button
@@ -235,7 +237,7 @@ export function UploadDocumentModal({
                     handleFileSelect();
                   }}
                 >
-                  Select File
+                  {t("organization:upload_modal.select_file")}
                 </Button>
               </div>
             </div>
@@ -282,7 +284,7 @@ export function UploadDocumentModal({
   const footerContent = (
     <>
       <Button variant="outline" onClick={handleClose} disabled={isUploading}>
-        Cancel
+        {t("common:buttons.cancel")}
       </Button>
       <Button
         onClick={handleUpload}
@@ -292,12 +294,12 @@ export function UploadDocumentModal({
         {isUploading ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Uploading...
+            {t("organization:upload_modal.uploading")}
           </>
         ) : (
           <>
             <FileText className="h-4 w-4 mr-2" />
-            Upload Document
+            {t("organization:upload_modal.title")}
           </>
         )}
       </Button>
@@ -319,7 +321,7 @@ export function UploadDocumentModal({
           <SheetHeader className="px-6 pb-2 text-left">
             <div className="flex items-start justify-between gap-4 pr-8">
               <SheetTitle className="text-xl font-bold">
-                Upload Document
+                {t("organization:upload_modal.title")}
               </SheetTitle>
             </div>
           </SheetHeader>
@@ -337,7 +339,7 @@ export function UploadDocumentModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Upload Document</DialogTitle>
+          <DialogTitle className="text-xl">{t("organization:upload_modal.title")}</DialogTitle>
         </DialogHeader>
         {formContent}
         <DialogFooter className="flex justify-between gap-2">

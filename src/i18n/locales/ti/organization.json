@@ -1,0 +1,73 @@
+{
+  "title": "ሰነዳት ትካል",
+  "subtitle": "ናይ ትካል ሰነዳት ብድሕነት ጸዐንን ኣመሓድርን",
+  "breadcrumb_dashboard": "ዳሽቦርድ",
+  "breadcrumb_documents": "ሰነዳት ትካል",
+  "documents_title": "ሰነዳት",
+  "search_placeholder": "ብዓይነት ሰነድ ድለ...",
+  "upload_document": "ሰነድ ጸዐን",
+  "stats": {
+    "total": "ጠቕላላ ሰነዳት",
+    "pending": "ዝጽበዩ",
+    "approved": "ዝተቐበሉ",
+    "rejected": "ዝተነጸጉ"
+  },
+  "filters": {
+    "status": "ኩነታት:",
+    "document_type": "ዓይነት ሰነድ:",
+    "entity_type": "ዓይነት ኣካል:",
+    "all": "ኩሉ",
+    "clear": "ኣጽሪ",
+    "truck": "መኪና",
+    "driver": "ሾፌር"
+  },
+  "card_view": {
+    "no_documents": "ሰነድ ኣይተረኽበን",
+    "organization": "ትካል",
+    "more_actions": "ዝያዳ ስጉምትታት"
+  },
+  "upload_modal": {
+    "title": "ሰነድ ጸዐን",
+    "document_type": "ዓይነት ሰነድ *",
+    "select_type": "ዓይነት ምረጽ...",
+    "file_upload": "ፋይል ጸዐን",
+    "select_file": "ፋይል ምረጽ",
+    "uploading": "ይጽዓን ኣሎ...",
+    "success": "ሰነድ ብዓወት ተጸዒኑ",
+    "failed": "ሰነድ ምጽዓን ኣይሰለጠን",
+    "click_to_upload": "ንምጽዓን ጠውቑ ወይ ጎቲትኩም ኣቕርቡ",
+    "file_types": "PDF, JPG ወይ PNG (ላዕለዋይ 10MB)",
+    "invalid_file_type": "ዘይቅኑዕ ዓይነት ፋይል። በጃኹም PDF, DOC, DOCX, JPG, ወይ PNG ፋይላት ጸዐኑ።",
+    "file_too_large": "ፋይል ዓቐኑ ካብ 10MB ልዕሊ እዩ። በጃኹም ዝንእስ ፋይል ምረጹ።",
+    "select_file_error": "በጃኹም ፋይል ምረጹ",
+    "select_type_error": "በጃኹም ዓይነት ሰነድ ምረጹ"
+  },
+  "edit_modal": {
+    "title": "ሰነድ ኣርም",
+    "document_type": "ዓይነት ሰነድ",
+    "select_type": "ዓይነት ሰነድ ምረጽ",
+    "replace_file": "ፋይል ተክእ (ኣማራጺ)",
+    "select_new_file": "ሓድሽ ፋይል ምረጽ (ኣማራጺ)",
+    "updating": "ይቕየር ኣሎ...",
+    "update": "ኣዘምን",
+    "success": "ሰነድ ብዓወት ተዘሚኑ",
+    "failed": "ሰነድ ምዝማን ኣይሰለጠን",
+    "select_type_error": "በጃኹም ዓይነት ሰነድ ምረጹ"
+  },
+  "delete_modal": {
+    "title": "ሰነድ ደምስስ",
+    "confirm": "ነዚ {{type}} ክትድምስሱ ርግጸኛ ዲኹም? እዚ ስጉምቲ ክምለስ ኣይክእልን።",
+    "success": "ሰነድ ብዓወት ተደምሲሱ",
+    "failed": "ሰነድ ምድምሳስ ኣይሰለጠን"
+  },
+  "view": {
+    "url_not_available": "ናይ ሰነድ URL ኣይርከብን",
+    "view_failed": "ሰነድ ምርኣይ ኣይሰለጠን"
+  },
+  "columns": {
+    "document_type": "ዓይነት ሰነድ",
+    "entity_type": "ዓይነት ኣካል",
+    "status": "ኩነታት",
+    "uploaded_date": "ዝተጸዓነ ዕለት"
+  }
+}

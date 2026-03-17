@@ -1,0 +1,9 @@
+{
+  "required": "እዚ ቦታ ግዴታ እዩ",
+  "email_invalid": "በጃኹም ቅኑዕ ናይ ስራሕ ኢመይል ኣእትዉ",
+  "password_min_6": "ፓስዎርድ እንተወሓደ 6 ፊደላት ክኸውን ኣለዎ",
+  "password_min_8": "ፓስዎርድ እንተወሓደ 8 ፊደላት ክኸውን ኣለዎ",
+  "passwords_no_match": "ፓስዎርዳት ኣይሰማማዑን",
+  "passwords_dont_match": "ፓስዎርዳት ኣይሰማማዑን",
+  "reset_code_required": "ናይ ምቕያር ኮድ ግዴታ እዩ"
+}

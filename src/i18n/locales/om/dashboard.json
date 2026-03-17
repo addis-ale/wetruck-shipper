@@ -1,0 +1,25 @@
+{
+  "welcome": "Baga nagaan dhuftan",
+  "overview": "Haala fe'umsa fi sochii keessanii kunooti.",
+  "stats": {
+    "active_shipments": "Fe'umsaalee Hojii Irra Jiran",
+    "active_description": "Karaa irra jiran yookaan fudhachuuf qophii",
+    "pending_quotes": "Gatii Eeggataa Jiran",
+    "pending_description": "Gatii yookaan fudhatama keessan eegaa jiran",
+    "completed": "Xumuraman",
+    "completed_description": "Milkaa'inaan geejjibaman",
+    "drafts": "Wixineelee",
+    "drafts_description": "Gaaffilee ajaja hin xumuramin"
+  },
+  "recent_shipments": "Fe'umsaalee Dhiyoo",
+  "no_shipments": "Ammaaf fe'umsi hin jiru",
+  "create_first": "Jalqabuuf fe'umsa jalqabaa uumaa",
+  "create_shipment": "Fe'umsa Uumi",
+  "action_required": "Tarkaanfiin Barbaachisa",
+  "all_caught_up": "Hundi xumuramee jira",
+  "no_actions": "Yeroo ammaa tarkaanfiin barbaachisu hin jiru",
+  "price_requested_for": "Fe'umsa #{{id}}f gatiin gaafatame",
+  "review_quotes": "Gatii dhiyoo geejjibsitootaa irraa dhufan ilaalaa.",
+  "review_now": "Amma ilaali >",
+  "view_all_priced": "Fe'umsaalee gatii qaban hunda ilaali"
+}

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useConfirmPasswordReset } from "../../server/hooks/use-confirm-password-reset";
+import { useTranslation } from "react-i18next";
 
 
 const passwordSchema = z
@@ -37,6 +38,7 @@ type FormData = z.infer<typeof passwordSchema>;
 export function ResetPasswordForm() {
   const router = useRouter();
   const mutation = useConfirmPasswordReset();
+  const { t } = useTranslation("auth");
 
   const [step, setStep] = useState<"otp" | "password">("otp");
   const [showNew, setShowNew] = useState(false);
@@ -74,7 +76,7 @@ export function ResetPasswordForm() {
       <Alert className="bg-green-50 border-green-200">
         <CheckCircle className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-sm text-green-700">
-          Password reset successful. Redirecting to sign in…
+          {t("reset_password.success")}
         </AlertDescription>
       </Alert>
     );
@@ -96,14 +98,14 @@ export function ResetPasswordForm() {
         <>
           <div className="space-y-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Reset Code (OTP) <span className="text-destructive">*</span>
+              {t("reset_password.otp_label")} <span className="text-destructive">*</span>
             </label>
             <Input
-              placeholder="Enter the code sent to your email"
+              placeholder={t("reset_password.otp_placeholder")}
               {...form.register("code")}
             />
             <p className="text-xs text-muted-foreground">
-              Check your inbox and spam folder.
+              {t("reset_password.otp_hint")}
             </p>
             {errors.code && (
               <p className="text-xs text-red-600">
@@ -119,7 +121,7 @@ export function ResetPasswordForm() {
             disabled={!form.watch("code")}
           >
             <KeyRound className="mr-2 h-4 w-4" />
-            Verify Code
+            {t("reset_password.verify_code")}
           </Button>
         </>
       )}
@@ -129,11 +131,11 @@ export function ResetPasswordForm() {
         <>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              New Password <span className="text-destructive">*</span>
+              {t("reset_password.new_password_label")} <span className="text-destructive">*</span>
             </label>
             <Input
               type={showNew ? "text" : "password"}
-              placeholder="New password"
+              placeholder={t("reset_password.new_password_placeholder")}
               {...form.register("new_password")}
               className="pr-10"
             />
@@ -155,12 +157,12 @@ export function ResetPasswordForm() {
           {/* Confirm password */}
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Confirm Password <span className="text-destructive">*</span>
+              {t("reset_password.confirm_password_label")} <span className="text-destructive">*</span>
             </label>
             <div className="relative">
               <Input
                 type={showConfirm ? "text" : "password"}
-                placeholder="Confirm password"
+                placeholder={t("reset_password.confirm_password_placeholder")}
                 {...form.register("confirm_password")}
                 className="pr-10"
               />
@@ -198,10 +200,10 @@ export function ResetPasswordForm() {
             {mutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Updating…
+                {t("reset_password.updating")}
               </>
             ) : (
-              "Reset Password"
+              t("reset_password.submit")
             )}
           </Button>
         </>

@@ -15,26 +15,11 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
-const DOCUMENT_TYPES = [
-  { value: "TRADE_LICENCE", label: "Trade Licence" },
-  {
-    value: "AUTHORISED_CONTACT_PERSON_COMPANY_ID",
-    label: "Authorised Contact Person Company ID",
-  },
-  { value: "OTHER", label: "Other" },
-] as const;
-
-const DOCUMENT_STATUSES = [
-  { value: "pending", label: "Pending" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-] as const;
-
-const ENTITY_TYPES = [
-  { value: "truck", label: "Truck" },
-  { value: "driver", label: "Driver" },
-] as const;
+const DOCUMENT_TYPE_VALUES = ["TRADE_LICENCE", "AUTHORISED_CONTACT_PERSON_COMPANY_ID", "OTHER"] as const;
+const DOCUMENT_STATUS_VALUES = ["pending", "approved", "rejected"] as const;
+const ENTITY_TYPE_VALUES = ["truck", "driver"] as const;
 
 interface DocumentFilterControlsProps {
   filters: {
@@ -68,6 +53,22 @@ export function DocumentFilterControls({
   onEntityTypeFilter,
   onClearFilters,
 }: DocumentFilterControlsProps) {
+  const { t } = useTranslation(["organization", "common"]);
+
+  const DOC_TYPE_LABEL_MAP: Record<string, string> = {
+    TRADE_LICENCE: t("common:document_types.trade_licence"),
+    AUTHORISED_CONTACT_PERSON_COMPANY_ID: t("common:document_types.authorised_contact_person_company_id"),
+    OTHER: t("common:document_types.other"),
+  };
+  const STATUS_LABEL_MAP: Record<string, string> = {
+    pending: t("common:status.pending"),
+    approved: t("common:status.approved"),
+    rejected: t("common:status.rejected"),
+  };
+  const ENTITY_LABEL_MAP: Record<string, string> = {
+    truck: t("organization:filters.truck"),
+    driver: t("organization:filters.driver"),
+  };
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [isDocumentTypeFilterOpen, setIsDocumentTypeFilterOpen] =
     useState(false);
@@ -95,7 +96,7 @@ export function DocumentFilterControls({
               )}
               onClick={() => onStatusFilter(isAll ? "all" : status)}
             >
-              {isAll ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+              {isAll ? t("organization:filters.all") : STATUS_LABEL_MAP[status] ?? status}
             </Button>
           );
         })}
@@ -107,11 +108,10 @@ export function DocumentFilterControls({
               variant="outline"
               className="h-9 text-xs sm:text-sm min-w-[100px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap"
             >
-              <span className="hidden sm:inline">Status: </span>
+              <span className="hidden sm:inline">{t("organization:filters.status")} </span>
               {filters.status
-                ? DOCUMENT_STATUSES.find((s) => s.value === filters.status)
-                    ?.label
-                : "All"}
+                ? STATUS_LABEL_MAP[filters.status]
+                : t("organization:filters.all")}
               <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -137,22 +137,22 @@ export function DocumentFilterControls({
                       "whitespace-nowrap",
                     )}
                   >
-                    All
+                    {t("organization:filters.all")}
                   </CommandItem>
-                  {DOCUMENT_STATUSES.map((status) => (
+                  {DOCUMENT_STATUS_VALUES.map((value) => (
                     <CommandItem
-                      key={status.value}
+                      key={value}
                       onSelect={() => {
-                        onStatusFilter(status.value);
+                        onStatusFilter(value);
                         setIsStatusFilterOpen(false);
                       }}
                       className={cn(
-                        status.value === filters.status &&
+                        value === filters.status &&
                           "bg-amber-100 text-amber-700 font-medium",
                         "whitespace-nowrap",
                       )}
                     >
-                      {status.label}
+                      {STATUS_LABEL_MAP[value]}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -170,11 +170,10 @@ export function DocumentFilterControls({
               variant="outline"
               className="h-9 text-xs sm:text-sm min-w-[120px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap"
             >
-              <span className="hidden sm:inline">Document Type: </span>
+              <span className="hidden sm:inline">{t("organization:filters.document_type")} </span>
               {filters.document_type
-                ? DOCUMENT_TYPES.find((t) => t.value === filters.document_type)
-                    ?.label
-                : "All"}
+                ? DOC_TYPE_LABEL_MAP[filters.document_type]
+                : t("organization:filters.all")}
               <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -200,22 +199,22 @@ export function DocumentFilterControls({
                       "whitespace-nowrap",
                     )}
                   >
-                    All
+                    {t("organization:filters.all")}
                   </CommandItem>
-                  {DOCUMENT_TYPES.map((type) => (
+                  {DOCUMENT_TYPE_VALUES.map((value) => (
                     <CommandItem
-                      key={type.value}
+                      key={value}
                       onSelect={() => {
-                        onDocumentTypeFilter(type.value);
+                        onDocumentTypeFilter(value);
                         setIsDocumentTypeFilterOpen(false);
                       }}
                       className={cn(
-                        type.value === filters.document_type &&
+                        value === filters.document_type &&
                           "bg-amber-100 text-amber-700 font-medium",
                         "whitespace-nowrap",
                       )}
                     >
-                      {type.label}
+                      {DOC_TYPE_LABEL_MAP[value]}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -233,11 +232,10 @@ export function DocumentFilterControls({
               variant="outline"
               className="h-9 text-xs sm:text-sm min-w-[100px] sm:min-w-0 flex-1 sm:flex-initial whitespace-nowrap"
             >
-              <span className="hidden sm:inline">Entity Type: </span>
+              <span className="hidden sm:inline">{t("organization:filters.entity_type")} </span>
               {filters.entity_type
-                ? ENTITY_TYPES.find((t) => t.value === filters.entity_type)
-                    ?.label
-                : "All"}
+                ? ENTITY_LABEL_MAP[filters.entity_type]
+                : t("organization:filters.all")}
               <ChevronsUpDownIcon className="ml-2 h-3 w-3 sm:h-4 sm:w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -263,22 +261,22 @@ export function DocumentFilterControls({
                       "whitespace-nowrap",
                     )}
                   >
-                    All
+                    {t("organization:filters.all")}
                   </CommandItem>
-                  {ENTITY_TYPES.map((type) => (
+                  {ENTITY_TYPE_VALUES.map((value) => (
                     <CommandItem
-                      key={type.value}
+                      key={value}
                       onSelect={() => {
-                        onEntityTypeFilter(type.value);
+                        onEntityTypeFilter(value);
                         setIsEntityTypeFilterOpen(false);
                       }}
                       className={cn(
-                        type.value === filters.entity_type &&
+                        value === filters.entity_type &&
                           "bg-amber-100 text-amber-700 font-medium",
                         "whitespace-nowrap",
                       )}
                     >
-                      {type.label}
+                      {ENTITY_LABEL_MAP[value]}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -294,7 +292,7 @@ export function DocumentFilterControls({
             onClick={onClearFilters}
             className="h-9 text-xs sm:text-sm shrink-0"
           >
-            Clear
+            {t("organization:filters.clear")}
           </Button>
         )}
       </div>

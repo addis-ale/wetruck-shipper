@@ -28,8 +28,10 @@ import { toast } from "sonner";
 import { organizationApi } from "@/lib/api/organization";
 import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
 import { extToMimeType } from "@/lib/utils/document-utils";
+import { useTranslation } from "react-i18next";
 
 export function OrganizationDocumentsView() {
+  const { t } = useTranslation(["organization", "common"]);
   const router = useRouter();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -82,13 +84,13 @@ export function OrganizationDocumentsView() {
       },
       {
         onSuccess: () => {
-          toast.success("Document uploaded successfully");
+          toast.success(t("organization:upload_modal.success"));
         },
         onError: (error) => {
           toast.error(
             error instanceof Error
               ? error.message
-              : "Failed to upload document",
+              : t("organization:upload_modal.failed"),
           );
         },
       },
@@ -107,13 +109,13 @@ export function OrganizationDocumentsView() {
       { id, data },
       {
         onSuccess: () => {
-          toast.success("Document updated successfully");
+          toast.success(t("organization:edit_modal.success"));
         },
         onError: (error) => {
           toast.error(
             error instanceof Error
               ? error.message
-              : "Failed to update document",
+              : t("organization:edit_modal.failed"),
           );
         },
       },
@@ -132,11 +134,11 @@ export function OrganizationDocumentsView() {
 
     deleteDocumentMutation.mutate(documentId, {
       onSuccess: () => {
-        toast.success("Document deleted successfully");
+        toast.success(t("organization:delete_modal.success"));
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete document",
+          error instanceof Error ? error.message : t("organization:delete_modal.failed"),
         );
       },
     });
@@ -160,11 +162,11 @@ export function OrganizationDocumentsView() {
           extToMimeType(response.data.file_ext) ?? undefined,
         );
       } else {
-        toast.error("Document URL not available");
+        toast.error(t("organization:view.url_not_available"));
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to view document",
+        error instanceof Error ? error.message : t("organization:view.view_failed"),
       );
     }
   };
@@ -269,11 +271,11 @@ export function OrganizationDocumentsView() {
           onClick={() => router.push("/dashboard")}
           className="hover:text-foreground transition-colors"
         >
-          Dashboard
+          {t("organization:breadcrumb_dashboard")}
         </button>
         <ChevronRight className="h-4 w-4" />
         <span className="text-foreground font-medium">
-          Organization Documents
+          {t("organization:breadcrumb_documents")}
         </span>
       </div>
 
@@ -282,11 +284,11 @@ export function OrganizationDocumentsView() {
         <div className="flex flex-row items-center justify-between gap-3">
           <div>
             <h2 className="text-xl sm:text-xl font-bold tracking-tight text-primary">
-              <span className="sm:hidden">Documents</span>
-              <span className="hidden sm:inline">Organization Documents</span>
+              <span className="sm:hidden">{t("organization:documents_title")}</span>
+              <span className="hidden sm:inline">{t("organization:title")}</span>
             </h2>
             <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-              Upload and manage organization-related documents securely
+              {t("organization:subtitle")}
             </p>
           </div>
         </div>
@@ -300,7 +302,7 @@ export function OrganizationDocumentsView() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary sm:text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search by document type..."
+                placeholder={t("organization:search_placeholder")}
                 className="pl-9 h-10 sm:h-9 rounded-lg bg-muted/50 sm:bg-background focus-visible:ring-0 focus-visible:ring-offset-0 border-border"
                 value={searchTerm}
                 onChange={(e) => {
@@ -317,7 +319,7 @@ export function OrganizationDocumentsView() {
             className="hidden sm:flex h-9 text-xs bg-primary hover:bg-primary/90 text-white shrink-0"
           >
             <Upload className="h-3.5 w-3.5 mr-1.5" />
-            Upload Document
+            {t("organization:upload_document")}
           </Button>
         </div>
         <DocumentFilterControls

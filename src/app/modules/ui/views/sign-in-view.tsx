@@ -32,6 +32,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
 import CaptchaComponent from "@/components/captcha/CaptchaComponent";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid business email"),
@@ -43,6 +45,7 @@ const formSchema = z.object({
 export const SignInView = () => {
   const router = useRouter();
   const { login, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation(["auth", "common"]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -76,9 +79,7 @@ export const SignInView = () => {
     // Make captcha errors more user-friendly
     const lowerMsg = msg.toLowerCase();
     if (lowerMsg.includes("captcha") || lowerMsg.includes("security code")) {
-      setError(
-        "Unable to load security code. Please refresh the page and try again.",
-      );
+      setError(t("auth:errors.captcha_load_failed"));
     } else {
       setError(msg);
     }
@@ -109,9 +110,7 @@ export const SignInView = () => {
           (lowerErrorMessage.includes("captcha") ||
             lowerErrorMessage.includes("code")))
       ) {
-        setError(
-          "The security code you entered is incorrect. Please enter the code from the new image below.",
-        );
+        setError(t("auth:errors.captcha_incorrect"));
         // Refresh captcha on error
         setCaptchaSolution("");
         setCaptchaId("");
@@ -129,9 +128,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("cannot connect") ||
         lowerErrorMessage.includes("connection")
       ) {
-        setError(
-          "Unable to connect to the server. Please check your internet connection and try again.",
-        );
+        setError(t("auth:errors.network_error"));
       }
       // Invalid credentials (but not captcha)
       else if (
@@ -146,9 +143,7 @@ export const SignInView = () => {
           !lowerErrorMessage.includes("captcha")) ||
         lowerErrorMessage.includes("401")
       ) {
-        setError(
-          "The email or password you entered is incorrect. Please check your credentials and try again.",
-        );
+        setError(t("auth:errors.invalid_credentials"));
       }
       // Account-related errors
       else if (
@@ -156,17 +151,13 @@ export const SignInView = () => {
         lowerErrorMessage.includes("doesn't exist") ||
         lowerErrorMessage.includes("user not found")
       ) {
-        setError(
-          "No account found with this email address. Please check your email or contact support.",
-        );
+        setError(t("auth:errors.account_not_found"));
       } else if (
         lowerErrorMessage.includes("disabled") ||
         lowerErrorMessage.includes("suspended") ||
         lowerErrorMessage.includes("inactive")
       ) {
-        setError(
-          "Your account has been disabled. Please contact support for assistance.",
-        );
+        setError(t("auth:errors.account_disabled"));
       }
       // Server errors
       else if (
@@ -174,7 +165,7 @@ export const SignInView = () => {
         lowerErrorMessage.includes("server error") ||
         lowerErrorMessage.includes("internal server")
       ) {
-        setError("A server error occurred. Please try again in a few moments.");
+        setError(t("auth:errors.server_error"));
       }
       // Rate limiting
       else if (
@@ -182,15 +173,11 @@ export const SignInView = () => {
         lowerErrorMessage.includes("rate limit") ||
         lowerErrorMessage.includes("429")
       ) {
-        setError(
-          "Too many login attempts. Please wait a few minutes before trying again.",
-        );
+        setError(t("auth:errors.too_many_attempts"));
       }
       // Generic fallback
       else {
-        setError(
-          "Login failed. Please check your credentials and try again. If the problem persists, contact support.",
-        );
+        setError(t("auth:errors.login_failed"));
       }
     } finally {
       setPending(false);
@@ -203,7 +190,9 @@ export const SignInView = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">
+            {t("auth:sign_in.loading")}
+          </p>
         </div>
       </div>
     );
@@ -216,7 +205,7 @@ export const SignInView = () => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
-            Redirecting to dashboard...
+            {t("auth:sign_in.redirecting")}
           </p>
         </div>
       </div>
@@ -237,10 +226,10 @@ export const SignInView = () => {
                 >
                   <div className="space-y-2 text-center md:text-left">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
-                      Shipper Portal
+                      {t("auth:sign_in.title")}
                     </h1>
                     <p className="text-muted-foreground text-sm">
-                      Enter your credentials to access your dashboard.
+                      {t("auth:sign_in.subtitle")}
                     </p>
                   </div>
 
@@ -254,13 +243,15 @@ export const SignInView = () => {
                             className="text-xs font-semibold uppercase tracking-wider text-gray-500"
                             required
                           >
-                            Email Address
+                            {t("auth:sign_in.email_label")}
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                               <Input
-                                placeholder="name@company.com"
+                                placeholder={t(
+                                  "auth:sign_in.email_placeholder",
+                                )}
                                 {...field}
                                 className="pl-9 h-11 border border-gray-200 focus-visible:ring-primary focus-visible:ring-offset-0"
                               />
@@ -281,13 +272,13 @@ export const SignInView = () => {
                               className="text-xs font-semibold uppercase tracking-wider text-gray-500"
                               required
                             >
-                              Password
+                              {t("auth:sign_in.password_label")}
                             </FormLabel>
                             <Link
                               href="/forgot-password"
                               className="text-xs text-primary hover:text-primary/80 hover:underline"
                             >
-                              Forgot?
+                              {t("auth:sign_in.forgot")}
                             </Link>
                           </div>
                           <FormControl>
@@ -356,7 +347,7 @@ export const SignInView = () => {
                       htmlFor="terms-accept"
                       className="text-xs text-gray-500 leading-snug cursor-pointer select-none"
                     >
-                      I have read and accept the{" "}
+                      {t("auth:sign_in.terms_prefix")}{" "}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -365,7 +356,7 @@ export const SignInView = () => {
                         }}
                         className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
                       >
-                        Terms &amp; Conditions
+                        {t("auth:sign_in.terms_link")}
                       </button>
                     </label>
                   </div>
@@ -383,10 +374,10 @@ export const SignInView = () => {
                     {pending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Authenticating...
+                        {t("auth:sign_in.authenticating")}
                       </>
                     ) : (
-                      "Sign In"
+                      t("auth:sign_in.submit")
                     )}
                   </Button>
                 </form>
@@ -406,38 +397,44 @@ export const SignInView = () => {
               <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-8 w-full h-full">
                 <div className="space-y-4">
                   <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
-                    Move Forward, <br />
-                    <span>Go Wide!</span>
+                    {t("auth:brand.tagline_1")} <br />
+                    <span>{t("auth:brand.tagline_2")}</span>
                   </h2>
                   <div className="h-1 w-20 bg-white mx-auto rounded-full" />
                 </div>
 
                 <p className="text-white/80 text-base max-w-[300px] leading-relaxed font-light italic">
-                  &quot;The most reliable freight partner for your business
-                  growth.&quot;
+                  {t("auth:brand.quote")}
                 </p>
               </div>
 
               {/* Bottom Accent */}
               <div className="absolute bottom-8 left-8 right-8 z-10">
                 <div className="flex justify-between items-center text-[10px] text-white/40 uppercase tracking-[0.2em]">
-                  <span className="font-bold text-white/70">Logistics</span>
+                  <span className="font-bold text-white/70">
+                    {t("auth:brand.logistics")}
+                  </span>
                   <span className="text-white">•</span>
-                  <span className="font-bold text-white/70">Efficiency</span>
+                  <span className="font-bold text-white/70">
+                    {t("auth:brand.efficiency")}
+                  </span>
                   <span className="text-white">•</span>
-                  <span className="font-bold text-white/70">Control</span>
+                  <span className="font-bold text-white/70">
+                    {t("auth:brand.control")}
+                  </span>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Footer Links */}
-        <p className="text-center text-xs text-gray-400">
-          &copy; {new Date().getFullYear()}{" "}
-          <span className="text-primary font-medium">WeTruck</span> TechEnable
-          Solutions PLC.
-        </p>
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-3">
+          <p className="text-center text-xs text-gray-400">
+            {t("auth:brand.copyright", { year: new Date().getFullYear() })}
+          </p>
+          <LanguageSwitcher />
+        </div>
       </div>
 
       {/* Terms & Conditions Dialog */}
@@ -445,17 +442,17 @@ export const SignInView = () => {
         <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-primary">
-              WeTruck Platform &ndash; Terms &amp; Conditions
+              {t("auth:terms_dialog.title")}
             </DialogTitle>
             <DialogDescription>
-              Please read these terms carefully before using the platform.
+              {t("auth:terms_dialog.subtitle")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-sm text-gray-700 leading-relaxed">
             <section>
               <h3 className="font-semibold text-base text-gray-900 mb-2">
-                1. For Transporters &amp; Freight Forwarders
+                {t("auth:terms_dialog.section_1_title")}
               </h3>
               <p>
                 By clicking &ldquo;I Accept&rdquo;, you confirm that you have
@@ -471,7 +468,7 @@ export const SignInView = () => {
 
             <section>
               <h3 className="font-semibold text-base text-gray-900 mb-2">
-                2. Transporter Responsibilities
+                {t("auth:terms_dialog.section_2_title")}
               </h3>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
@@ -522,7 +519,7 @@ export const SignInView = () => {
 
             <section>
               <h3 className="font-semibold text-base text-gray-900 mb-2">
-                3. Freight Forwarder / Shipper Responsibilities
+                {t("auth:terms_dialog.section_3_title")}
               </h3>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
@@ -557,7 +554,7 @@ export const SignInView = () => {
 
             <section>
               <h3 className="font-semibold text-base text-gray-900 mb-2">
-                4. Important Notes
+                {t("auth:terms_dialog.section_4_title")}
               </h3>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
@@ -596,7 +593,7 @@ export const SignInView = () => {
           <DialogFooter className="flex-row gap-2 pt-4 border-t">
             <DialogClose asChild>
               <Button variant="outline" className="flex-1">
-                Close
+                {t("auth:terms_dialog.close")}
               </Button>
             </DialogClose>
             <Button
@@ -606,7 +603,7 @@ export const SignInView = () => {
                 setShowTermsDialog(false);
               }}
             >
-              I Accept
+              {t("auth:terms_dialog.accept")}
             </Button>
           </DialogFooter>
         </DialogContent>

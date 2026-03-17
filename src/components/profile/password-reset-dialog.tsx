@@ -26,6 +26,7 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { request } from "@/lib/api-client";
+import { useTranslation } from "react-i18next";
 
 // Validation schema
 const passwordResetSchema = z
@@ -58,6 +59,7 @@ export function PasswordResetDialog({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation(["auth", "common"]);
 
   const form = useForm<PasswordResetFormValues>({
     resolver: zodResolver(passwordResetSchema),
@@ -128,14 +130,14 @@ export function PasswordResetDialog({
         if (status === 403) {
           form.setError("current_password", {
             type: "manual",
-            message: "Current password is incorrect",
+            message: t("errors.current_password_incorrect"),
           });
           return;
         }
 
         if (status === 401) {
-          toast.error("Authentication Error", {
-            description: "Your session has expired. Please log in again.",
+          toast.error(t("toasts.auth_error"), {
+            description: t("errors.auth_expired"),
           });
           router.push("/sign-in");
           return;
@@ -144,27 +146,27 @@ export function PasswordResetDialog({
         // Handle validation errors
         if (status === 422) {
           const errorMessage =
-            error || "Validation error. Please check your input.";
-          toast.error("Validation Error", {
+            error || t("errors.validation_error");
+          toast.error(t("toasts.validation_error"), {
             description: errorMessage,
           });
           return;
         }
 
-        throw new Error(error || "Failed to reset password");
+        throw new Error(error || t("errors.password_reset_failed"));
       }
 
-      toast.success("Success", {
-        description: result.message || "Password changed successfully",
+      toast.success(t("toasts.success"), {
+        description: result.message || t("errors.password_changed"),
       });
 
       // Reset form and close dialog
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      toast.error("Error", {
+      toast.error(t("toasts.error"), {
         description:
-          error instanceof Error ? error.message : "Failed to reset password",
+          error instanceof Error ? error.message : t("errors.password_reset_failed"),
       });
     }
   }
@@ -175,10 +177,10 @@ export function PasswordResetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Change Password
+            {t("change_password.title")}
           </DialogTitle>
           <DialogDescription>
-            Enter your current password and choose a new password.
+            {t("change_password.subtitle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -189,12 +191,12 @@ export function PasswordResetDialog({
               name="current_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Password *</FormLabel>
+                  <FormLabel>{t("change_password.current_password")}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showCurrentPassword ? "text" : "password"}
-                        placeholder="Enter current password"
+                        placeholder={t("change_password.current_placeholder")}
                         {...field}
                         className="pr-10"
                       />
@@ -225,12 +227,12 @@ export function PasswordResetDialog({
               name="new_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password *</FormLabel>
+                  <FormLabel>{t("change_password.new_password")}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showNewPassword ? "text" : "password"}
-                        placeholder="Enter new password"
+                        placeholder={t("change_password.new_placeholder")}
                         {...field}
                         className="pr-10"
                       />
@@ -250,7 +252,7 @@ export function PasswordResetDialog({
                     </div>
                   </FormControl>
                   <p className="text-sm text-muted-foreground">
-                    Password must be at least 8 characters long.
+                    {t("change_password.password_hint")}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -262,12 +264,12 @@ export function PasswordResetDialog({
               name="confirm_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm New Password *</FormLabel>
+                  <FormLabel>{t("change_password.confirm_password")}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm new password"
+                        placeholder={t("change_password.confirm_placeholder")}
                         {...field}
                         className="pr-10"
                       />
@@ -302,10 +304,10 @@ export function PasswordResetDialog({
                   onOpenChange(false);
                 }}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                {form.formState.isSubmitting ? t("change_password.saving") : t("change_password.save")}
               </Button>
             </DialogFooter>
           </form>

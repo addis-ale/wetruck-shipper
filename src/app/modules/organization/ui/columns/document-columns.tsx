@@ -21,17 +21,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { OrganizationDocument } from "@/lib/api/organization";
+import i18next from "i18next";
 
 export type OrganizationDocumentTableRow = OrganizationDocument;
 
 const formatDocumentType = (type?: string) => {
-  if (!type) return "Document";
-  // Handle both uppercase (from UI) and lowercase (from backend)
+  const t = i18next.t.bind(i18next);
+  if (!type) return t("common:labels.documents");
   const typeUpper = type.toUpperCase();
   const typeMap: Record<string, string> = {
-    TRADE_LICENCE: "Trade Licence",
-    AUTHORISED_CONTACT_PERSON_COMPANY_ID: "Authorised Contact Person Company ID",
-    OTHER: "Other",
+    TRADE_LICENCE: t("common:document_types.trade_licence"),
+    AUTHORISED_CONTACT_PERSON_COMPANY_ID: t("common:document_types.authorised_contact_person_company_id"),
+    OTHER: t("common:document_types.other"),
   };
   return typeMap[typeUpper] || type.replace(/_/g, " ");
 };
@@ -53,7 +54,7 @@ export const organizationDocumentColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
         >
-          Document Type
+          {i18next.t("organization:columns.document_type")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -82,7 +83,7 @@ export const organizationDocumentColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
         >
-          Entity Type
+          {i18next.t("organization:columns.entity_type")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -134,7 +135,7 @@ export const organizationDocumentColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
         >
-          Status
+          {i18next.t("organization:columns.status")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -180,7 +181,7 @@ export const organizationDocumentColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="text-xs sm:text-sm flex items-center cursor-pointer px-1"
         >
-          Uploaded Date
+          {i18next.t("organization:columns.uploaded_date")}
           <ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
         </span>
       );
@@ -212,23 +213,23 @@ export const organizationDocumentColumns = (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{i18next.t("common:open_menu")}</span>
                 <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onView(String(doc.id))}>
-                <Eye className="mr-2 h-4 w-4" /> View
+                <Eye className="mr-2 h-4 w-4" /> {i18next.t("common:buttons.view")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(String(doc.id))}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
+                <Edit className="mr-2 h-4 w-4" /> {i18next.t("common:buttons.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(doc.id)}
                 disabled={isDeleting}
               >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Trash2 className="mr-2 h-4 w-4" /> {i18next.t("common:buttons.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -42,13 +42,15 @@ import {
 } from "@/lib/constants/locations";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
 import type { UpdateShipmentPayload } from "@/app/modules/shipment/server/types/shipment.types";
+import { useTranslation } from "react-i18next";
 
 type UpdateShipmentFormValues = z.input<typeof updateShipmentSchema>;
 
-const STEPS = [
-  { id: 1, title: "Route & dates" },
-  { id: 2, title: "Pickup address" },
-  { id: 3, title: "Delivery address" },
+const STEP_IDS = [1, 2, 3] as const;
+const STEP_KEYS = [
+  "shipment:create_form.steps.route_dates",
+  "shipment:create_form.steps.pickup_address",
+  "shipment:create_form.steps.delivery_address",
 ] as const;
 
 type OriginDestination = z.infer<typeof originDestinationEnum>;
@@ -114,6 +116,7 @@ export function UpdateShipmentDrawer({
   onOpenChange,
   shipment,
 }: UpdateShipmentDrawerProps) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [step, setStep] = useState(1);
 
   const defaultValues = useMemo<UpdateShipmentInput>(
@@ -373,18 +376,18 @@ export function UpdateShipmentDrawer({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Package className="h-4 w-4 text-primary" />
             </div>
-            <SheetTitle className="text-lg">Edit shipment</SheetTitle>
+            <SheetTitle className="text-lg">{t("shipment:update_form.edit_shipment")}</SheetTitle>
           </div>
           <div className="flex gap-1 mt-2">
-            {STEPS.map((s) => (
+            {STEP_IDS.map((id) => (
               <div
-                key={s.id}
-                className={`h-1 flex-1 rounded-full ${s.id <= step ? "bg-primary" : "bg-muted"}`}
+                key={id}
+                className={`h-1 flex-1 rounded-full ${id <= step ? "bg-primary" : "bg-muted"}`}
               />
             ))}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Step {step} of 3 · {STEPS[step - 1].title}
+            {t("shipment:create_form.step_of", { step, title: t(STEP_KEYS[step - 1]) })}
           </p>
         </SheetHeader>
 
@@ -398,7 +401,7 @@ export function UpdateShipmentDrawer({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Origin</Label>
+                    <Label>{t("shipment:create_form.origin")}</Label>
                     <Controller
                       name="origin"
                       control={control}
@@ -408,7 +411,7 @@ export function UpdateShipmentDrawer({
                           value={field.value}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select origin" />
+                            <SelectValue placeholder={t("shipment:create_form.select_origin")} />
                           </SelectTrigger>
                           <SelectContent>
                             {ORIGIN_OPTIONS.map((o) => (
@@ -427,7 +430,7 @@ export function UpdateShipmentDrawer({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Destination</Label>
+                    <Label>{t("shipment:create_form.destination")}</Label>
                     <Controller
                       name="destination"
                       control={control}
@@ -437,7 +440,7 @@ export function UpdateShipmentDrawer({
                           value={field.value}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select destination" />
+                            <SelectValue placeholder={t("shipment:create_form.select_destination")} />
                           </SelectTrigger>
                           <SelectContent>
                             {DESTINATION_OPTIONS.map((o) => (
@@ -458,7 +461,7 @@ export function UpdateShipmentDrawer({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Pickup date</Label>
+                    <Label>{t("shipment:create_form.pickup_date")}</Label>
                     <Controller
                       name="pickup_date"
                       control={control}
@@ -476,7 +479,7 @@ export function UpdateShipmentDrawer({
                                     : new Date(field.value),
                                   "PPP",
                                 )
-                                : "Select date"}
+                                : t("shipment:create_form.select_date")}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent
@@ -511,7 +514,7 @@ export function UpdateShipmentDrawer({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Delivery date</Label>
+                    <Label>{t("shipment:create_form.delivery_date")}</Label>
                     <Controller
                       name="delivery_date"
                       control={control}
@@ -529,7 +532,7 @@ export function UpdateShipmentDrawer({
                                     : new Date(field.value),
                                   "PPP",
                                 )
-                                : "Select date"}
+                                : t("shipment:create_form.select_date")}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent
@@ -565,9 +568,9 @@ export function UpdateShipmentDrawer({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Bill of lading number</Label>
+                  <Label>{t("shipment:create_form.bill_of_lading")}</Label>
                   <Input
-                    placeholder="Optional"
+                    placeholder={t("common:labels.optional")}
                     {...register("shipment_details.bill_of_lading_number")}
                   />
                   {errors.shipment_details?.bill_of_lading_number && (
@@ -581,11 +584,11 @@ export function UpdateShipmentDrawer({
 
             {step === 2 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Pickup address</h3>
+                <h3 className="text-sm font-semibold">{t("shipment:create_form.steps.pickup_address")}</h3>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Country</Label>
+                      <Label>{t("common:labels.country")}</Label>
                       <Controller
                         name="pickup_facility.country"
                         control={control}
@@ -602,7 +605,7 @@ export function UpdateShipmentDrawer({
                             value={field.value}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select country" />
+                              <SelectValue placeholder={t("common:select_country")} />
                             </SelectTrigger>
                             <SelectContent>
                               {countryOptions.map((o) => (
@@ -621,7 +624,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Region</Label>
+                      <Label>{t("common:labels.region")}</Label>
                       <Controller
                         name="pickup_facility.region"
                         control={control}
@@ -632,11 +635,11 @@ export function UpdateShipmentDrawer({
                             onValueChange={field.onChange}
                             placeholder={
                               pickupCountry
-                                ? "Select region"
-                                : "Select country first"
+                                ? t("common:select_region")
+                                : t("common:select_country_first")
                             }
-                            searchPlaceholder="Search region..."
-                            emptyMessage="No region found."
+                            searchPlaceholder={t("common:search_region")}
+                            emptyMessage={t("common:no_region_found")}
                             disabled={
                               !pickupCountry || pickupRegions.length === 0
                             }
@@ -653,9 +656,9 @@ export function UpdateShipmentDrawer({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Clearance agent name</Label>
+                      <Label>{t("shipment:create_form.clearance_agent")}</Label>
                       <Input
-                        placeholder="Name"
+                        placeholder={t("common:labels.name")}
                         {...register("pickup_facility.name")}
                       />
                       {errors.pickup_facility?.name && (
@@ -665,7 +668,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Contact name</Label>
+                      <Label>{t("common:labels.contact_name")}</Label>
                       <Input {...register("pickup_facility.contact_name")} />
                       {errors.pickup_facility?.contact_name && (
                         <p className="text-sm text-destructive">
@@ -676,7 +679,7 @@ export function UpdateShipmentDrawer({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Contact phone</Label>
+                      <Label>{t("common:labels.contact_phone")}</Label>
                       <Input
                         {...register("pickup_facility.contact_phone_number")}
                       />
@@ -687,7 +690,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Contact email</Label>
+                      <Label>{t("common:labels.contact_email")}</Label>
                       <Input
                         type="email"
                         {...register("pickup_facility.contact_email")}
@@ -700,7 +703,7 @@ export function UpdateShipmentDrawer({
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Loading address</Label>
+                    <Label>{t("shipment:create_form.loading_address")}</Label>
                     <Input {...register("pickup_facility.address")} />
                     {errors.pickup_facility?.address && (
                       <p className="text-sm text-destructive">
@@ -714,11 +717,11 @@ export function UpdateShipmentDrawer({
 
             {step === 3 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Delivery address</h3>
+                <h3 className="text-sm font-semibold">{t("shipment:create_form.steps.delivery_address")}</h3>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Country</Label>
+                      <Label>{t("common:labels.country")}</Label>
                       <Controller
                         name="delivery_facility.country"
                         control={control}
@@ -738,7 +741,7 @@ export function UpdateShipmentDrawer({
                             value={field.value}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select country" />
+                              <SelectValue placeholder={t("common:select_country")} />
                             </SelectTrigger>
                             <SelectContent>
                               {countryOptions.map((o) => (
@@ -757,7 +760,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Region</Label>
+                      <Label>{t("common:labels.region")}</Label>
                       <Controller
                         name="delivery_facility.region"
                         control={control}
@@ -768,11 +771,11 @@ export function UpdateShipmentDrawer({
                             onValueChange={field.onChange}
                             placeholder={
                               deliveryCountry
-                                ? "Select region"
-                                : "Select country first"
+                                ? t("common:select_region")
+                                : t("common:select_country_first")
                             }
-                            searchPlaceholder="Search region..."
-                            emptyMessage="No region found."
+                            searchPlaceholder={t("common:search_region")}
+                            emptyMessage={t("common:no_region_found")}
                             disabled={
                               !deliveryCountry || deliveryRegions.length === 0
                             }
@@ -789,9 +792,9 @@ export function UpdateShipmentDrawer({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Clearance agent name</Label>
+                      <Label>{t("shipment:create_form.clearance_agent")}</Label>
                       <Input
-                        placeholder="Name"
+                        placeholder={t("common:labels.name")}
                         {...register("delivery_facility.name")}
                       />
                       {errors.delivery_facility?.name && (
@@ -801,7 +804,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Contact name</Label>
+                      <Label>{t("common:labels.contact_name")}</Label>
                       <Input {...register("delivery_facility.contact_name")} />
                       {errors.delivery_facility?.contact_name && (
                         <p className="text-sm text-destructive">
@@ -812,7 +815,7 @@ export function UpdateShipmentDrawer({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Contact phone</Label>
+                      <Label>{t("common:labels.contact_phone")}</Label>
                       <Input
                         {...register("delivery_facility.contact_phone_number")}
                       />
@@ -826,7 +829,7 @@ export function UpdateShipmentDrawer({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Contact email</Label>
+                      <Label>{t("common:labels.contact_email")}</Label>
                       <Input
                         type="email"
                         {...register("delivery_facility.contact_email")}
@@ -839,7 +842,7 @@ export function UpdateShipmentDrawer({
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Off loading address</Label>
+                    <Label>{t("shipment:create_form.off_loading_address")}</Label>
                     <Input {...register("delivery_facility.address")} />
                     {errors.delivery_facility?.address && (
                       <p className="text-sm text-destructive">
@@ -863,7 +866,7 @@ export function UpdateShipmentDrawer({
               className="flex-1"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
+              {t("common:buttons.back")}
             </Button>
           ) : (
             <Button
@@ -873,12 +876,12 @@ export function UpdateShipmentDrawer({
               disabled={submitting}
               className="flex-1"
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
           )}
           {step < 3 ? (
             <Button type="button" onClick={handleNext} className="flex-1">
-              Next
+              {t("common:buttons.next")}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
@@ -889,11 +892,11 @@ export function UpdateShipmentDrawer({
               className="flex-1"
             >
               {submitting ? (
-                "Saving..."
+                t("shipment:update_form.saving")
               ) : (
                 <>
                   <Check className="h-4 w-4 mr-1" />
-                  Save changes
+                  {t("shipment:update_form.save_changes")}
                 </>
               )}
             </Button>

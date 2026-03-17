@@ -44,6 +44,7 @@ import { CreateContainerDrawer } from "@/app/modules/container/ui/components/cre
 import { ViewContainersSheet } from "@/app/modules/container/ui/components/view-containers-sheet";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "react-i18next";
 
 const PER_PAGE = 5;
 
@@ -77,6 +78,7 @@ export function ContainerAssignTable<TData, TValue>({
   priceRequestError,
   onDismissError,
 }: ContainerAssignTableProps<TData, TValue>) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -278,11 +280,11 @@ export function ContainerAssignTable<TData, TValue>({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Container Assignment</CardTitle>
+        <CardTitle>{t("shipment:assign_table.title")}</CardTitle>
         <CardDescription>
           {activeShipmentId
-            ? "Search and assign available containers to this shipment."
-            : "Select a shipment to manage containers."}
+            ? t("shipment:assign_table.select_shipment_desc")
+            : t("shipment:assign_table.no_shipment_desc")}
         </CardDescription>
       </CardHeader>
 
@@ -294,7 +296,7 @@ export function ContainerAssignTable<TData, TValue>({
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
                 <Input
-                  placeholder="Search containers by number..."
+                  placeholder={t("shipment:assign_table.search_placeholder")}
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-9"
@@ -324,8 +326,7 @@ export function ContainerAssignTable<TData, TValue>({
                   <div className="divide-y">
                     {!debouncedSearch && (
                       <div className="px-3 py-1.5 text-xs text-muted-foreground bg-muted/50">
-                        Showing {availableContainers.length} available
-                        containers • Type to search
+                        {t("shipment:assign_table.showing_available", { count: availableContainers.length })}
                       </div>
                     )}
                     {availableContainers.map((container) => (
@@ -363,8 +364,8 @@ export function ContainerAssignTable<TData, TValue>({
                 ) : (
                   <div className="p-3 text-sm text-muted-foreground text-center">
                     {debouncedSearch
-                      ? "No containers found"
-                      : "No available containers"}
+                      ? t("shipment:assign_table.no_found")
+                      : t("shipment:assign_table.no_available")}
                   </div>
                 )}
               </div>
@@ -376,7 +377,7 @@ export function ContainerAssignTable<TData, TValue>({
                       className="w-full"
                       onClick={handleAssignSelected}
                     >
-                      Assign selected ({selectedToAssign.length})
+                      {t("shipment:assign_table.assign_selected", { count: selectedToAssign.length })}
                     </Button>
                   </div>
                 )}
@@ -392,7 +393,7 @@ export function ContainerAssignTable<TData, TValue>({
                 className="gap-1.5 shrink-0"
               >
                 <Plus className="h-4 w-4" />
-                Add New Container
+                {t("shipment:assign_table.add_new")}
               </Button>
               <Button
                 type="button"
@@ -402,7 +403,7 @@ export function ContainerAssignTable<TData, TValue>({
                 className="gap-1.5 shrink-0"
               >
                 <List className="h-4 w-4" />
-                View Containers
+                {t("shipment:assign_table.view_containers")}
               </Button>
             </>
           )}
@@ -474,7 +475,7 @@ export function ContainerAssignTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No containers found.
+                    {t("shipment:assign_table.no_found")}
                   </TableCell>
                 </TableRow>
               )}
@@ -486,8 +487,7 @@ export function ContainerAssignTable<TData, TValue>({
         {table.getRowModel().rows?.length > 0 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Showing {table.getRowModel().rows.length} of {data.length}{" "}
-              container(s)
+              {t("shipment:assign_table.showing_of", { count: table.getRowModel().rows.length, total: data.length })}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -496,7 +496,7 @@ export function ContainerAssignTable<TData, TValue>({
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                {t("common:buttons.previous")}
               </Button>
               <Button
                 variant="outline"
@@ -504,7 +504,7 @@ export function ContainerAssignTable<TData, TValue>({
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                Next
+                {t("common:buttons.next")}
               </Button>
             </div>
           </div>
@@ -525,7 +525,7 @@ export function ContainerAssignTable<TData, TValue>({
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
-                        Unable to Request Price
+                        {t("shipment:price.unable_to_request")}
                       </h3>
                       <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
                         {priceRequestError}
@@ -558,11 +558,10 @@ export function ContainerAssignTable<TData, TValue>({
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
-                          Price Request Submitted Successfully
+                          {t("shipment:price.success_title")}
                         </h3>
                         <p className="text-sm text-green-700 dark:text-green-300">
-                          Your price request has been successfully submitted.
-                          You will be notified once a response is received.
+                          {t("shipment:price.success_message")}
                         </p>
                       </div>
                       <button
@@ -595,23 +594,22 @@ export function ContainerAssignTable<TData, TValue>({
                   {isRequestingPrice ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Requesting Price...
+                      {t("shipment:price.requesting_dots")}
                     </>
                   ) : (
                     <>
-                      Request Price ({data.length} container
-                      {data.length !== 1 ? "s" : ""})
+                      {t("shipment:price.request_price_count", { count: data.length })}
                     </>
                   )}
                 </Button>
               ) : shipmentStatus === "price_requested" ? (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
-                  <span className="text-sm font-medium">Price Requested</span>
+                  <span className="text-sm font-medium">{t("shipment:price.price_requested")}</span>
                 </div>
               ) : shipmentStatus ? (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-md bg-muted text-muted-foreground">
                   <span className="text-sm">
-                    Status:{" "}
+                    {t("shipment:assign_table.status_label")}{" "}
                     {shipmentStatus
                       .replace(/_/g, " ")
                       .replace(/\b\w/g, (l) => l.toUpperCase())}

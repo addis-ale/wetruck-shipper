@@ -33,6 +33,7 @@ import { COUNTRIES } from "@/lib/constants/locations";
 import { useCreateContainer } from "../../../server/hooks/use-create-container";
 import type { Container } from "../../../server/types/container.types";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
@@ -122,12 +123,9 @@ function extractFormMessage(data: BackendErrorShape, fallback: string) {
 }
 
 export interface CreateContainerDialogProps {
-  /** Controlled open state (when set, dialog is controlled and no default trigger is shown) */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Called with the created container when creation succeeds (e.g. to assign it to a shipment) */
   onCreated?: (container: Container) => void;
-  /** When true, do not render the default "Add Container" trigger button */
   hideTrigger?: boolean;
 }
 
@@ -139,6 +137,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
     hideTrigger = false,
   } = props ?? {};
 
+  const { t } = useTranslation(["container", "common"]);
   const [internalOpen, setInternalOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -221,7 +220,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
 
   const { mutateAsync, isPending } = useCreateContainer({
     onSuccess: (container) => {
-      toast.success("Container created successfully");
+      toast.success(t("container:create.success"));
       setFormError(null);
       setOpen(false);
       reset(defaultValues);
@@ -238,7 +237,6 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
     try {
       const parsed = createContainerSchema.parse(values);
 
-      // Prepare the payload based on country
       let returnLocationInfo = undefined;
 
       if (parsed.is_returning && parsed.return_location_info) {
@@ -302,10 +300,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
       }
 
       setFormError(
-        extractFormMessage(
-          responseData,
-          "Failed to create container. Please review your inputs and try again.",
-        ),
+        extractFormMessage(responseData, t("container:create.error")),
       );
     }
   }
@@ -313,7 +308,9 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
   return (
     <>
       {!hideTrigger && (
-        <Button onClick={() => setOpen(true)}>Add Container</Button>
+        <Button onClick={() => setOpen(true)}>
+          {t("container:add_container")}
+        </Button>
       )}
 
       <Dialog
@@ -328,24 +325,21 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
       >
         <DialogContent className="create-container-dialog sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Add Container</DialogTitle>
+            <DialogTitle>{t("container:create.title")}</DialogTitle>
             <DialogDescription>
-              Fill the container details and save.
+              {t("container:create.dialog_description")}
             </DialogDescription>
           </DialogHeader>
 
-          {/* ====================== FORM ====================== */}
           <form
             id="create-container-form"
             onSubmit={handleSubmit(onSubmit)}
             className="flex-1 overflow-y-auto pr-1 space-y-6 scrollbar-hide"
           >
-            {/* ================= TOP FIELDS ================= */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Container Number */}
               <div className="space-y-2">
                 <Label htmlFor="container_number" required>
-                  Container Number
+                  {t("container:create.container_number")}
                 </Label>
                 <Input
                   id="container_number"
@@ -358,9 +352,10 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Sequencing Priority */}
               <div className="space-y-2">
-                <Label htmlFor="sequencing_priority">Sequencing Priority</Label>
+                <Label htmlFor="sequencing_priority">
+                  {t("container:create.sequencing_priority")}
+                </Label>
                 <Input
                   id="sequencing_priority"
                   type="number"
@@ -374,20 +369,27 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Container Size */}
               <div className="space-y-2">
-                <Label htmlFor="container_size">Container Size</Label>
+                <Label htmlFor="container_size">
+                  {t("container:container_size")}
+                </Label>
                 <Controller
                   name="container_size"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="container_size">
-                        <SelectValue placeholder="Select size" />
+                        <SelectValue
+                          placeholder={t("container:create.select_size")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="twenty_feet">20 Feet</SelectItem>
-                        <SelectItem value="forty_feet">40 Feet</SelectItem>
+                        <SelectItem value="twenty_feet">
+                          {t("common:container_sizes.20_ft")}
+                        </SelectItem>
+                        <SelectItem value="forty_feet">
+                          {t("common:container_sizes.40_ft")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -399,20 +401,32 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="container_type">Container Type</Label>
+                <Label htmlFor="container_type">
+                  {t("container:container_type")}
+                </Label>
                 <Controller
                   name="container_type"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="container_type">
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue
+                          placeholder={t("container:create.select_type")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="dry">Dry</SelectItem>
-                        <SelectItem value="reefer">Reefer</SelectItem>
-                        <SelectItem value="open_top">Open Top</SelectItem>
-                        <SelectItem value="tank">Tank</SelectItem>
+                        <SelectItem value="dry">
+                          {t("common:container_types.dry")}
+                        </SelectItem>
+                        <SelectItem value="reefer">
+                          {t("common:container_types.reefer")}
+                        </SelectItem>
+                        <SelectItem value="open_top">
+                          {t("common:container_types.open_top")}
+                        </SelectItem>
+                        <SelectItem value="tank">
+                          {t("common:container_types.tank")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -424,10 +438,9 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Recommended Truck Type (kept as you had) */}
               <div className="space-y-2">
                 <Label htmlFor="recommended_truck_type">
-                  Recommended Truck Type
+                  {t("container:recommended_truck_type")}
                 </Label>
 
                 <Controller<CreateContainerFormValues, "recommended_truck_type">
@@ -442,11 +455,17 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                         className="w-full"
                         id="recommended_truck_type"
                       >
-                        <SelectValue placeholder="Select truck type" />
+                        <SelectValue
+                          placeholder={t("container:create.select_truck_type")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="flatbed">Flatbed</SelectItem>
-                        <SelectItem value="trailer">Trailer</SelectItem>
+                        <SelectItem value="flatbed">
+                          {t("common:truck_types.flatbed")}
+                        </SelectItem>
+                        <SelectItem value="trailer">
+                          {t("common:truck_types.trailer")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -459,9 +478,10 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Gross Weight */}
               <div className="space-y-2">
-                <Label htmlFor="gross_weight">Gross Weight</Label>
+                <Label htmlFor="gross_weight">
+                  {t("container:create.gross_weight_label")}
+                </Label>
                 <Input
                   id="gross_weight"
                   type="number"
@@ -475,9 +495,10 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Gross Weight Unit */}
               <div className="space-y-2">
-                <Label htmlFor="gross_weight_unit">Gross Weight Unit</Label>
+                <Label htmlFor="gross_weight_unit">
+                  {t("container:create.gross_weight_unit_label")}
+                </Label>
                 <Controller
                   name="gross_weight_unit"
                   control={control}
@@ -487,7 +508,9 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger id="gross_weight_unit">
-                        <SelectValue placeholder="Select unit" />
+                        <SelectValue
+                          placeholder={t("container:create.select_unit")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="kg">kg</SelectItem>
@@ -502,9 +525,10 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Tare Weight */}
               <div className="space-y-2">
-                <Label htmlFor="tare_weight">Tare Weight</Label>
+                <Label htmlFor="tare_weight">
+                  {t("container:create.tare_weight_label")}
+                </Label>
                 <Input
                   id="tare_weight"
                   type="number"
@@ -518,9 +542,10 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                 )}
               </div>
 
-              {/* Is Returning */}
               <div className="space-y-2">
-                <Label htmlFor="is_returning">Is Returning?</Label>
+                <Label htmlFor="is_returning">
+                  {t("container:create.is_returning")}
+                </Label>
                 <Select
                   value={isReturning ? "yes" : "no"}
                   onValueChange={(v) => {
@@ -540,30 +565,35 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                   }}
                 >
                   <SelectTrigger id="is_returning">
-                    <SelectValue placeholder="Select option" />
+                    <SelectValue
+                      placeholder={t("container:create.select_option")}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="yes">{t("common:yes")}</SelectItem>
+                    <SelectItem value="no">{t("common:no")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="rounded-md border p-4 space-y-4">
-              <div className="font-medium">Container Details</div>
+              <div className="font-medium">
+                {t("container:create.container_details_section")}
+              </div>
 
               <div className="space-y-2">
                 <div>
-                  <Label htmlFor="instruction">Instruction</Label>
+                  <Label htmlFor="instruction">
+                    {t("container:create.instruction")}
+                  </Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Provide any special handling instructions or important notes
-                    about the container contents for transporters
+                    {t("container:create.instruction_full_hint")}
                   </p>
                 </div>
                 <Input
                   id="instruction"
-                  placeholder="e.g., The content inside the container is fragile..."
+                  placeholder={t("container:create.instruction_example")}
                   {...register("container_details.instruction")}
                 />
                 {errors.container_details?.instruction && (
@@ -574,12 +604,14 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
               </div>
 
               <div className="space-y-2">
-                <Label>Cargo Description</Label>
+                <Label>{t("container:create.cargo_description")}</Label>
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
                   {commodities.fields.map((field, idx) => (
                     <div key={field.id} className="flex gap-2">
                       <Input
-                        placeholder={`Cargo Description ${idx + 1}`}
+                        placeholder={t("container:create.cargo_description_n", {
+                          n: idx + 1,
+                        })}
                         {...register(
                           `container_details.commodity.${idx}` as const,
                         )}
@@ -591,7 +623,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                         onClick={() => commodities.remove(idx)}
                         disabled={commodities.fields.length === 1}
                       >
-                        Remove
+                        {t("container:create.remove")}
                       </Button>
                     </div>
                   ))}
@@ -601,7 +633,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                   variant="secondary"
                   onClick={() => commodities.append("")}
                 >
-                  Add Cargo Description
+                  {t("container:create.add_cargo_description")}
                 </Button>
 
                 {errors.container_details?.commodity && (
@@ -614,11 +646,15 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
 
             {isReturning && (
               <div className="rounded-md border p-4 space-y-4">
-                <div className="font-medium">Return Location</div>
+                <div className="font-medium">
+                  {t("container:create.return_location_section")}
+                </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country">
+                      {t("common:labels.country")}
+                    </Label>
                     <Controller
                       name="return_location_info.country"
                       control={control}
@@ -628,7 +664,9 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger id="country">
-                            <SelectValue placeholder="Select country" />
+                            <SelectValue
+                              placeholder={t("common:select_country")}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {countryOptions.map((c) => (
@@ -648,7 +686,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{t("common:labels.city")}</Label>
                     <Input
                       id="city"
                       {...register("return_location_info.city")}
@@ -665,7 +703,7 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                         htmlFor="port"
                         required={returnCountry === "Djibouti"}
                       >
-                        Port
+                        {t("common:labels.port")}
                       </Label>
                       <Input
                         id="port"
@@ -681,7 +719,9 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">
+                      {t("common:labels.address")}
+                    </Label>
                     <Input
                       id="address"
                       {...register("return_location_info.address")}
@@ -712,14 +752,16 @@ export function CreateContainerDialog(props?: CreateContainerDialogProps) {
 
           <DialogFooter className="border-t pt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               type="submit"
               form="create-container-form"
               disabled={submitting || !isValid}
             >
-              {submitting ? "Saving..." : "Add Container"}
+              {submitting
+                ? t("container:create.creating")
+                : t("container:create.add_container")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -72,6 +72,8 @@ import {
 import { ShipmentDocumentsCard } from "../components/shipment-documents/shipment-documents-card";
 import type { Container } from "@/app/modules/container/server/types/container.types";
 import type { ShipperShipItemsItem, ShipItem } from "@/lib/zod/shipment.schema";
+import { useTranslation } from "react-i18next";
+import { formatDateShort, formatDateLong } from "@/lib/format";
 
 interface ShipmentDetailViewProps {
   shipmentId: number;
@@ -82,13 +84,6 @@ function formatLocation(s: string) {
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
-}
-
-function formatDateShort(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 // Helper function to get status badge variant
@@ -115,18 +110,10 @@ const getStatusVariant = (status: string) => {
   return "secondary";
 };
 
-// Helper function to format date
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
 export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation(["shipment", "common"]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [dismissedAlerts, setDismissedAlerts] = useState<
@@ -288,18 +275,17 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-destructive text-lg font-medium mb-2">
-              Failed to load shipment details
+              {t("shipment:detail.failed_to_load")}
             </p>
             <p className="text-muted-foreground mb-4">
-              The shipment you&apos;re looking for doesn&apos;t exist or an
-              error occurred.
+              {t("shipment:detail.not_found")}
             </p>
             <Button
               variant="outline"
               onClick={() => router.push("/dashboard/shipments")}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Shipments
+              {t("shipment:detail.back_to_shipments")}
             </Button>
           </div>
         </CardContent>
@@ -352,7 +338,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Shipments
+            {t("shipment:title")}
           </Link>
           <div className="flex items-center gap-1">
             <Button
@@ -363,7 +349,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             >
               <Link href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}>
                 <Navigation className="h-4 w-4" />
-                Track
+                {t("shipment:track.track")}
               </Link>
             </Button>
             {shipment.status === "created" && (
@@ -399,16 +385,16 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <Truck className="h-4 w-4 text-primary" />
               </div>
               <span className="text-sm font-semibold text-foreground truncate">
-                Selected Shipment
+                {t("shipment:detail.selected_shipment")}
               </span>
             </div>
             <div className="flex flex-col items-end gap-1">
               <Badge variant="secondary" className="shrink-0 font-mono text-xs">
-                BOL #
+                {t("shipment:bol_number")}
                 {shipment.shipment_details?.bill_of_lading_number ?? shipment.id}
               </Badge>
               <span className="text-[10px] font-mono font-medium text-primary">
-                {shipment.tracking_number ?? "No Tracking Number"}
+                {shipment.tracking_number ?? t("shipment:no_tracking_number")}
               </span>
             </div>
           </div>
@@ -417,7 +403,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Origin
+                    {t("common:labels.origin")}
                   </p>
                   <p className="text-sm font-semibold text-foreground mt-0.5">
                     {formatLocation(shipment.origin)}
@@ -433,7 +419,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 />
                 <div className="min-w-0 flex-1 text-right">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Destination
+                    {t("common:labels.destination")}
                   </p>
                   <p className="text-sm font-semibold text-foreground mt-0.5">
                     {formatLocation(shipment.destination)}
@@ -451,10 +437,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-muted-foreground">
-                  Estimated arrival
+                  {t("shipment:detail.estimated_arrival")}
                 </p>
                 <p className="text-sm font-semibold text-foreground">
-                  {formatDate(shipment.delivery_date)}
+                  {formatDateLong(shipment.delivery_date)}
                 </p>
               </div>
             </div>
@@ -473,7 +459,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   </div>
-                  Transporter Quotes
+                  {t("shipment:quotes.title")}
                   {transporterGroups.length > 0 && (
                     <span className="text-sm font-normal text-muted-foreground">
                       ({transporterGroups.length})
@@ -488,13 +474,13 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                     onClick={handleToggleAllTransporters}
                   >
                     {selectedTransporterIds.size === transporterGroups.length
-                      ? "Deselect all"
-                      : "Select all"}
+                      ? t("shipment:quotes.deselect_all")
+                      : t("shipment:quotes.select_all")}
                   </Button>
                 )}
               </div>
               <CardDescription className="mt-1">
-                Select quotes to accept for this shipment
+                {t("shipment:quotes.select_hint")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 px-4 pt-0">
@@ -507,10 +493,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/20 py-8 px-4 text-center">
                   <Package className="mx-auto h-10 w-10 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground mb-1">
-                    No quotes available
+                    {t("shipment:quotes.no_available")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Transporter quotes will appear here once submitted.
+                    {t("shipment:quotes.will_appear")}
                   </p>
                 </div>
               ) : (
@@ -561,20 +547,19 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                                   <Truck className="h-3.5 w-3.5 text-blue-500" />
                                 </div>
                                 <span className="text-sm font-semibold text-foreground">
-                                  Transporter #{group.transporter_id}
+                                  {t("shipment:quotes.transporter", { id: group.transporter_id })}
                                 </span>
                               </div>
                               <Badge
                                 variant="outline"
                                 className="shrink-0 text-xs"
                               >
-                                Pending
+                                {t("common:status.pending")}
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/60">
                               <span className="text-xs text-muted-foreground">
-                                {containerCount} container
-                                {containerCount !== 1 ? "s" : ""}
+                                {t("shipment:quotes.containers_count", { count: containerCount })}
                               </span>
                               <p className="text-base font-bold text-foreground">
                                 {totalPrice.toLocaleString(undefined, {
@@ -604,8 +589,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                             }}
                           >
                             <ContainerIcon className="h-4 w-4" />
-                            See {allContainers.length} Container
-                            {allContainers.length !== 1 ? "s" : ""}
+                            {t("shipment:quotes.see_containers", { count: allContainers.length })}
                           </Button>
                         </div>
                       )}
@@ -623,8 +607,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   disabled={isAccepting}
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  Accept Selected ({selectedTransporterIds.size} quote
-                  {selectedTransporterIds.size !== 1 ? "s" : ""})
+                  {t("shipment:quotes.accept_selected", { count: selectedTransporterIds.size })}
                 </Button>
               )}
             </CardContent>
@@ -640,7 +623,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                     <ContainerIcon className="h-4 w-4 text-primary" />
                   </div>
-                  Containers
+                  {t("shipment:containers.title")}
                   {assignedContainers.length > 0 && (
                     <span className="text-sm font-normal text-muted-foreground">
                       ({assignedContainers.length})
@@ -654,7 +637,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                     className="shrink-0"
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    Add
+                    {t("common:buttons.add")}
                   </Button>
                 )}
               </div>
@@ -664,10 +647,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/20 py-8 px-4 text-center">
                   <ContainerIcon className="mx-auto h-10 w-10 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground mb-1">
-                    No containers assigned
+                    {t("shipment:containers.no_assigned")}
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Add containers from your list to this shipment
+                    {t("shipment:containers.add_hint")}
                   </p>
                   {shipment.status === "created" && (
                     <Button
@@ -677,7 +660,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       className="border-primary text-primary hover:bg-primary/10"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Select containers
+                      {t("shipment:containers.select_containers")}
                     </Button>
                   )}
                 </div>
@@ -690,7 +673,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Container name
+                          {t("shipment:detail.container_name")}
                         </p>
                         <p className="font-semibold text-foreground truncate mt-0.5">
                           {c.container_number}
@@ -723,7 +706,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3 pt-3 border-t border-border">
                       <div>
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Size / Type
+                          {t("shipment:detail.size_type")}
                         </p>
                         <p className="text-sm text-foreground">
                           {containerSizeLabel(c.container_size)} /{" "}
@@ -732,7 +715,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       </div>
                       <div>
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Weight
+                          {t("common:labels.weight")}
                         </p>
                         <p className="text-sm text-foreground">
                           {Number(c.gross_weight).toLocaleString()}{" "}
@@ -750,7 +733,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         {/* Pickup & delivery addresses (mobile) */}
         <div className="space-y-3">
           <h3 className="text-base font-semibold text-foreground">
-            Pickup & delivery
+            {t("shipment:detail.pickup_delivery")}
           </h3>
           <div className="space-y-2">
             <div className="rounded-xl border bg-card p-4 shadow-sm">
@@ -759,13 +742,13 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <Building2 className="h-4 w-4 text-primary" />
                 </div>
                 <span className="text-sm font-semibold text-foreground">
-                  Pickup address
+                  {t("shipment:detail.pickup_address")}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-w-0">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Address
+                    {t("common:labels.address")}
                   </p>
                   <p
                     className="text-sm font-medium text-foreground"
@@ -785,7 +768,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 </div>
                 <div className="min-w-0 border-l border-border pl-3">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Contact
+                    {t("common:labels.contact")}
                   </p>
                   <p className="text-sm text-foreground">
                     {shipment.pickup_facility?.contact_name ?? "—"}
@@ -811,13 +794,13 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <CheckCircle2 className="h-4 w-4 text-primary" />
                 </div>
                 <span className="text-sm font-semibold text-foreground">
-                  Delivery address
+                  {t("shipment:detail.delivery_address")}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-w-0">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Address
+                    {t("common:labels.address")}
                   </p>
                   <p
                     className="text-sm font-medium text-foreground"
@@ -837,7 +820,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 </div>
                 <div className="min-w-0 border-l border-border pl-3">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Contact
+                    {t("common:labels.contact")}
                   </p>
                   <p className="text-sm text-foreground">
                     {shipment.delivery_facility?.contact_name ?? "—"}
@@ -876,10 +859,9 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         >
           <DialogContent className="sm:max-w-xs">
             <DialogHeader>
-              <DialogTitle>Remove container</DialogTitle>
+              <DialogTitle>{t("shipment:remove_container.title")}</DialogTitle>
               <DialogDescription>
-                Unassign this container from the shipment? You can assign it
-                again later.
+                {t("shipment:remove_container.message")}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:gap-0">
@@ -887,7 +869,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 variant="outline"
                 onClick={() => setRemoveConfirmContainerId(null)}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button
                 variant="destructive"
@@ -901,7 +883,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   }
                 }}
               >
-                Remove
+                {t("common:buttons.remove")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -917,10 +899,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             {isRequestingPrice ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Requesting…
+                {t("shipment:price.requesting")}
               </>
             ) : (
-              "Request price"
+              t("shipment:price.request_price")
             )}
           </Button>
         )}
@@ -935,39 +917,37 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Shipment</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete shipment #{shipment.id}? This
-                action cannot be undone.
-                {assignedContainers.length > 0 && (
-                  <span className="block mt-2 text-destructive font-medium">
-                    ⚠️ This shipment has {assignedContainers.length} assigned
-                    container(s). They will be unassigned.
-                  </span>
-                )}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete Shipment"
-                )}
+            <DialogTitle>{t("shipment:delete.title")}</DialogTitle>
+            <DialogDescription>
+              {t("shipment:delete.confirm", { id: shipment.id })}
+              {assignedContainers.length > 0 && (
+                <span className="block mt-2 text-destructive font-medium">
+                  {t("shipment:delete.warning_containers", { count: assignedContainers.length })}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              {t("common:buttons.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t("shipment:delete.deleting")}
+                </>
+              ) : (
+                t("shipment:delete.title")
+              )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -981,13 +961,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           >
             <SheetHeader className="px-6 pt-6 pb-2 text-left">
               <SheetTitle className="text-xl font-bold">
-                Accept Quotes
+                {t("shipment:quotes.accept_quotes")}
               </SheetTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Are you sure you want to accept {selectedTransporterIds.size}{" "}
-                selected transporter quote
-                {selectedTransporterIds.size !== 1 ? "s" : ""} for shipment #
-                {shipmentId}?
+                {t("shipment:quotes.accept_confirm", { count: selectedTransporterIds.size, id: shipmentId })}
               </p>
             </SheetHeader>
             <div className="px-6 py-4 space-y-3">
@@ -1001,7 +978,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                     <div className="flex items-center gap-2">
                       <Truck className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">
-                        Transporter #{group.transporter_id}
+                        {t("shipment:quotes.transporter", { id: group.transporter_id })}
                       </span>
                     </div>
                     <span className="text-sm font-semibold">
@@ -1024,7 +1001,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 onClick={() => setAcceptDialogOpen(false)}
                 disabled={isAccepting}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button
                 className="flex-1 gap-2"
@@ -1034,12 +1011,12 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 {isAccepting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Accepting...
+                    {t("shipment:quotes.accepting")}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
-                    Accept
+                    {t("common:buttons.accept")}
                   </>
                 )}
               </Button>
@@ -1059,22 +1036,16 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             <SheetHeader className="px-6 pt-6 pb-2 text-left shrink-0">
               <SheetTitle className="text-lg font-bold flex items-center gap-2">
                 <ContainerIcon className="h-5 w-5 text-primary" />
-                Container Details
+                {t("shipment:containers.container_details")}
               </SheetTitle>
               {containersSheetGroup && (
                 <p className="text-sm text-muted-foreground">
-                  {
-                    containersSheetGroup.ship_items.flatMap(
+                  {t("shipment:containers.containers_from", {
+                    count: containersSheetGroup.ship_items.flatMap(
                       (i: ShipItem) => i.containers ?? [],
-                    ).length
-                  }{" "}
-                  container
-                  {containersSheetGroup.ship_items.flatMap(
-                    (i: ShipItem) => i.containers ?? [],
-                  ).length !== 1
-                    ? "s"
-                    : ""}{" "}
-                  from Transporter #{containersSheetGroup.transporter_id}
+                    ).length,
+                    id: containersSheetGroup.transporter_id,
+                  })}
                 </p>
               )}
             </SheetHeader>
@@ -1095,21 +1066,21 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                           variant="secondary"
                           className="text-[10px] shrink-0"
                         >
-                          Returning
+                          {t("common:status.returning")}
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
                           className="text-[10px] shrink-0"
                         >
-                          One-way
+                          {t("common:status.one_way")}
                         </Badge>
                       )}
                     </div>
                     <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border/60">
                       <div>
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Size
+                          {t("common:labels.size")}
                         </p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
                           {container.container_size === "forty_feet"
@@ -1119,7 +1090,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       </div>
                       <div>
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Type
+                          {t("common:labels.type")}
                         </p>
                         <p className="text-sm font-medium text-foreground capitalize mt-0.5">
                           {container.container_type || "N/A"}
@@ -1127,7 +1098,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                       </div>
                       <div>
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Weight
+                          {t("common:labels.weight")}
                         </p>
                         <p className="text-sm font-medium text-foreground mt-0.5">
                           {container.gross_weight
@@ -1153,7 +1124,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           onClick={() => router.push("/dashboard/shipments")}
           className="hover:text-foreground transition-colors"
         >
-          Shipments
+          {t("shipment:title")}
         </button>
         <ChevronRight className="h-4 w-4" />
         <span className="text-foreground font-medium">
@@ -1177,11 +1148,11 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             </Badge>
           </div>
           <span className="text-sm font-mono font-medium text-primary">
-            {shipment.tracking_number ?? "No Tracking Number"}
+            {shipment.tracking_number ?? t("shipment:no_tracking_number")}
           </span>
 
           <p className="text-sm text-muted-foreground">
-            Created on {formatDate(shipment.pickup_date)}
+            {t("shipment:detail.created_on", { date: formatDateLong(shipment.pickup_date) })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1193,7 +1164,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           >
             <Link href={`/dashboard/shipments/placeholder/tracking?id=${shipmentId}`}>
               <Navigation className="h-4 w-4" />
-              Track Shipment
+              {t("shipment:track.track_shipment")}
             </Link>
           </Button>
           {/* Request Price Button - Only show when status is "created" and has containers */}
@@ -1210,10 +1181,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               {isRequestingPrice ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Requesting...
+                  {t("shipment:price.requesting_dots")}
                 </>
               ) : (
-                "Request price"
+                t("shipment:price.request_price")
               )}
             </Button>
           )}
@@ -1223,7 +1194,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             className="shrink-0"
           >
             <Edit className="h-4 w-4 mr-2" />
-            {isEditMode ? "Cancel Edit" : "Edit Shipment"}
+            {isEditMode ? t("shipment:edit.cancel_edit") : t("shipment:edit.edit_shipment")}
           </Button>
           <Button
             variant="destructive"
@@ -1231,7 +1202,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
             className="shrink-0"
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            Delete
+            {t("common:buttons.delete")}
           </Button>
         </div>
       </div>
@@ -1248,7 +1219,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
-                  Unable to Request Price
+                  {t("shipment:price.unable_to_request")}
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
                   {priceRequestError?.message || "Failed to request price"}
@@ -1278,11 +1249,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
-                  Price Request Submitted Successfully
+                  {t("shipment:price.success_title")}
                 </h3>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  Your price request has been successfully submitted. You will
-                  be notified once a response is received.
+                  {t("shipment:price.success_message")}
                 </p>
               </div>
               <button
@@ -1302,7 +1272,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Containers Assigned
+              {t("shipment:containers.assigned")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1315,7 +1285,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   {assignedContainers.length}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Total containers
+                  {t("shipment:containers.total")}
                 </p>
               </div>
             </div>
@@ -1325,7 +1295,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Route
+              {t("shipment:route.title")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1337,7 +1307,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <p className="text-sm font-semibold truncate capitalize">
                   {shipment.origin.replace(/_/g, " ")}
                 </p>
-                <p className="text-xs text-muted-foreground">to</p>
+                <p className="text-xs text-muted-foreground">{t("common:labels.to")}</p>
                 <p className="text-sm font-semibold truncate capitalize">
                   {shipment.destination.replace(/_/g, " ")}
                 </p>
@@ -1349,7 +1319,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Delivery Date
+              {t("shipment:detail.delivery_date")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1359,10 +1329,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               </div>
               <div>
                 <p className="text-sm font-semibold">
-                  {formatDate(shipment.delivery_date)}
+                  {formatDateLong(shipment.delivery_date)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Scheduled delivery
+                  {t("shipment:route.scheduled_delivery")}
                 </p>
               </div>
             </div>
@@ -1387,10 +1357,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Truck className="h-5 w-5" />
-                  Route Information
+                  {t("shipment:detail.route_info")}
                 </CardTitle>
                 <CardDescription>
-                  Origin and destination details
+                  {t("shipment:detail.route_description")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -1398,7 +1368,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
-                      <span>Origin</span>
+                      <span>{t("common:labels.origin")}</span>
                     </div>
                     <p className="text-base font-medium capitalize">
                       {shipment.origin.replace(/_/g, " ")}
@@ -1407,7 +1377,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
-                      <span>Destination</span>
+                      <span>{t("common:labels.destination")}</span>
                     </div>
                     <p className="text-base font-medium capitalize">
                       {shipment.destination.replace(/_/g, " ")}
@@ -1416,19 +1386,19 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      <span>Pickup Date</span>
+                      <span>{t("shipment:detail.pickup_date")}</span>
                     </div>
                     <p className="text-base font-medium">
-                      {formatDate(shipment.pickup_date)}
+                      {formatDateLong(shipment.pickup_date)}
                     </p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4" />
-                      <span>Delivery Date</span>
+                      <span>{t("shipment:detail.delivery_date")}</span>
                     </div>
                     <p className="text-base font-medium">
-                      {formatDate(shipment.delivery_date)}
+                      {formatDateLong(shipment.delivery_date)}
                     </p>
                   </div>
                 </div>
@@ -1442,7 +1412,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Building2 className="h-5 w-5" />
-                    Pickup Address
+                    {t("shipment:detail.pickup_address")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1462,7 +1432,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Contact Person
+                      {t("shipment:detail.contact_person")}
                     </p>
                     <p className="text-sm font-medium">
                       {shipment.pickup_facility?.contact_name ?? "—"}
@@ -1490,7 +1460,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <CheckCircle2 className="h-5 w-5" />
-                    Delivery Address
+                    {t("shipment:detail.delivery_address")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1510,7 +1480,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Contact Person
+                      {t("shipment:detail.contact_person")}
                     </p>
                     <div className="space-y-1">
                       <p className="text-sm font-medium">
@@ -1541,16 +1511,16 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <FileText className="h-5 w-5" />
-                    Shipment Details
+                    {t("shipment:detail.shipment_details")}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Documentation and reference numbers
+                    {t("shipment:detail.documentation_ref")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Bill of Lading Number
+                      {t("shipment:detail.bill_of_lading")}
                     </p>
                     <p className="text-sm font-mono">
                       {shipment.shipment_details?.bill_of_lading_number ??
@@ -1568,12 +1538,12 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Quick Info</CardTitle>
+                <CardTitle className="text-lg">{t("shipment:detail.quick_info")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Shipment ID
+                    {t("shipment:detail.shipment_id")}
                   </p>
                   <p className="text-sm font-mono font-semibold">
                     #{shipment.id}
@@ -1582,7 +1552,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <Separator />
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Tracking Number
+                    {t("shipment:detail.tracking_number")}
                   </p>
                   <p className="text-sm font-mono font-semibold text-primary">
                     {shipment.tracking_number ?? "N/A"}
@@ -1591,7 +1561,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <Separator />
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Shipper ID
+                    {t("shipment:detail.shipper_id")}
                   </p>
                   <p className="text-sm font-semibold">
                     #{shipment.shipper_id}
@@ -1600,7 +1570,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
                 <Separator />
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">
-                    Status
+                    {t("common:labels.status")}
                   </p>
 
                   {shipment.status ? (
@@ -1629,11 +1599,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Container Assignment
+            {t("shipment:containers.assignment")}
           </CardTitle>
           <CardDescription>
-            Manage containers assigned to this shipment. Search and assign
-            containers or remove existing assignments.
+            {t("shipment:containers.assignment_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1659,15 +1628,12 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Shipment</DialogTitle>
+            <DialogTitle>{t("shipment:delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete shipment #{shipment.id}? This
-              action cannot be undone.
+              {t("shipment:delete.confirm", { id: shipment.id })}
               {assignedContainers.length > 0 && (
                 <span className="block mt-2 text-destructive font-medium">
-                  ⚠️ Warning: This shipment has {assignedContainers.length}{" "}
-                  assigned container(s). They will be unassigned from this
-                  shipment.
+                  {t("shipment:delete.warning_containers_full", { count: assignedContainers.length })}
                 </span>
               )}
             </DialogDescription>
@@ -1678,7 +1644,7 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               onClick={() => setShowDeleteDialog(false)}
               disabled={isDeleting}
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -1688,10 +1654,10 @@ export function ShipmentDetailView({ shipmentId }: ShipmentDetailViewProps) {
               {isDeleting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
+                  {t("shipment:delete.deleting")}
                 </>
               ) : (
-                "Delete Shipment"
+                t("shipment:delete.title")
               )}
             </Button>
           </DialogFooter>

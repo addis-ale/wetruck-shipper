@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import type { Shipment } from "@/app/modules/shipment/server/types/shipment.types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package2, MapPin, Calendar, Edit, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { formatDateShort } from "@/lib/format";
 
 interface ShipmentSidebarProps {
   shipments: Shipment[];
@@ -29,6 +31,8 @@ export function ShipmentSidebar({
   totalPages = 1,
   onPageChange,
 }: ShipmentSidebarProps) {
+  const { t } = useTranslation(["shipment", "common"]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "created":
@@ -46,17 +50,6 @@ export function ShipmentSidebar({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "N/A";
-    }
-  };
-
   const formatLocation = (location: string) => {
     return location
       .split("_")
@@ -69,7 +62,7 @@ export function ShipmentSidebar({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Package2 className="h-5 w-5" />
-          Shipments
+          {t("shipment:sidebar.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 p-0">
@@ -77,7 +70,7 @@ export function ShipmentSidebar({
           <div className="space-y-2 p-4 pt-0">
             {shipments.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                No shipments yet. Create one to get started.
+                {t("shipment:sidebar.empty")}
               </div>
             ) : (
               shipments.map((shipment) => {
@@ -154,21 +147,21 @@ export function ShipmentSidebar({
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Calendar className="h-3 w-3 shrink-0" />
                           <span>
-                            {formatDate(shipment.pickup_date)} -{" "}
-                            {formatDate(shipment.delivery_date)}
+                            {formatDateShort(shipment.pickup_date)} -{" "}
+                            {formatDateShort(shipment.delivery_date)}
                           </span>
                         </div>
 
                         {/* Tracking Number */}
                         <div className="text-[10px] font-mono font-medium text-primary truncate">
-                          TN: {shipment.tracking_number ?? "N/A"}
+                          {t("shipment:sidebar.tn")} {shipment.tracking_number ?? t("common:na")}
                         </div>
 
                         {/* BOL Number */}
                         <div className="text-[10px] text-muted-foreground truncate">
-                          BOL:{" "}
+                          {t("shipment:sidebar.bol")}{" "}
                           {shipment.shipment_details?.bill_of_lading_number ??
-                            "N/A"}
+                            t("common:na")}
                         </div>
                       </div>
                     </div>
@@ -180,7 +173,7 @@ export function ShipmentSidebar({
                         className="flex items-center gap-2 text-xs text-primary hover:underline"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        View Details
+                        {t("common:buttons.view_details")}
                       </Link>
                     </div>
                   </div>
@@ -202,7 +195,7 @@ export function ShipmentSidebar({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-xs text-muted-foreground">
-              Page {page} of {totalPages}
+              {t("common:pagination.page_of", { page, totalPages })}
             </span>
             <Button
               variant="outline"

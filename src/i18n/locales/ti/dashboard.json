@@ -1,0 +1,25 @@
+{
+  "welcome": "እንቋዕ ደሓን መጻእኩም",
+  "overview": "ናይ ጽዕነትኩምን ንጥፈታትኩምን ጠቕላላ ትሕዝቶ እንሆ።",
+  "stats": {
+    "active_shipments": "ንጡፋት ጽዕነታት",
+    "active_description": "ኣብ መገዲ ወይ ንምልቓቕ ድሉው",
+    "pending_quotes": "ዝጽበዩ ዋጋታት",
+    "pending_description": "ዋጋ ወይ ቅቡልነትኩም ይጽበዩ ኣለዉ",
+    "completed": "ዝተዛዘሙ",
+    "completed_description": "ብዓወት ዝበጽሑ",
+    "drafts": "ድራፍትታት",
+    "drafts_description": "ዘይተዛዘሙ ናይ ትእዛዝ ሕቶታት"
+  },
+  "recent_shipments": "ናይ ቀረባ ጽዕነታት",
+  "no_shipments": "ገና ጽዕነት የሎን",
+  "create_first": "ንምጅማር ናይ መጀመርያ ጽዕነት ፍጠሩ",
+  "create_shipment": "ጽዕነት ፍጠር",
+  "action_required": "ስጉምቲ ዘድሊ",
+  "all_caught_up": "ኩሉ ተዛዚሙ",
+  "no_actions": "ኣብዚ ግዜ ስጉምቲ ዘድሊ የሎን",
+  "price_requested_for": "ንጽዕነት #{{id}} ዋጋ ተሓቲቱ",
+  "review_quotes": "ናይ ቀረባ ዋጋታት ካብ መጓዓዝቲ ርአዩ።",
+  "review_now": "ሕጂ ርአ >",
+  "view_all_priced": "ኩሎም ዋጋ ዝተገብረሎም ጽዕነታት ርአ"
+}

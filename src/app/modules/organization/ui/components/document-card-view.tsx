@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { OrganizationDocument } from "@/lib/api/organization";
+import { useTranslation } from "react-i18next";
 
 interface DocumentCardViewProps {
   documents: OrganizationDocument[];
@@ -39,6 +40,7 @@ export function DocumentCardView({
   onEntityClick,
   isDeleting,
 }: DocumentCardViewProps) {
+  const { t } = useTranslation(["organization", "common"]);
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "approved":
@@ -62,13 +64,12 @@ export function DocumentCardView({
   };
 
   const formatDocumentType = (type?: string) => {
-    if (!type) return "Document";
+    if (!type) return t("common:labels.documents");
     const typeUpper = type.toUpperCase();
     const typeMap: Record<string, string> = {
-      TRADE_LICENCE: "Trade Licence",
-      AUTHORISED_CONTACT_PERSON_COMPANY_ID:
-        "Authorised Contact Person Company ID",
-      OTHER: "Other",
+      TRADE_LICENCE: t("common:document_types.trade_licence"),
+      AUTHORISED_CONTACT_PERSON_COMPANY_ID: t("common:document_types.authorised_contact_person_company_id"),
+      OTHER: t("common:document_types.other"),
     };
     return typeMap[typeUpper] || type.replace(/_/g, " ");
   };
@@ -77,7 +78,7 @@ export function DocumentCardView({
     return (
       <div className="text-center py-12">
         <File className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-        <p className="text-sm text-muted-foreground">No documents found</p>
+        <p className="text-sm text-muted-foreground">{t("organization:card_view.no_documents")}</p>
       </div>
     );
   }
@@ -112,7 +113,7 @@ export function DocumentCardView({
                   {formatDocumentType(doc.document_type)}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Organization
+                  {t("organization:card_view.organization")}
                 </p>
               </div>
               <Badge
@@ -140,7 +141,7 @@ export function DocumentCardView({
                 onClick={() => onView(String(doc.id))}
               >
                 <Eye className="h-3.5 w-3.5" />
-                View
+                {t("common:buttons.view")}
               </button>
               <button
                 type="button"
@@ -148,7 +149,7 @@ export function DocumentCardView({
                 onClick={() => onEdit(String(doc.id))}
               >
                 <Edit className="h-3.5 w-3.5" />
-                Edit
+                {t("common:buttons.edit")}
               </button>
               <button
                 type="button"
@@ -157,7 +158,7 @@ export function DocumentCardView({
                 disabled={isDeleting}
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete
+                {t("common:buttons.delete")}
               </button>
             </div>
 
@@ -169,24 +170,24 @@ export function DocumentCardView({
                     <Button
                       variant="ghost"
                       className="h-6 w-6 p-0 shrink-0"
-                      aria-label="More actions"
+                      aria-label={t("organization:card_view.more_actions")}
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={() => onView(String(doc.id))}>
-                      <Eye className="mr-2 h-4 w-4" /> View
+                      <Eye className="mr-2 h-4 w-4" /> {t("common:buttons.view")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(String(doc.id))}>
-                      <Edit className="mr-2 h-4 w-4" /> Edit
+                      <Edit className="mr-2 h-4 w-4" /> {t("common:buttons.edit")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       onClick={() => onDelete(doc.id)}
                       disabled={isDeleting}
                     >
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      <Trash2 className="mr-2 h-4 w-4" /> {t("common:buttons.delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

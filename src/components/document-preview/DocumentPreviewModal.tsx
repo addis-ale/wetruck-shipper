@@ -17,6 +17,7 @@ import { getDocumentType } from "@/lib/utils/document-utils";
 import { fetchDocumentData } from "@/lib/utils/fetch-document";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type ReactPdfComponents = {
   Document: typeof import("react-pdf").Document;
@@ -145,6 +146,7 @@ export function DocumentPreviewModal({
   onClose,
   onDownload,
 }: DocumentPreviewModalProps) {
+  const { t } = useTranslation(["container", "common"]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
@@ -196,7 +198,7 @@ export function DocumentPreviewModal({
       .catch((err) => {
         console.warn("[DocumentPreview] Failed to load react-pdf:", err);
         if (!cancelled) {
-          setError("Failed to load PDF viewer");
+          setError(t("container:document_preview.pdf_load_failed"));
           setLoading(false);
         }
       });
@@ -270,7 +272,7 @@ export function DocumentPreviewModal({
         {/* ── Header bar ── */}
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-black/50 px-3 py-2 safe-area-top">
           <DialogTitle id="document-preview-title" className="sr-only">
-            Document preview
+            {t("container:document_preview.title")}
           </DialogTitle>
           <span
             className="truncate text-sm text-white/90"
@@ -319,10 +321,10 @@ export function DocumentPreviewModal({
               <FileQuestion className="h-12 w-12 text-white/50" />
               <p className="text-sm text-white/80">
                 {documentType === "unsupported"
-                  ? "Preview not available for this file type."
+                  ? t("container:document_preview.preview_not_available")
                   : error || (documentType === "image" && imageError)
-                    ? "Could not load preview."
-                    : "Preview failed."}
+                    ? t("container:document_preview.could_not_load")
+                    : t("container:document_preview.preview_failed")}
               </p>
               {error && (
                 <p className="text-xs text-white/40 font-mono break-all">
@@ -330,8 +332,7 @@ export function DocumentPreviewModal({
                 </p>
               )}
               <p className="text-xs text-white/60">
-                The document may be restricted or expired. Try downloading or
-                opening in browser.
+                {t("container:document_preview.restricted_hint")}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <Button
@@ -341,7 +342,7 @@ export function DocumentPreviewModal({
                   onClick={handleDownload}
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Download
+                  {t("common:buttons.download")}
                 </Button>
                 <Button
                   type="button"
@@ -350,7 +351,7 @@ export function DocumentPreviewModal({
                   onClick={handleOpenInBrowser}
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
-                  Open in browser
+                  {t("container:document_preview.open_in_browser")}
                 </Button>
               </div>
             </div>
@@ -455,7 +456,7 @@ export function DocumentPreviewModal({
                   className="w-full flex-1 border-0 bg-white"
                   onLoad={() => setLoading(false)}
                   onError={() => {
-                    setError("Failed to display PDF");
+                    setError(t("container:document_preview.pdf_display_failed"));
                     setLoading(false);
                   }}
                 />
@@ -469,7 +470,7 @@ export function DocumentPreviewModal({
                   className="w-full flex-1 border-0 bg-white"
                   onLoad={() => setLoading(false)}
                   onError={() => {
-                    setError("Failed to load PDF");
+                    setError(t("container:document_preview.pdf_load_error"));
                     setLoading(false);
                   }}
                 />

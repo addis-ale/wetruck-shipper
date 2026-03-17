@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 // Component for action cell to allow useState hook
 function ActionCell({
@@ -29,11 +30,12 @@ function ActionCell({
   onAssign: (id: number) => void;
   onRemove: (id: number) => void;
 }) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
 
   if (!activeShipmentId) {
     return (
-      <span className="text-xs text-muted-foreground">Select a shipment</span>
+      <span className="text-xs text-muted-foreground">{t("shipment:assign_table.select_shipment")}</span>
     );
   }
 
@@ -47,17 +49,15 @@ function ActionCell({
           className="h-8"
         >
           <Minus className="h-3 w-3 mr-1" />
-          Remove
+          {t("common:buttons.remove")}
         </Button>
 
         <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Remove Container</DialogTitle>
+              <DialogTitle>{t("shipment:remove_container.title")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to remove container{" "}
-                <strong>{container.container_number}</strong> from this
-                shipment?
+                {t("shipment:assign_table.remove_confirm", { number: container.container_number })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -65,7 +65,7 @@ function ActionCell({
                 variant="outline"
                 onClick={() => setShowRemoveDialog(false)}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
               <Button
                 variant="destructive"
@@ -74,7 +74,7 @@ function ActionCell({
                   setShowRemoveDialog(false);
                 }}
               >
-                Remove
+                {t("common:buttons.remove")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -86,7 +86,7 @@ function ActionCell({
   return (
     <Button size="sm" onClick={() => onAssign(container.id)} className="h-8">
       <Plus className="h-3 w-3 mr-1" />
-      Assign
+      {t("shipment:assign_table.assign")}
     </Button>
   );
 }
@@ -108,17 +108,18 @@ export function useContainerAssignColumns({
   onRemove,
   showActionsColumn = true,
 }: ContainerColumnsProps): ColumnDef<Container>[] {
+  const { t } = useTranslation(["shipment", "common"]);
   const columns: ColumnDef<Container>[] = [
     {
       accessorKey: "container_number",
-      header: "Container Name",
+      header: t("shipment:assign_table.container_name"),
       cell: ({ row }) => (
         <span className="font-medium">{row.original.container_number}</span>
       ),
     },
     {
       accessorKey: "container_size",
-      header: "Size",
+      header: t("common:labels.size"),
       cell: ({ row }) => {
         const size = row.original.container_size;
         return size === "twenty_feet" ? "20ft" : "40ft";
@@ -126,7 +127,7 @@ export function useContainerAssignColumns({
     },
     {
       accessorKey: "container_type",
-      header: "Type",
+      header: t("common:labels.type"),
       cell: ({ row }) => {
         const type = row.original.container_type;
         return type.charAt(0).toUpperCase() + type.slice(1);
@@ -134,7 +135,7 @@ export function useContainerAssignColumns({
     },
     {
       accessorKey: "gross_weight",
-      header: "Weight",
+      header: t("common:labels.weight"),
       cell: ({ row }) => (
         <span>
           {row.original.gross_weight} {row.original.gross_weight_unit}
@@ -143,17 +144,16 @@ export function useContainerAssignColumns({
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("common:labels.status"),
       cell: () => {
-        // This table only shows containers assigned to the shipment, so status is always Assigned
-        return <Badge variant="default">Assigned</Badge>;
+        return <Badge variant="default">{t("common:status.assigned")}</Badge>;
       },
     },
     ...(showActionsColumn
       ? [
           {
             id: "actions",
-            header: "Actions",
+            header: t("common:labels.actions"),
             cell: ({ row }) => {
               const isAssigned = assignedContainers.includes(row.original.id);
               return (

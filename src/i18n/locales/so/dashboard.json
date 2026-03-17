@@ -1,0 +1,25 @@
+{
+  "welcome": "Ku soo dhawoow",
+  "overview": "Halkan waa dulmar ku saabsan xamuulahaaga iyo dhaqdhaqaaqaaga.",
+  "stats": {
+    "active_shipments": "Xamuulaha Firfircoon",
+    "active_description": "Socda ama diyaar u ah qaadista",
+    "pending_quotes": "Qiimayaasha La Sugayo",
+    "pending_description": "La sugayo qiimaha ama aqbalaadaada",
+    "completed": "La Dhammaystiray",
+    "completed_description": "Si guul leh loo gaarsiiyay",
+    "drafts": "Qorsheyo",
+    "drafts_description": "Codsiyada aan la dhammaysan"
+  },
+  "recent_shipments": "Xamuulaha Dhowaan",
+  "no_shipments": "Xamuul ma jiro weli",
+  "create_first": "Samee xamuulkaaga ugu horreeya si aad u bilowdo",
+  "create_shipment": "Samee Xamuul",
+  "action_required": "Ficil Loo Baahan Yahay",
+  "all_caught_up": "Dhamaan waa la dhamaystiray",
+  "no_actions": "Ficil looma baahna hadda",
+  "price_requested_for": "Qiimo ayaa loo codsaday xamuulka #{{id}}",
+  "review_quotes": "Dib u eeg qiimayaasha ugu dambeeyay.",
+  "review_now": "Hadda dib u eeg >",
+  "view_all_priced": "Arag dhammaan xamuulaha la qiimayay"
+}

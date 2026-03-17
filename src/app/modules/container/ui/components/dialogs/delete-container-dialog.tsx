@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useDeleteContainer } from "../../../server/hooks/use-delete-container";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   open: boolean;
@@ -17,11 +18,8 @@ type Props = {
   id: number;
 };
 
-export function DeleteContainerDialog({
-  open,
-  onOpenChange,
-  id,
-}: Props) {
+export function DeleteContainerDialog({ open, onOpenChange, id }: Props) {
+  const { t } = useTranslation(["container", "common"]);
   const { mutate, isPending } = useDeleteContainer({
     onSuccess: () => onOpenChange(false),
   });
@@ -30,19 +28,16 @@ export function DeleteContainerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Container?</DialogTitle>
+          <DialogTitle>{t("container:delete.title")}</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          This action cannot be undone.
+          {t("container:delete.cannot_undo")}
         </p>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t("common:buttons.cancel")}
           </Button>
 
           <Button
@@ -50,7 +45,7 @@ export function DeleteContainerDialog({
             onClick={() => mutate(id)}
             disabled={isPending}
           >
-            Delete
+            {t("common:buttons.delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

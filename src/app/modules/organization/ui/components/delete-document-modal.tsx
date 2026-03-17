@@ -11,18 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { OrganizationDocument } from "@/lib/api/organization";
+import { useTranslation } from "react-i18next";
 
-const formatDocumentType = (type?: string) => {
-  if (!type) return "document";
-  // Handle both uppercase (from UI) and lowercase (from backend)
-  const typeUpper = type.toUpperCase();
-  const typeMap: Record<string, string> = {
-    TRADE_LICENCE: "Trade Licence",
-    AUTHORISED_CONTACT_PERSON_COMPANY_ID: "Authorised Contact Person Company ID",
-    OTHER: "Other",
-  };
-  return typeMap[typeUpper] || type.replace(/_/g, " ");
-};
+// formatDocumentType moved inside component to access t()
 
 interface DeleteDocumentModalProps {
   document: OrganizationDocument | null;
@@ -39,6 +30,19 @@ export function DeleteDocumentModal({
   onDelete,
   isDeleting,
 }: DeleteDocumentModalProps) {
+  const { t } = useTranslation(["organization", "common"]);
+
+  const formatDocumentType = (type?: string) => {
+    if (!type) return t("common:labels.documents");
+    const typeUpper = type.toUpperCase();
+    const typeMap: Record<string, string> = {
+      TRADE_LICENCE: t("common:document_types.trade_licence"),
+      AUTHORISED_CONTACT_PERSON_COMPANY_ID: t("common:document_types.authorised_contact_person_company_id"),
+      OTHER: t("common:document_types.other"),
+    };
+    return typeMap[typeUpper] || type.replace(/_/g, " ");
+  };
+
   const handleDelete = async () => {
     if (!document) return;
 
@@ -59,14 +63,10 @@ export function DeleteDocumentModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive text-lg">
             <AlertTriangle className="h-5 w-5" />
-            Delete Document
+            {t("organization:delete_modal.title")}
           </DialogTitle>
           <DialogDescription className="pt-2">
-            Are you sure you want to delete this{" "}
-            <span className="font-bold text-primary">
-              {formatDocumentType(document.document_type)}
-            </span>
-            ? This action cannot be undone.
+            {t("organization:delete_modal.confirm", { type: formatDocumentType(document.document_type) })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="pt-4 gap-2 sm:gap-2 flex-col sm:flex-row">
@@ -76,7 +76,7 @@ export function DeleteDocumentModal({
             disabled={isDeleting}
             className="w-full sm:w-auto"
           >
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -87,7 +87,7 @@ export function DeleteDocumentModal({
             {isDeleting && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Delete Document
+            {t("organization:delete_modal.title")}
           </Button>
         </DialogFooter>
       </DialogContent>

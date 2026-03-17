@@ -38,31 +38,33 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Sidebar } from "@/components/layout/sidebar";
 import { PasswordResetDialog } from "@/components/profile/password-reset-dialog";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const navigation = [
   {
-    name: "Dashboard",
+    nameKey: "common:navigation.dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    label: "Dashboard",
+    labelKey: "common:navigation.dashboard",
   },
   {
-    name: "My Shipments",
+    nameKey: "common:navigation.my_shipments",
     href: "/dashboard/shipments",
     icon: Package,
-    label: "Shipments",
+    labelKey: "common:navigation.shipments",
   },
   {
-    name: "Documents",
+    nameKey: "common:navigation.documents",
     href: "/dashboard/organazation/documents",
     icon: Upload,
-    label: "Documents",
+    labelKey: "common:navigation.documents",
   },
   {
-    name: "Containers",
+    nameKey: "common:navigation.containers",
     href: "/dashboard/containers",
     icon: Boxes,
-    label: "Containers",
+    labelKey: "common:navigation.containers",
   },
 ];
 
@@ -71,6 +73,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation("common");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -150,7 +153,7 @@ export default function DashboardLayout({
                   ) : (
                     <PanelLeftClose className="h-5 w-5" />
                   )}
-                  <span className="sr-only">Toggle Sidebar</span>
+                  <span className="sr-only">{t("toggle_sidebar")}</span>
                 </button>
 
                 <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
@@ -163,6 +166,7 @@ export default function DashboardLayout({
                     />
                   </div>
                   <div className="flex items-center gap-x-3 sm:gap-x-6">
+                    <LanguageSwitcher />
                     <ModeToggle />
 
                     <DropdownMenu>
@@ -172,7 +176,8 @@ export default function DashboardLayout({
                             {user?.name?.[0] || "S"}
                           </div>
                           <span className="hidden sm:inline-flex max-w-[100px] truncate">
-                            {user?.name?.split(" ")[0] || "Shipper"}
+                            {user?.name?.split(" ")[0] ||
+                              t("user_menu.shipper")}
                           </span>
                         </button>
                       </DropdownMenuTrigger>
@@ -183,7 +188,7 @@ export default function DashboardLayout({
                         <DropdownMenuLabel className="font-normal px-2 pb-2">
                           <div className="flex flex-col space-y-1">
                             <p className="text-sm font-bold leading-none">
-                              {user?.name || "Shipper Admin"}
+                              {user?.name || t("user_menu.shipper_admin")}
                             </p>
                             <p className="text-xs leading-none text-muted-foreground italic">
                               {user?.email || "admin@shipper.com"}
@@ -196,7 +201,7 @@ export default function DashboardLayout({
                           onClick={() => setPasswordDialogOpen(true)}
                         >
                           <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
-                          <span>Change Password</span>
+                          <span>{t("user_menu.change_password")}</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="-mx-2" />
                         <DropdownMenuItem
@@ -204,7 +209,7 @@ export default function DashboardLayout({
                           className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer rounded-md py-2 px-3 font-medium"
                         >
                           <LogOut className="mr-3 h-4 w-4" />
-                          <span>Sign out</span>
+                          <span>{t("user_menu.sign_out")}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -216,10 +221,9 @@ export default function DashboardLayout({
             <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle>Confirm Sign out</DialogTitle>
+                  <DialogTitle>{t("logout_dialog.title")}</DialogTitle>
                   <DialogDescription>
-                    Are you sure you want to sign out of the WeTruck Shipper
-                    Portal?
+                    {t("logout_dialog.message")}
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -227,10 +231,10 @@ export default function DashboardLayout({
                     variant="outline"
                     onClick={() => setShowLogoutDialog(false)}
                   >
-                    Stay Logged In
+                    {t("logout_dialog.stay")}
                   </Button>
                   <Button variant="destructive" onClick={confirmLogout}>
-                    Sign Out
+                    {t("logout_dialog.sign_out")}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -251,13 +255,8 @@ export default function DashboardLayout({
             <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 border-t border-border backdrop-blur-xl lg:hidden shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
               <div className="flex justify-around items-center h-16 px-2 max-w-md mx-auto">
                 {navigation.map((item) => {
-                  // Check if this is an exact match
                   const isExactMatch = pathname === item.href;
-
-                  // Check if pathname starts with this href (for child routes)
                   const isChildRoute = pathname.startsWith(`${item.href}/`);
-
-                  // Find if there's a more specific route that also matches
                   const hasMoreSpecificMatch = navigation.some(
                     (otherItem) =>
                       otherItem.href !== item.href &&
@@ -271,7 +270,7 @@ export default function DashboardLayout({
                     isExactMatch || (isChildRoute && !hasMoreSpecificMatch);
                   return (
                     <Link
-                      key={item.name}
+                      key={item.href}
                       href={item.href}
                       className={cn(
                         "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all relative",
@@ -295,7 +294,7 @@ export default function DashboardLayout({
                           isActive ? "opacity-100" : "opacity-70",
                         )}
                       >
-                        {item.label}
+                        {t(item.labelKey)}
                       </span>
                     </Link>
                   );

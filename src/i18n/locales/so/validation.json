@@ -1,0 +1,9 @@
+{
+  "required": "Goobtan waa lagama maarmaan",
+  "email_invalid": "Fadlan geli iimeel ganacsi oo sax ah",
+  "password_min_6": "Furahu waa inuu ugu yaraan 6 xaraf ahaadaa",
+  "password_min_8": "Furahu waa inuu ugu yaraan 8 xaraf ahaadaa",
+  "passwords_no_match": "Furayaashu ma isku mid yihiin",
+  "passwords_dont_match": "Furayaashu ma isku mid yihiin",
+  "reset_code_required": "Koodka dib u dejinta waa lagama maarmaan"
+}

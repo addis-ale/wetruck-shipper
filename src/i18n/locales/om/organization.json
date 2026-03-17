@@ -1,0 +1,73 @@
+{
+  "title": "Sanadoota Dhaabbataa",
+  "subtitle": "Sanadoota dhaabbataaf haala nageenya qabuun olfe'aa fi bulchaa",
+  "breadcrumb_dashboard": "Daashboordii",
+  "breadcrumb_documents": "Sanadoota Dhaabbataa",
+  "documents_title": "Sanadoota",
+  "search_placeholder": "Gosa sanadaatiin barbaadi...",
+  "upload_document": "Sanadaa Olfe'i",
+  "stats": {
+    "total": "Sanadoota Waliigalaa",
+    "pending": "Eeggataa",
+    "approved": "Fudhatame",
+    "rejected": "Didame"
+  },
+  "filters": {
+    "status": "Haala:",
+    "document_type": "Gosa Sanadaa:",
+    "entity_type": "Gosa Qaama:",
+    "all": "Hunda",
+    "clear": "Haqi",
+    "truck": "Konkolaataa",
+    "driver": "Konkolaachisaa"
+  },
+  "card_view": {
+    "no_documents": "Sanadaan hin argamne",
+    "organization": "Dhaabbata",
+    "more_actions": "Tarkaanfiilee dabalataa"
+  },
+  "upload_modal": {
+    "title": "Sanadaa Olfe'i",
+    "document_type": "Gosa Sanadaa *",
+    "select_type": "Gosa fili...",
+    "file_upload": "Faayilii Olfe'i",
+    "select_file": "Faayilii Fili",
+    "uploading": "Olfe'aa jira...",
+    "success": "Sanadaan milkaa'inaan olfe'ame",
+    "failed": "Sanadaa olfe'uu hin dandeenye",
+    "click_to_upload": "Olfe'uuf cuqaasaa yookaan harkisaa fidaa",
+    "file_types": "PDF, JPG yookaan PNG (ol. 10MB)",
+    "invalid_file_type": "Gosa faayilii sirrii miti. Maaloo PDF, DOC, DOCX, JPG, yookaan PNG faayiloota olfe'aa.",
+    "file_too_large": "Hammni faayilii daangaa 10MB caale. Maaloo faayilii xiqqaa filaa.",
+    "select_file_error": "Maaloo faayilii filaa",
+    "select_type_error": "Maaloo gosa sanadaa filaa"
+  },
+  "edit_modal": {
+    "title": "Sanadaa Gulaali",
+    "document_type": "Gosa Sanadaa",
+    "select_type": "Gosa sanadaa fili",
+    "replace_file": "Faayilii Bakka Buusi (Filannoo)",
+    "select_new_file": "Faayilii Haaraa Fili (Filannoo)",
+    "updating": "Haaromsaa jira...",
+    "update": "Haaromsi",
+    "success": "Sanadaan milkaa'inaan haarome",
+    "failed": "Sanadaa haaromsuu hin dandeenye",
+    "select_type_error": "Maaloo gosa sanadaa filaa"
+  },
+  "delete_modal": {
+    "title": "Sanadaa Haqi",
+    "confirm": "{{type}} kana haquu barbaadduu? Tarkaanfiin kun deebi'uu hin danda'u.",
+    "success": "Sanadaan milkaa'inaan haqame",
+    "failed": "Sanadaa haquu hin dandeenye"
+  },
+  "view": {
+    "url_not_available": "URL sanadaa hin jiru",
+    "view_failed": "Sanadaa ilaaluu hin dandeenye"
+  },
+  "columns": {
+    "document_type": "Gosa Sanadaa",
+    "entity_type": "Gosa Qaama",
+    "status": "Haala",
+    "uploaded_date": "Guyyaa Olfe'amee"
+  }
+}

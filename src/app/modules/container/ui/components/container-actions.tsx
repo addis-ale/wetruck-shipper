@@ -11,12 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 import { Container } from "../../server/types/container.types";
 import { UpdateContainerDialog } from "./dialogs/update-container-dialog";
 import { UpdateContainerDrawer } from "./update-container-drawer";
 import { DeleteContainerDialog } from "./dialogs/delete-container-dialog";
 
 export function ContainerActions({ container }: { container: Container }) {
+  const { t } = useTranslation("common");
   const isMobile = useIsMobile();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -30,7 +32,7 @@ export function ContainerActions({ container }: { container: Container }) {
             size="icon"
             className="h-8 w-8"
             onClick={() => setEditOpen(true)}
-            aria-label="Edit"
+            aria-label={t("common:buttons.edit")}
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -39,7 +41,7 @@ export function ContainerActions({ container }: { container: Container }) {
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => setDeleteOpen(true)}
-            aria-label="Delete"
+            aria-label={t("common:buttons.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -53,13 +55,13 @@ export function ContainerActions({ container }: { container: Container }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => setEditOpen(true)}>
-              Edit
+              {t("common:buttons.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => setDeleteOpen(true)}
             >
-              Delete
+              {t("common:buttons.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

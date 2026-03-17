@@ -20,13 +20,14 @@ import {
 } from "@/components/ui/select";
 
 import { useCreateShipmentDocument } from "@/app/modules/shipment/server/hooks/use-create-shipment-document";
+import { useTranslation } from "react-i18next";
 
 /* ----------------------------------------
    Hard-coded shipment document types
 ----------------------------------------- */
 const SHIPMENT_DOCUMENT_TYPES = [
-  { value: "BILL_OF_LADING", label: "Bill of Lading" },
-  { value: "PACKING_LIST", label: "Packing List" },
+  { value: "BILL_OF_LADING", labelKey: "common:document_types.bill_of_lading" },
+  { value: "PACKING_LIST", labelKey: "common:document_types.packing_list" },
 ] as const;
 
 type ShipmentDocumentType = (typeof SHIPMENT_DOCUMENT_TYPES)[number]["value"];
@@ -42,6 +43,7 @@ export function UploadShipmentDocumentDialog({
   open,
   onOpenChange,
 }: Props) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState<ShipmentDocumentType>("BILL_OF_LADING");
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function UploadShipmentDocumentDialog({
         className="flex flex-col rounded-t-xl p-0 max-h-[85vh] overflow-hidden w-full"
       >
         <SheetHeader className="shrink-0 border-b px-6 py-4">
-          <SheetTitle className="text-xl">Upload Document</SheetTitle>
+          <SheetTitle className="text-xl">{t("shipment:documents.upload_document")}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
@@ -72,7 +74,7 @@ export function UploadShipmentDocumentDialog({
             {/* Document type */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">
-                Document Type
+                {t("shipment:documents.document_type")}
               </label>
 
               <Select
@@ -86,9 +88,9 @@ export function UploadShipmentDocumentDialog({
                 </SelectTrigger>
 
                 <SelectContent>
-                  {SHIPMENT_DOCUMENT_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+                  {SHIPMENT_DOCUMENT_TYPES.map((dt) => (
+                    <SelectItem key={dt.value} value={dt.value}>
+                      {t(dt.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -98,7 +100,7 @@ export function UploadShipmentDocumentDialog({
             {/* File picker */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">
-                Choose File
+                {t("shipment:documents.choose_file")}
               </label>
 
               <input
@@ -120,7 +122,7 @@ export function UploadShipmentDocumentDialog({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-4 w-4" />
-                Browse Files
+                {t("shipment:documents.browse_files")}
               </Button>
 
               {file && (
@@ -171,7 +173,7 @@ export function UploadShipmentDocumentDialog({
                 }}
                 disabled={isPending}
               >
-                Cancel
+                {t("common:buttons.cancel")}
               </Button>
 
               <Button
@@ -185,20 +187,20 @@ export function UploadShipmentDocumentDialog({
                     { document_type: type, file },
                     {
                       onSuccess: () => {
-                        toast.success("Document uploaded successfully");
+                        toast.success(t("shipment:documents.upload_success"));
                         setFile(null);
                         setUploadError(null);
                         onOpenChange(false);
                       },
                       onError: (err: Error) => {
                         setUploadError(err.message);
-                        toast.error(err.message || "Upload failed");
+                        toast.error(err.message || t("shipment:documents.upload_failed"));
                       },
                     },
                   );
                 }}
               >
-                {isPending ? "Uploading..." : "Upload Document"}
+                {isPending ? t("shipment:documents.uploading") : t("shipment:documents.upload_document")}
               </Button>
             </div>
           </div>

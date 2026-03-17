@@ -28,6 +28,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import type { OrganizationDocument } from "@/lib/api/organization";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 interface EditDocumentModalProps {
   isOpen: boolean;
@@ -47,6 +48,7 @@ export function EditDocumentModal({
   onUpdate,
   isUpdating,
 }: EditDocumentModalProps) {
+  const { t } = useTranslation(["organization", "common"]);
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [documentType, setDocumentType] = useState("");
@@ -81,7 +83,7 @@ export function EditDocumentModal({
     if (!document) return;
 
     if (!documentType.trim()) {
-      setError("Please select a document type");
+      setError(t("organization:edit_modal.select_type_error"));
       return;
     }
 
@@ -113,7 +115,7 @@ export function EditDocumentModal({
   const formContent = (
     <div className="space-y-4 py-2">
       <div className="space-y-2">
-        <Label htmlFor="edit-document-type">Document Type</Label>
+        <Label htmlFor="edit-document-type">{t("organization:edit_modal.document_type")}</Label>
         <Select
           value={documentType}
           onValueChange={(value) => {
@@ -126,20 +128,20 @@ export function EditDocumentModal({
             id="edit-document-type"
             className="h-11 w-full rounded-lg"
           >
-            <SelectValue placeholder="Select document type" />
+            <SelectValue placeholder={t("organization:edit_modal.select_type")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="TRADE_LICENCE">Trade Licence</SelectItem>
+            <SelectItem value="TRADE_LICENCE">{t("common:document_types.trade_licence")}</SelectItem>
             <SelectItem value="AUTHORISED_CONTACT_PERSON_COMPANY_ID">
-              Authorised Contact Person Company ID
+              {t("common:document_types.authorised_contact_person_company_id")}
             </SelectItem>
-            <SelectItem value="OTHER">Other</SelectItem>
+            <SelectItem value="OTHER">{t("common:document_types.other")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="edit-file">Replace File (Optional)</Label>
+        <Label htmlFor="edit-file">{t("organization:edit_modal.replace_file")}</Label>
         <input
           ref={fileInputRef}
           id="edit-file"
@@ -164,7 +166,7 @@ export function EditDocumentModal({
           ) : (
             <>
               <Upload className="h-4 w-4 mr-2" />
-              Select New File (Optional)
+              {t("organization:edit_modal.select_new_file")}
             </>
           )}
         </Button>
@@ -187,7 +189,7 @@ export function EditDocumentModal({
   const footerContent = (
     <>
       <Button variant="outline" onClick={handleClose} disabled={isUpdating}>
-        Cancel
+        {t("common:buttons.cancel")}
       </Button>
       <Button
         onClick={handleUpdate}
@@ -197,10 +199,10 @@ export function EditDocumentModal({
         {isUpdating ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Updating...
+            {t("organization:edit_modal.updating")}
           </>
         ) : (
-          "Update"
+          t("organization:edit_modal.update")
         )}
       </Button>
     </>
@@ -220,7 +222,7 @@ export function EditDocumentModal({
           <SheetHeader className="px-6 pb-2 text-left">
             <div className="flex items-start justify-between gap-4 pr-8">
               <SheetTitle className="text-xl font-bold">
-                Edit Document
+                {t("organization:edit_modal.title")}
               </SheetTitle>
             </div>
           </SheetHeader>
@@ -238,7 +240,7 @@ export function EditDocumentModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Document</DialogTitle>
+          <DialogTitle>{t("organization:edit_modal.title")}</DialogTitle>
         </DialogHeader>
         {formContent}
         <DialogFooter className="flex justify-between gap-2">

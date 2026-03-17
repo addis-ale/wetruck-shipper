@@ -1,0 +1,73 @@
+{
+  "title": "Dukumeentiyada Hay'adda",
+  "subtitle": "Soo rar oo maaree dukumeentiyada hay'adda si ammaan ah",
+  "breadcrumb_dashboard": "Bogga Hore",
+  "breadcrumb_documents": "Dukumeentiyada Hay'adda",
+  "documents_title": "Dukumeentiyada",
+  "search_placeholder": "Ku raadi nooca dukumentiga...",
+  "upload_document": "Soo Rar Dukumenti",
+  "stats": {
+    "total": "Wadarta Dukumeentiyada",
+    "pending": "La Sugayo",
+    "approved": "La Ansixiyay",
+    "rejected": "La Diiday"
+  },
+  "filters": {
+    "status": "Xaalad:",
+    "document_type": "Nooca Dukumentiga:",
+    "entity_type": "Nooca Hay'adda:",
+    "all": "Dhammaan",
+    "clear": "Nadiifi",
+    "truck": "Gaari",
+    "driver": "Darawal"
+  },
+  "card_view": {
+    "no_documents": "Dukumenti lama helin",
+    "organization": "Hay'adda",
+    "more_actions": "Ficillo kale"
+  },
+  "upload_modal": {
+    "title": "Soo Rar Dukumenti",
+    "document_type": "Nooca Dukumentiga *",
+    "select_type": "Dooro nooca...",
+    "file_upload": "Soo Rarida Faylka",
+    "select_file": "Dooro Fayl",
+    "uploading": "Waa la soo rariyaa...",
+    "success": "Dukumentiga si guul leh ayaa loo soo raray",
+    "failed": "Soo raridu wuu guuldareystay",
+    "click_to_upload": "Guji si aad u soo rarisid ama ku dheji",
+    "file_types": "PDF, JPG ama PNG (ugu badnaan 10MB)",
+    "invalid_file_type": "Nooca faylku waa khalad. Fadlan soo rar PDF, DOC, DOCX, JPG, ama PNG.",
+    "file_too_large": "Faylka cabbirku wuu ka weyn yahay 10MB. Fadlan dooro fayl yar.",
+    "select_file_error": "Fadlan dooro fayl",
+    "select_type_error": "Fadlan dooro nooc dukumenti"
+  },
+  "edit_modal": {
+    "title": "Wax ka Beddel Dukumentiga",
+    "document_type": "Nooca Dukumentiga",
+    "select_type": "Dooro nooca dukumentiga",
+    "replace_file": "Beddel Faylka (Ikhtiyaari)",
+    "select_new_file": "Dooro Fayl Cusub (Ikhtiyaari)",
+    "updating": "Waa la cusboonaysiinayaa...",
+    "update": "Cusboonaysii",
+    "success": "Dukumentiga si guul leh ayaa loo cusboonaysiiyay",
+    "failed": "Cusboonaysiintu wuu guuldareystay",
+    "select_type_error": "Fadlan dooro nooc dukumenti"
+  },
+  "delete_modal": {
+    "title": "Tirtir Dukumentiga",
+    "confirm": "Ma hubtaa inaad tirtirto {{type}}? Ficilkan lama celinayo.",
+    "success": "Dukumentiga si guul leh ayaa loo tirtiray",
+    "failed": "Tirtirku wuu guuldareystay"
+  },
+  "view": {
+    "url_not_available": "URL-ka dukumentiga ma diyaarsana",
+    "view_failed": "Arinta dukumentiga wuu guuldareystay"
+  },
+  "columns": {
+    "document_type": "Nooca Dukumentiga",
+    "entity_type": "Nooca Hay'adda",
+    "status": "Xaalad",
+    "uploaded_date": "Taariikhda Soo Rarida"
+  }
+}

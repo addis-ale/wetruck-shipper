@@ -24,20 +24,21 @@ import { useDeleteShipmentDocument } from "../../../server/hooks/use-delete-ship
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 import { useDocumentPreviewContext } from "@/components/providers/DocumentPreviewProvider";
 import { extToMimeType } from "@/lib/utils/document-utils";
+import { useTranslation } from "react-i18next";
 
 /* ----------------------------------------
    Hard-coded document type labels
 ----------------------------------------- */
-const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  BILL_OF_LADING: "Bill of Lading",
-  COMMERCIAL_INVOICE: "Commercial Invoice",
-  PACKING_LIST: "Packing List",
-  DELIVERY_NOTE: "Delivery Note",
-  INSURANCE_CERTIFICATE: "Insurance Certificate",
-  CUSTOMS_DECLARATION: "Customs Declaration",
-  LICENSE: "License",
-  PERMIT: "Permit",
-  OTHER: "Other",
+const DOCUMENT_TYPE_KEYS: Record<string, string> = {
+  BILL_OF_LADING: "common:document_types.bill_of_lading",
+  COMMERCIAL_INVOICE: "common:document_types.commercial_invoice",
+  PACKING_LIST: "common:document_types.packing_list",
+  DELIVERY_NOTE: "common:document_types.delivery_note",
+  INSURANCE_CERTIFICATE: "common:document_types.insurance_certificate",
+  CUSTOMS_DECLARATION: "common:document_types.customs_declaration",
+  LICENSE: "common:document_types.license",
+  PERMIT: "common:document_types.permit",
+  OTHER: "common:document_types.other",
 };
 export function ShipmentDocumentRow({
   shipId,
@@ -48,6 +49,7 @@ export function ShipmentDocumentRow({
   document: ShipmentDocument;
   compact?: boolean;
 }) {
+  const { t } = useTranslation(["shipment", "common"]);
   const [shouldFetchPreview, setShouldFetchPreview] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -86,7 +88,7 @@ export function ShipmentDocumentRow({
     }
   }, [data, shouldFetchPreview, openDocument, fileName, doc.file_ext]);
 
-  const label = DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type;
+  const label = DOCUMENT_TYPE_KEYS[doc.document_type] ? t(DOCUMENT_TYPE_KEYS[doc.document_type]) : doc.document_type;
 
   if (compact) {
     return (
@@ -123,7 +125,7 @@ export function ShipmentDocumentRow({
               ) : (
                 <Eye className="h-3.5 w-3.5 mr-1" />
               )}
-              View
+              {t("common:buttons.view")}
             </Button>
             <Button
               size="sm"
@@ -132,7 +134,7 @@ export function ShipmentDocumentRow({
               onClick={() => setConfirmOpen(true)}
             >
               <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Delete
+              {t("common:buttons.delete")}
             </Button>
           </div>
         </div>
@@ -143,11 +145,11 @@ export function ShipmentDocumentRow({
           onConfirm={() =>
             deleteDoc(doc.id, {
               onSuccess: () => {
-                toast.success("Document deleted successfully");
+                toast.success(t("shipment:documents.delete_success"));
                 setConfirmOpen(false);
               },
               onError: (e: Error) => {
-                toast.error(e.message || "Delete failed");
+                toast.error(e.message || t("shipment:documents.delete_failed"));
                 setConfirmOpen(false);
               },
             })
@@ -182,7 +184,7 @@ export function ShipmentDocumentRow({
                 ) : (
                   <Eye className="mr-2 h-4 w-4" />
                 )}
-                View
+                {t("common:buttons.view")}
               </DropdownMenuItem>
 
               <DropdownMenuItem
@@ -190,7 +192,7 @@ export function ShipmentDocumentRow({
                 onClick={() => setConfirmOpen(true)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t("common:buttons.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -204,11 +206,11 @@ export function ShipmentDocumentRow({
         onConfirm={() =>
           deleteDoc(doc.id, {
             onSuccess: () => {
-              toast.success("Document deleted successfully");
+              toast.success(t("shipment:documents.delete_success"));
               setConfirmOpen(false);
             },
             onError: (e: Error) => {
-              toast.error(e.message || "Delete failed");
+              toast.error(e.message || t("shipment:documents.delete_failed"));
               setConfirmOpen(false);
             },
           })

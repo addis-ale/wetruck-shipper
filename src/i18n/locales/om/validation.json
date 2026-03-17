@@ -1,0 +1,9 @@
+{
+  "required": "Bakki kun dirqama",
+  "email_invalid": "Maaloo imeelii hojii sirrii galchaa",
+  "password_min_6": "Jecha darbii yoo xiqqaate arfii 6 qabaachuu qaba",
+  "password_min_8": "Jecha darbii yoo xiqqaate arfii 8 qabaachuu qaba",
+  "passwords_no_match": "Jechoonni darbii wal hin simu",
+  "passwords_dont_match": "Jechoonni darbii wal hin simu",
+  "reset_code_required": "Koodiin haaromsuu dirqama"
+}

@@ -1,0 +1,9 @@
+{
+  "required": "ይህ መስክ ያስፈልጋል",
+  "email_invalid": "እባክዎ ትክክለኛ የንግድ ኢሜይል ያስገቡ",
+  "password_min_6": "የይለፍ ቃል ቢያንስ 6 ቁምፊ ሊኖረው ይገባል",
+  "password_min_8": "የይለፍ ቃል ቢያንስ 8 ቁምፊ ሊኖረው ይገባል",
+  "passwords_no_match": "የይለፍ ቃሎች አይዛመዱም",
+  "passwords_dont_match": "የይለፍ ቃሎች አይዛመዱም",
+  "reset_code_required": "የዳግም ማስጀመሪያ ኮድ ያስፈልጋል"
+}

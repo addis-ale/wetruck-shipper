@@ -22,7 +22,7 @@
 /ios
 /icons
 /assets
-
+/capacitor.config.ts
 # misc
 .DS_Store
 *.pem

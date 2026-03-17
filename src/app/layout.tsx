@@ -80,6 +80,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { DocumentPreviewProvider } from "@/components/providers/DocumentPreviewProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { I18nProvider } from "@/components/providers/I18nProvider";
 
 export default function RootLayout({
   children,
@@ -100,21 +101,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <QueryProvider>
-            <AuthProvider>
-              <DocumentPreviewProvider>
-                {children}
-                <Toaster />
-              </DocumentPreviewProvider>
-            </AuthProvider>
-          </QueryProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>
+              <AuthProvider>
+                <DocumentPreviewProvider>
+                  {children}
+                  <Toaster />
+                </DocumentPreviewProvider>
+              </AuthProvider>
+            </QueryProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

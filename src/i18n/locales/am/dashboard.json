@@ -1,0 +1,25 @@
+{
+  "welcome": "እንኳን ደህና መጡ",
+  "overview": "የጭነቶችዎ እና እንቅስቃሴዎ ማጠቃለያ እነሆ።",
+  "stats": {
+    "active_shipments": "ንቁ ጭነቶች",
+    "active_description": "በመጓጓዝ ላይ ወይም ለማንሳት ዝግጁ",
+    "pending_quotes": "በመጠባበቅ ላይ ያሉ ዋጋዎች",
+    "pending_description": "ዋጋ ወይም ማረጋገጫዎን በመጠበቅ ላይ",
+    "completed": "የተጠናቀቁ",
+    "completed_description": "በተሳካ ሁኔታ የደረሱ",
+    "drafts": "ረቂቆች",
+    "drafts_description": "ያልተጠናቀቁ የትዕዛዝ ጥያቄዎች"
+  },
+  "recent_shipments": "የቅርብ ጊዜ ጭነቶች",
+  "no_shipments": "ገና ምንም ጭነቶች የሉም",
+  "create_first": "ለመጀመር የመጀመሪያ ጭነትዎን ይፍጠሩ",
+  "create_shipment": "ጭነት ፍጠር",
+  "action_required": "ድርጊት ያስፈልጋል",
+  "all_caught_up": "ሁሉም ተጠናቋል",
+  "no_actions": "በዚህ ጊዜ ምንም ድርጊት አያስፈልግም",
+  "price_requested_for": "ለጭነት #{{id}} ዋጋ ተጠይቋል",
+  "review_quotes": "ከአጓጓዦች የቅርብ ጊዜ ዋጋዎችን ይገምግሙ።",
+  "review_now": "አሁን ይገምግሙ >",
+  "view_all_priced": "ሁሉንም ዋጋ የተሰጣቸው ጭነቶች ይመልከቱ"
+}

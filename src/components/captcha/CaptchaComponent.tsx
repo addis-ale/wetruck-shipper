@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useCaptcha } from "@/hooks/useCaptcha";
 import { RefreshCw, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CaptchaComponentProps {
   onCaptchaVerified?: (captchaId: string, solution: string) => void;
@@ -23,6 +24,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
   onRefreshReady,
 }) => {
   const [userInput, setUserInput] = useState<string>("");
+  const { t } = useTranslation("auth");
   const inputRef = useRef<HTMLInputElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef<boolean>(true);
@@ -183,7 +185,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
           htmlFor="captcha-input"
           className="text-xs font-semibold uppercase tracking-wider text-gray-500"
         >
-          Security Code
+          {t("captcha.label")}
         </label>
         {showRefreshButton && (
           <button
@@ -196,8 +198,8 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
             }}
             disabled={isLoading || disabled}
             className="p-1.5 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Refresh CAPTCHA"
-            title="Refresh CAPTCHA"
+            aria-label={t("captcha.refresh")}
+            title={t("captcha.refresh")}
           >
             {isLoading ? (
               <Loader2 className="h-3.5 w-3.5 text-gray-600 animate-spin" />
@@ -222,7 +224,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
               ) : (
-                <span className="text-xs text-gray-400">Loading...</span>
+                <span className="text-xs text-gray-400">{t("sign_in.loading")}</span>
               )}
             </div>
           )}
@@ -238,7 +240,7 @@ const CaptchaComponent: React.FC<CaptchaComponentProps> = ({
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           disabled={disabled || isVerified || isLoading}
-          placeholder="Enter code"
+          placeholder={t("captcha.placeholder")}
           className="w-full h-11 border border-gray-200 rounded-md px-3 focus-visible:ring-primary focus-visible:ring-offset-0 uppercase text-sm"
           aria-label="CAPTCHA text input"
           maxLength={6}

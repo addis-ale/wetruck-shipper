@@ -32,6 +32,7 @@ import {
 
 import { useUpdateContainer } from "../../../server/hooks/use-update-container";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 type UpdateContainerFormValues = z.input<typeof updateContainerSchema>;
 
@@ -46,6 +47,8 @@ export function UpdateContainerDialog({
   onOpenChange,
   container,
 }: Props) {
+  const { t } = useTranslation(["container", "common"]);
+
   const form = useForm<UpdateContainerFormValues>({
     resolver: zodResolver(updateContainerSchema),
     defaultValues: {
@@ -68,7 +71,7 @@ export function UpdateContainerDialog({
             country: container.return_location_info.country ?? "",
             city: container.return_location_info.city ?? "",
             address: container.return_location_info.address ?? "",
-            port: container.return_location_info.port ?? undefined, // 🔑 fix
+            port: container.return_location_info.port ?? undefined,
           }
         : undefined,
     },
@@ -96,7 +99,7 @@ export function UpdateContainerDialog({
               country: container.return_location_info.country ?? "",
               city: container.return_location_info.city ?? "",
               address: container.return_location_info.address ?? "",
-              port: container.return_location_info.port ?? undefined, // 🔑 fix
+              port: container.return_location_info.port ?? undefined,
             }
           : undefined,
       });
@@ -112,7 +115,6 @@ export function UpdateContainerDialog({
     }
   }, [isSuccess, onOpenChange, form]);
 
-  // Country options
   const countryOptions = COUNTRIES.map((c) => ({
     value: c.name,
     label: c.name,
@@ -128,7 +130,7 @@ export function UpdateContainerDialog({
         ? {
             ...parsed.container_details,
             commodity: parsed.container_details.commodity.filter(Boolean),
-            instruction: parsed.container_details.instruction ?? "", // 🔑 FIX
+            instruction: parsed.container_details.instruction ?? "",
           }
         : undefined,
 
@@ -144,22 +146,20 @@ export function UpdateContainerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Container</DialogTitle>
+          <DialogTitle>{t("container:update.title")}</DialogTitle>
         </DialogHeader>
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          {/* Container Number */}
           <div className="space-y-1">
-            <Label>Container Number *</Label>
+            <Label>{t("container:create.container_number")} *</Label>
             <Input {...form.register("container_number")} />
           </div>
 
-          {/* Size */}
           <div className="space-y-1">
-            <Label>Size *</Label>
+            <Label>{t("container:create.size")} *</Label>
             <Controller
               control={form.control}
               name="container_size"
@@ -169,17 +169,20 @@ export function UpdateContainerDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="twenty_feet">20 Feet</SelectItem>
-                    <SelectItem value="forty_feet">40 Feet</SelectItem>
+                    <SelectItem value="twenty_feet">
+                      {t("common:container_sizes.20_ft")}
+                    </SelectItem>
+                    <SelectItem value="forty_feet">
+                      {t("common:container_sizes.40_ft")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
           </div>
 
-          {/* Type */}
           <div className="space-y-1">
-            <Label>Type *</Label>
+            <Label>{t("common:labels.type")} *</Label>
             <Controller
               control={form.control}
               name="container_type"
@@ -189,28 +192,34 @@ export function UpdateContainerDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dry">Dry</SelectItem>
-                    <SelectItem value="reefer">Reefer</SelectItem>
-                    <SelectItem value="open_top">Open Top</SelectItem>
-                    <SelectItem value="tank">Tank</SelectItem>
+                    <SelectItem value="dry">
+                      {t("common:container_types.dry")}
+                    </SelectItem>
+                    <SelectItem value="reefer">
+                      {t("common:container_types.reefer")}
+                    </SelectItem>
+                    <SelectItem value="open_top">
+                      {t("common:container_types.open_top")}
+                    </SelectItem>
+                    <SelectItem value="tank">
+                      {t("common:container_types.tank")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
           </div>
 
-          {/* Gross Weight */}
           <div className="space-y-1">
-            <Label>Gross Weight *</Label>
+            <Label>{t("container:create.gross_weight_label")} *</Label>
             <Input
               type="number"
               {...form.register("gross_weight", { valueAsNumber: true })}
             />
           </div>
 
-          {/* Gross Weight Unit */}
           <div className="space-y-1">
-            <Label>Gross Weight Unit *</Label>
+            <Label>{t("container:create.gross_weight_unit_label")} *</Label>
             <Controller
               control={form.control}
               name="gross_weight_unit"
@@ -227,29 +236,26 @@ export function UpdateContainerDialog({
             />
           </div>
 
-          {/* Tare Weight */}
           <div className="space-y-1">
-            <Label>Tare Weight *</Label>
+            <Label>{t("container:create.tare_weight_label")} *</Label>
             <Input
               type="number"
               {...form.register("tare_weight", { valueAsNumber: true })}
             />
           </div>
 
-          {/* Sequencing Priority */}
           <div className="space-y-1">
-            <Label>Sequencing Priority *</Label>
+            <Label>{t("container:create.sequencing_priority")} *</Label>
             <Input
               type="number"
               {...form.register("sequencing_priority", { valueAsNumber: true })}
             />
           </div>
 
-          {/* Is Returning */}
           <div className="space-y-2 col-span-full">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Is Returning Container
+                {t("container:update.is_returning_label")}
               </Label>
               <Controller
                 control={form.control}
@@ -264,33 +270,30 @@ export function UpdateContainerDialog({
             </div>
           </div>
 
-          {/* Commodity */}
           <div className="col-span-full space-y-1">
-            <Label>Commodity * (comma separated)</Label>
+            <Label>{t("container:update.commodity_label")} *</Label>
             <Input
-              placeholder="Electronics, Machinery, Textiles"
+              placeholder={t("container:update.commodity_placeholder")}
               {...form.register("container_details.commodity.0")}
             />
           </div>
 
-          {/* Instruction */}
           <div className="col-span-full space-y-1">
-            <Label>Instruction</Label>
+            <Label>{t("container:create.instruction")}</Label>
             <Input
               {...form.register("container_details.instruction")}
-              placeholder="Special handling instructions"
+              placeholder={t("container:update.instruction_placeholder")}
             />
           </div>
 
-          {/* Return Location Info - Conditional */}
           {form.watch("is_returning") && (
             <div className="col-span-full">
               <Label className="text-base font-semibold mb-3 block">
-                Return Location Details
+                {t("container:update.return_details")}
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-1">
-                  <Label>Country *</Label>
+                  <Label>{t("common:labels.country")} *</Label>
                   <Controller
                     name="return_location_info.country"
                     control={form.control}
@@ -300,7 +303,9 @@ export function UpdateContainerDialog({
                         value={field.value}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select country" />
+                          <SelectValue
+                            placeholder={t("common:select_country")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {countryOptions.map((option) => (
@@ -322,15 +327,15 @@ export function UpdateContainerDialog({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label>City *</Label>
+                  <Label>{t("common:labels.city")} *</Label>
                   <Input {...form.register("return_location_info.city")} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Port *</Label>
+                  <Label>{t("common:labels.port")} *</Label>
                   <Input {...form.register("return_location_info.port")} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Address *</Label>
+                  <Label>{t("common:labels.address")} *</Label>
                   <Input {...form.register("return_location_info.address")} />
                 </div>
               </div>
@@ -343,10 +348,12 @@ export function UpdateContainerDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : "Save Changes"}
+              {isPending
+                ? t("container:update.saving")
+                : t("container:update.save_changes")}
             </Button>
           </DialogFooter>
         </form>

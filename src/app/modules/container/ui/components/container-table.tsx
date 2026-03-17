@@ -2,7 +2,7 @@
 
 import { useContainers } from "../../server/hooks/use-containers";
 import { UseContainersParams } from "../../server/hooks/use-containers";
-import { containerColumns } from "../columns/container-columns";
+import { useContainerColumns } from "../columns/container-columns";
 import { DataTable } from "./data-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const PER_PAGE_OPTIONS = [10, 20, 50, 100];
 
@@ -23,11 +24,13 @@ type Props = {
 };
 
 export function ContainerTable({ filters, setPage, setFilters }: Props) {
+  const { t } = useTranslation(["container", "common"]);
+  const columns = useContainerColumns();
   const { data, isLoading, error } = useContainers(filters);
 
   if (error) {
     console.error("Container table error:", error);
-    return <div>Error loading containers: {error.message}</div>;
+    return <div>{t("container:table.error", { message: error.message })}</div>;
   }
 
   const total = data?.total ?? 0;
@@ -40,20 +43,24 @@ export function ContainerTable({ filters, setPage, setFilters }: Props) {
   return (
     <div className="space-y-4">
       <DataTable
-        columns={containerColumns}
+        columns={columns}
         data={data?.items ?? []}
         isLoading={isLoading}
+        noResultsMessage={t("container:table.no_results")}
       />
       {total > 0 && (
         <div className="flex items-center justify-between px-1">
           <p className="text-sm text-muted-foreground">
-            Showing {startItem} to {endItem} of {total} container
-            {total !== 1 ? "s" : ""}
+            {t("container:table.showing", {
+              from: startItem,
+              to: endItem,
+              total,
+            })}
           </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                Per page
+                {t("container:table.per_page")}
               </span>
               <Select
                 value={String(perPage)}
@@ -82,10 +89,10 @@ export function ContainerTable({ filters, setPage, setFilters }: Props) {
                 disabled={page <= 1 || isLoading}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Previous
+                {t("common:buttons.previous")}
               </Button>
               <span className="text-sm text-muted-foreground px-2">
-                Page {page} of {totalPages}
+                {t("common:pagination.page_of", { page, totalPages })}
               </span>
               <Button
                 variant="outline"
@@ -93,7 +100,7 @@ export function ContainerTable({ filters, setPage, setFilters }: Props) {
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages || isLoading}
               >
-                Next
+                {t("common:buttons.next")}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

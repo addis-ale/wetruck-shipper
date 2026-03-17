@@ -39,6 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 interface AcceptedShipItemsTableProps {
   activeShipmentId: number | null;
@@ -55,6 +56,7 @@ const formatPrice = (value: number): string => {
 export function AcceptedShipItemsTable({
   activeShipmentId,
 }: AcceptedShipItemsTableProps) {
+  const { t } = useTranslation(["shipment", "common"]);
   const {
     data: acceptedShipItems,
     isLoading,
@@ -117,10 +119,10 @@ export function AcceptedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Accepted Ship Items
+            {t("shipment:accepted.title")}
           </CardTitle>
           <CardDescription>
-            Accepted transporter quotes for this shipment
+            {t("shipment:accepted.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -140,16 +142,16 @@ export function AcceptedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Accepted Ship Items
+            {t("shipment:accepted.title")}
           </CardTitle>
           <CardDescription>
-            Accepted transporter quotes for this shipment
+            {t("shipment:accepted.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive">
-            Error loading accepted ship items:{" "}
-            {error instanceof Error ? error.message : "Unknown error"}
+            {t("shipment:accepted.error_loading")}{" "}
+            {error instanceof Error ? error.message : t("common:errors.unknown")}
           </p>
         </CardContent>
       </Card>
@@ -162,15 +164,15 @@ export function AcceptedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Accepted Ship Items
+            {t("shipment:accepted.title")}
           </CardTitle>
           <CardDescription>
-            Accepted transporter quotes for this shipment
+            {t("shipment:accepted.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            Select a shipment to view accepted ship items.
+            {t("shipment:accepted.select_shipment")}
           </p>
         </CardContent>
       </Card>
@@ -183,15 +185,15 @@ export function AcceptedShipItemsTable({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Accepted Ship Items
+            {t("shipment:accepted.title")}
           </CardTitle>
           <CardDescription>
-            Accepted ship items for this shipment
+            {t("shipment:accepted.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            No accepted ship items found for this shipment.
+            {t("shipment:accepted.no_found")}
           </p>
         </CardContent>
       </Card>
@@ -206,12 +208,10 @@ export function AcceptedShipItemsTable({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5" />
-                Accepted Ship Items
+                {t("shipment:accepted.title")}
               </CardTitle>
               <CardDescription>
-                {shipItemsList.length} accepted ship item
-                {shipItemsList.length !== 1 ? "s" : ""} for shipment #
-                {activeShipmentId}
+                {t("shipment:accepted.items_for", { count: shipItemsList.length, id: activeShipmentId })}
               </CardDescription>
             </div>
             {selectedShipItemIds.length > 0 && (
@@ -222,10 +222,10 @@ export function AcceptedShipItemsTable({
                 {completeMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Completing…
+                    {t("shipment:accepted.completing")}
                   </>
                 ) : (
-                  "Complete"
+                  t("shipment:accepted.complete")
                 )}
               </Button>
             )}
@@ -243,12 +243,12 @@ export function AcceptedShipItemsTable({
                       aria-label="Select all rows"
                     />
                   </TableHead>
-                  <TableHead>Containers</TableHead>
-                  <TableHead>Return Status</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead>Currency</TableHead>
-                  <TableHead>Uploaded docs</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
+                  <TableHead>{t("shipment:containers.title")}</TableHead>
+                  <TableHead>{t("shipment:priced.return_status")}</TableHead>
+                  <TableHead className="text-right">{t("common:labels.price")}</TableHead>
+                  <TableHead>{t("common:labels.currency")}</TableHead>
+                  <TableHead>{t("shipment:accepted.uploaded_docs")}</TableHead>
+                  <TableHead className="text-right">{t("common:labels.status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -284,7 +284,7 @@ export function AcceptedShipItemsTable({
                               variant="secondary"
                               className="w-fit text-xs"
                             >
-                              Returning
+                              {t("common:status.returning")}
                             </Badge>
                             <TooltipProvider>
                               <Tooltip>
@@ -296,9 +296,7 @@ export function AcceptedShipItemsTable({
                                   className="max-w-xs"
                                 >
                                   <p className="text-sm">
-                                    A flat fee of 10,000 ETB is added when at
-                                    least 1 container is returning. This fee is
-                                    included in the total price.
+                                    {t("shipment:priced.returning_fee")}
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
@@ -306,7 +304,7 @@ export function AcceptedShipItemsTable({
                           </div>
                         ) : (
                           <Badge variant="outline" className="w-fit text-xs">
-                            One-way
+                            {t("common:status.one_way")}
                           </Badge>
                         )}
                       </TableCell>
@@ -322,7 +320,7 @@ export function AcceptedShipItemsTable({
                       <TableCell className="text-right">
                         <Badge variant="secondary" className="gap-1">
                           <CheckCircle2 className="h-3 w-3" />
-                          Accepted
+                          {t("common:status.accepted")}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -338,13 +336,11 @@ export function AcceptedShipItemsTable({
       <Dialog open={containersModalOpen} onOpenChange={setContainersModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Container Details</DialogTitle>
+            <DialogTitle>{t("shipment:accepted.container_details")}</DialogTitle>
             <DialogDescription>
               {selectedShipItem && (
                 <>
-                  Showing {selectedContainers.length} container
-                  {selectedContainers.length !== 1 ? "s" : ""} for this ship
-                  item
+                  {t("shipment:accepted.showing_containers", { count: selectedContainers.length })}
                 </>
               )}
             </DialogDescription>
@@ -356,13 +352,13 @@ export function AcceptedShipItemsTable({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Container Number</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Weight</TableHead>
-                        <TableHead>Return Status</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Documents</TableHead>
+                        <TableHead>{t("shipment:priced.container_number")}</TableHead>
+                        <TableHead>{t("common:labels.size")}</TableHead>
+                        <TableHead>{t("common:labels.type")}</TableHead>
+                        <TableHead>{t("common:labels.weight")}</TableHead>
+                        <TableHead>{t("shipment:priced.return_status")}</TableHead>
+                        <TableHead>{t("common:labels.status")}</TableHead>
+                        <TableHead>{t("common:labels.documents")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -397,14 +393,14 @@ export function AcceptedShipItemsTable({
                                 variant="secondary"
                                 className="w-fit text-xs"
                               >
-                                Returning
+                                {t("common:status.returning")}
                               </Badge>
                             ) : (
                               <Badge
                                 variant="outline"
                                 className="w-fit text-xs"
                               >
-                                One-way
+                                {t("common:status.one_way")}
                               </Badge>
                             )}
                           </TableCell>
@@ -413,7 +409,7 @@ export function AcceptedShipItemsTable({
                               console.log(`[AcceptedShipItemsTable] Rendering row for container: ${container.id} (shipItem: ${selectedShipItem.id})`);
                               return (
                                 <Badge variant="outline" className="w-fit text-xs">
-                                  {container.status || "N/A"}
+                                  {container.status || t("common:na")}
                                 </Badge>
                               );
                             })()}
@@ -439,7 +435,7 @@ export function AcceptedShipItemsTable({
               variant="outline"
               onClick={() => setContainersModalOpen(false)}
             >
-              Close
+              {t("common:buttons.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -36,13 +36,15 @@ import { useCreateContainer } from "../../server/hooks/use-create-container";
 import type { Container } from "../../server/types/container.types";
 import { toast } from "sonner";
 import { Box, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type CreateContainerFormValues = z.input<typeof createContainerSchema>;
 
-const STEPS = [
-  { id: 1, title: "Basic info" },
-  { id: 2, title: "Details & cargo" },
-  { id: 3, title: "Return location" },
+const STEP_IDS = [1, 2, 3] as const;
+const STEP_KEYS = [
+  "container:create.steps.basic_info",
+  "container:create.steps.details_cargo",
+  "container:create.steps.return_location",
 ] as const;
 
 type BackendErrorShape = {
@@ -127,6 +129,7 @@ export function CreateContainerDrawer({
   onOpenChange,
   onCreated,
 }: CreateContainerDrawerProps) {
+  const { t } = useTranslation(["container", "common"]);
   const [step, setStep] = useState(1);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -197,7 +200,7 @@ export function CreateContainerDrawer({
 
   const { mutateAsync, isPending } = useCreateContainer({
     onSuccess: (container) => {
-      toast.success("Container created successfully");
+      toast.success(t("container:create.success"));
       setFormError(null);
       onOpenChange(false);
       reset(defaultValues);
@@ -234,11 +237,17 @@ export function CreateContainerDrawer({
     if (step === 1) {
       const values = getValues();
       if (!values.container_number?.trim()) {
-        setError("container_number", { type: "required", message: "Required" });
+        setError("container_number", {
+          type: "required",
+          message: t("common:labels.required"),
+        });
         return;
       }
       if (!values.gross_weight || Number(values.gross_weight) <= 0) {
-        setError("gross_weight", { type: "required", message: "Required" });
+        setError("gross_weight", {
+          type: "required",
+          message: t("common:labels.required"),
+        });
         return;
       }
       const ok = await trigger(
@@ -251,7 +260,7 @@ export function CreateContainerDrawer({
       if (!inst) {
         setError("container_details.instruction", {
           type: "required",
-          message: "Required",
+          message: t("common:labels.required"),
         });
         return;
       }
@@ -261,7 +270,7 @@ export function CreateContainerDrawer({
       if (!comm?.length) {
         setError("container_details.commodity", {
           type: "required",
-          message: "At least one cargo description required",
+          message: t("container:create.at_least_one_cargo"),
         });
         return;
       }
@@ -281,24 +290,24 @@ export function CreateContainerDrawer({
         if (!r?.country?.trim())
           setError("return_location_info.country", {
             type: "required",
-            message: "Required",
+            message: t("common:labels.required"),
           });
         if (!r?.city?.trim())
           setError("return_location_info.city", {
             type: "required",
-            message: "Required",
+            message: t("common:labels.required"),
           });
         if (!r?.address?.trim())
           setError("return_location_info.address", {
             type: "required",
-            message: "Required",
+            message: t("common:labels.required"),
           });
         return;
       }
       if (returnCountry === "Djibouti" && !r?.port?.trim()) {
         setError("return_location_info.port", {
           type: "required",
-          message: "Port required for Djibouti",
+          message: t("container:create.port_required"),
         });
         return;
       }
@@ -374,10 +383,7 @@ export function CreateContainerDrawer({
         return;
       }
       setFormError(
-        extractFormMessage(
-          responseData,
-          "Failed to create container. Please try again.",
-        ),
+        extractFormMessage(responseData, t("container:create.error")),
       );
     }
   }
@@ -390,20 +396,25 @@ export function CreateContainerDrawer({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Box className="h-4 w-4 text-primary" strokeWidth={2} />
             </div>
-            <SheetTitle className="text-lg">Add Container</SheetTitle>
+            <SheetTitle className="text-lg">
+              {t("container:create.title")}
+            </SheetTitle>
           </div>
           <div className="flex gap-1 mt-2">
-            {STEPS.map((s) => (
+            {STEP_IDS.map((id) => (
               <div
-                key={s.id}
+                key={id}
                 className={`h-1 flex-1 rounded-full ${
-                  s.id <= step ? "bg-primary" : "bg-muted"
+                  id <= step ? "bg-primary" : "bg-muted"
                 }`}
               />
             ))}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Step {step} of 3 · {STEPS[step - 1].title}
+            {t("container:create.step_of", {
+              step,
+              title: t(STEP_KEYS[step - 1]),
+            })}
           </p>
         </SheetHeader>
 
@@ -417,7 +428,7 @@ export function CreateContainerDrawer({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Container number</Label>
+                    <Label>{t("container:create.container_number")}</Label>
                     <Input {...register("container_number")} />
                     {errors.container_number && (
                       <p className="text-sm text-destructive">
@@ -426,7 +437,7 @@ export function CreateContainerDrawer({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Sequencing priority</Label>
+                    <Label>{t("container:create.sequencing_priority")}</Label>
                     <Input
                       type="number"
                       min={1}
@@ -437,7 +448,7 @@ export function CreateContainerDrawer({
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-2 min-w-0">
-                    <Label>Size</Label>
+                    <Label>{t("container:create.size")}</Label>
                     <Controller
                       name="container_size"
                       control={control}
@@ -450,15 +461,19 @@ export function CreateContainerDrawer({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="twenty_feet">20 ft</SelectItem>
-                            <SelectItem value="forty_feet">40 ft</SelectItem>
+                            <SelectItem value="twenty_feet">
+                              {t("common:container_sizes.20_ft")}
+                            </SelectItem>
+                            <SelectItem value="forty_feet">
+                              {t("common:container_sizes.40_ft")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       )}
                     />
                   </div>
                   <div className="space-y-2 min-w-0">
-                    <Label>Container type</Label>
+                    <Label>{t("container:create.container_type")}</Label>
                     <Controller
                       name="container_type"
                       control={control}
@@ -471,17 +486,25 @@ export function CreateContainerDrawer({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="dry">Dry</SelectItem>
-                            <SelectItem value="reefer">Reefer</SelectItem>
-                            <SelectItem value="open_top">Open Top</SelectItem>
-                            <SelectItem value="tank">Tank</SelectItem>
+                            <SelectItem value="dry">
+                              {t("common:container_types.dry")}
+                            </SelectItem>
+                            <SelectItem value="reefer">
+                              {t("common:container_types.reefer")}
+                            </SelectItem>
+                            <SelectItem value="open_top">
+                              {t("common:container_types.open_top")}
+                            </SelectItem>
+                            <SelectItem value="tank">
+                              {t("common:container_types.tank")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       )}
                     />
                   </div>
                   <div className="space-y-2 min-w-0">
-                    <Label>Truck type</Label>
+                    <Label>{t("container:create.truck_type")}</Label>
                     <Controller
                       name="recommended_truck_type"
                       control={control}
@@ -491,11 +514,15 @@ export function CreateContainerDrawer({
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select" />
+                            <SelectValue placeholder={t("common:select")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="flatbed">Flatbed</SelectItem>
-                            <SelectItem value="trailer">Trailer</SelectItem>
+                            <SelectItem value="flatbed">
+                              {t("common:truck_types.flatbed")}
+                            </SelectItem>
+                            <SelectItem value="trailer">
+                              {t("common:truck_types.trailer")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -504,7 +531,7 @@ export function CreateContainerDrawer({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Gross weight (kg)</Label>
+                    <Label>{t("container:create.gross_weight")}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -517,7 +544,7 @@ export function CreateContainerDrawer({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Tare weight (optional)</Label>
+                    <Label>{t("container:create.tare_weight")}</Label>
                     <Input type="number" min={0} {...register("tare_weight")} />
                     {errors.tare_weight && (
                       <p className="text-sm text-destructive">
@@ -527,7 +554,7 @@ export function CreateContainerDrawer({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Is returning?</Label>
+                  <Label>{t("container:create.is_returning")}</Label>
                   <Select
                     value={isReturning ? "yes" : "no"}
                     onValueChange={(v) => {
@@ -551,8 +578,8 @@ export function CreateContainerDrawer({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
+                      <SelectItem value="yes">{t("common:yes")}</SelectItem>
+                      <SelectItem value="no">{t("common:no")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -562,12 +589,12 @@ export function CreateContainerDrawer({
             {step === 2 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Instruction</Label>
+                  <Label>{t("container:create.instruction")}</Label>
                   <p className="text-xs text-muted-foreground">
-                    Special handling or notes for transporters
+                    {t("container:create.instruction_hint")}
                   </p>
                   <Input
-                    placeholder="e.g. Fragile, handle with care..."
+                    placeholder={t("container:create.instruction_placeholder")}
                     {...register("container_details.instruction")}
                   />
                   {errors.container_details?.instruction && (
@@ -577,12 +604,14 @@ export function CreateContainerDrawer({
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Cargo description</Label>
+                  <Label>{t("container:create.cargo_description")}</Label>
                   <div className="space-y-2 max-h-40 overflow-y-auto pr-2 scrollbar-hide">
                     {commodities.fields.map((field, idx) => (
                       <div key={field.id} className="flex gap-2">
                         <Input
-                          placeholder={`Cargo ${idx + 1}`}
+                          placeholder={t("container:create.cargo_n", {
+                            n: idx + 1,
+                          })}
                           {...register(
                             `container_details.commodity.${idx}` as const,
                           )}
@@ -594,7 +623,7 @@ export function CreateContainerDrawer({
                           onClick={() => commodities.remove(idx)}
                           disabled={commodities.fields.length === 1}
                         >
-                          Remove
+                          {t("container:create.remove")}
                         </Button>
                       </div>
                     ))}
@@ -605,7 +634,7 @@ export function CreateContainerDrawer({
                     size="sm"
                     onClick={() => commodities.append("")}
                   >
-                    Add cargo
+                    {t("container:create.add_cargo")}
                   </Button>
                   {errors.container_details?.commodity && (
                     <p className="text-sm text-destructive">
@@ -620,7 +649,7 @@ export function CreateContainerDrawer({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2 min-w-0">
-                    <Label>Country</Label>
+                    <Label>{t("common:labels.country")}</Label>
                     <Controller
                       name="return_location_info.country"
                       control={control}
@@ -630,7 +659,9 @@ export function CreateContainerDrawer({
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select country" />
+                            <SelectValue
+                              placeholder={t("common:select_country")}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {countryOptions.map((c) => (
@@ -649,7 +680,7 @@ export function CreateContainerDrawer({
                     )}
                   </div>
                   <div className="space-y-2 min-w-0">
-                    <Label>Address</Label>
+                    <Label>{t("common:labels.address")}</Label>
                     <Input
                       className="w-full"
                       {...register("return_location_info.address")}
@@ -662,7 +693,7 @@ export function CreateContainerDrawer({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>City</Label>
+                  <Label>{t("common:labels.city")}</Label>
                   <Input {...register("return_location_info.city")} />
                   {errors.return_location_info?.city && (
                     <p className="text-sm text-destructive">
@@ -672,7 +703,7 @@ export function CreateContainerDrawer({
                 </div>
                 {returnCountry === "Djibouti" && (
                   <div className="space-y-2">
-                    <Label>Port</Label>
+                    <Label>{t("common:labels.port")}</Label>
                     <Input {...register("return_location_info.port")} />
                     {errors.return_location_info?.port && (
                       <p className="text-sm text-destructive">
@@ -702,7 +733,7 @@ export function CreateContainerDrawer({
               className="flex-1"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
+              {t("common:buttons.back")}
             </Button>
           ) : (
             <Button
@@ -712,7 +743,7 @@ export function CreateContainerDrawer({
               disabled={submitting}
               className="flex-1"
             >
-              Cancel
+              {t("common:buttons.cancel")}
             </Button>
           )}
           {(() => {
@@ -726,16 +757,16 @@ export function CreateContainerDrawer({
               >
                 {isLastStep ? (
                   submitting ? (
-                    "Creating..."
+                    t("container:create.creating")
                   ) : (
                     <>
                       <Check className="h-4 w-4 mr-1" />
-                      Add container
+                      {t("container:add_container")}
                     </>
                   )
                 ) : (
                   <>
-                    Next
+                    {t("common:buttons.next")}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </>
                 )}

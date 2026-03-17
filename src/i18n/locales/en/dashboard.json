@@ -1,0 +1,25 @@
+{
+  "welcome": "Welcome back",
+  "overview": "Here's an overview of your shipments and activity.",
+  "stats": {
+    "active_shipments": "Active Shipments",
+    "active_description": "In transit or ready for pickup",
+    "pending_quotes": "Pending Quotes",
+    "pending_description": "Awaiting price or your acceptance",
+    "completed": "Completed",
+    "completed_description": "Successfully delivered",
+    "drafts": "Drafts",
+    "drafts_description": "Incomplete order requests"
+  },
+  "recent_shipments": "Recent Shipments",
+  "no_shipments": "No shipments yet",
+  "create_first": "Create your first shipment to get started",
+  "create_shipment": "Create Shipment",
+  "action_required": "Action Required",
+  "all_caught_up": "All caught up",
+  "no_actions": "No actions required at the moment",
+  "price_requested_for": "Price requested for shipment #{{id}}",
+  "review_quotes": "Review the latest quotes from carriers.",
+  "review_now": "Review now >",
+  "view_all_priced": "View all priced shipments"
+}
