@@ -18,6 +18,7 @@
 /out/
 
 # Mobile app (Capacitor) – do not push to GitHub
+# Mobile app (Capacitor) – do not push to GitHub
 /android
 /ios
 /icons
@@ -43,6 +44,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 config.bat
+
+# Signing keys
+*.keystore
+*.jks
+keystore.properties
 
 # Signing keys
 *.keystore
